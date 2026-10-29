@@ -51,6 +51,10 @@ class ErrorNoDisponible(ErrorZeus):
     """Sin conexión o 5xx tras agotar los reintentos del sistema."""
 
 
+class ErrorRespuesta(ErrorZeus):
+    """200 con un cuerpo que no cumple el contrato (sin `value`, `value` que no es lista, filas que no son objetos)."""
+
+
 class ErrorBloqueo(ErrorZeus):
     """Falta algo externo para operar contra la API real (client_secret, autorización de uso, endpoint)."""
 
@@ -178,14 +182,22 @@ class ClienteZeus:
             url += "?" + urllib.parse.urlencode(parametros, quote_via=urllib.parse.quote, safe="$,")
         return url
 
+    @staticmethod
+    def _filas(cuerpo):
+        """Frontera: el cuerpo debe ser {"value": [objeto, ...]} como en el contrato; si no, error acotado."""
+        valores = cuerpo.get("value") if isinstance(cuerpo, dict) else None
+        if not isinstance(valores, list) or not all(isinstance(fila, dict) for fila in valores):
+            raise ErrorRespuesta("la respuesta de Zeus no cumple el contrato: falta `value` como lista de objetos")
+        return valores
+
     def consultar(self, filtro=None, select=None, first=None, orderby=None):
-        return self._autorizada("GET", self.url_consulta(filtro, select, first, orderby))["value"]
+        return self._filas(self._autorizada("GET", self.url_consulta(filtro, select, first, orderby)))
 
     def url_radicado(self, id_radicado):
         return f"{self.ajustes['UrlBase']}/IDRADICADO/{urllib.parse.quote(str(id_radicado))}"
 
     def radicado(self, id_radicado):
-        valores = self._autorizada("GET", self.url_radicado(id_radicado))["value"]
+        valores = self._filas(self._autorizada("GET", self.url_radicado(id_radicado)))
         return valores[0] if valores else None
 
 

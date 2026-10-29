@@ -93,9 +93,10 @@ def consultar_odata(filtro="", select="", first=None, orderby=""):
     try:
         filas = _sesion.cliente.consultar(filtro=filtro or None, select=tuple(select.split(",")) if select else None,
                                           first=lote, orderby=orderby or None)
+        ids = ep001.ids_de(filas, _sesion.cfg)
     except ErrorZeus as error:
         return _fallo(ep001.mensaje_detencion(error), detenido=True)
-    return _ok(filas=filas, ids=[str(f["IDRADICADO"]) for f in filas])
+    return _ok(filas=filas, ids=ids)
 
 
 def registrar_descartados(ids):
@@ -118,7 +119,7 @@ def registrar_detencion(motivo):
 def leer_radicado(id_radicado):
     """GET del radicado por IDRADICADO (consulta individual)."""
     try:
-        return _ok(crudo=ep001.leer_crudo(_sesion.cliente, id_radicado))
+        return _ok(crudo=ep001.leer_crudo(_sesion.cliente, id_radicado, _sesion.cfg))
     except ep001.ExcepcionSistemaCaso as error:
         return _fallo(error)
 

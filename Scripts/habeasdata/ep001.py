@@ -15,9 +15,11 @@ from .config import cargar
 from .redaccion import resumen_seguro
 from .registro import Registro
 from .zeus import (APLICATIVO, ClienteZeus, EscrituraComentario, ErrorBloqueo, ErrorNoAutenticado, ErrorNoDisponible,
-                   ErrorNoEncontrado, ErrorPermiso, ErrorSolicitud, ErrorZeus)
+                   ErrorNoEncontrado, ErrorPermiso, ErrorRespuesta, ErrorSolicitud, ErrorZeus)
 
 MODULO = "EP-001"
+CAMPOS_ESCALARES = ("IDRADICADO", "RadicadoPadre", "NOMBREDELCLIENTE", "TIPODEIDENTIFICACION", "NOIDENTIFICACIONDELCLIENTE",
+                    "FECHADERECEPCION", "CORREOELECTRONICOPARAEXCLUSION", "TELEFONODECONTACTO")
 OBLIGATORIOS = (("nombre", "NOMBRE DEL CLIENTE"), ("tipo_identificacion", "TIPO DE IDENTIFICACION"),
                 ("numero_identificacion", "NUMERO DE IDENTIFICACION"))
 
@@ -42,10 +44,12 @@ def separar_valores(valor, cfg):
     if es_ausente(valor, cfg):
         return []
     separador = cfg.proceso["Negocio"]["SeparadorValores"]
-    return [parte.strip() for parte in str(valor).split(separador) if parte.strip()]
+    partes = [parte.strip() for parte in str(valor).split(separador)]
+    return [parte for parte in partes if not es_ausente(parte, cfg)]
 
 
 def clasificar_telefono(valor, cfg):
+    valor = str(valor)
     negocio = cfg.proceso["Negocio"]
     if valor.isdigit() and len(valor) == negocio["DigitosCelular"] and valor.startswith(negocio["PrefijoCelular"]):
         return "celular"
@@ -92,7 +96,7 @@ def normalizar_caso(registro_zeus, cfg):
 def validar_completitud(caso):
     """HU-004: solo existencia, no formato ni contenido."""
     motivos = [etiqueta for clave, etiqueta in OBLIGATORIOS if not caso.get(clave)]
-    if not caso["canal_correo"] and not caso["canal_telefono"]:
+    if not caso.get("canal_correo") and not caso.get("canal_telefono"):
         motivos.append("SIN CANAL DE CONTACTO")
     return {"completo": not motivos, "motivos": motivos}
 
@@ -124,6 +128,17 @@ def registrar_descartados(registro, ids):
         registro.reporte(id_descartado, None, "descartado: identificación ausente", None, "sin gestión del bot")
 
 
+def ids_de(filas, cfg):
+    """Frontera: cada fila debe traer un IDRADICADO presente; si no, la respuesta no cumple el contrato."""
+    ids = []
+    for fila in filas:
+        valor = fila.get("IDRADICADO")
+        if es_ausente(valor, cfg) or isinstance(valor, (bool, float, dict, list)):
+            raise ErrorRespuesta("una fila de la respuesta de Zeus no trae un IDRADICADO válido")
+        ids.append(str(valor).strip())
+    return ids
+
+
 def filtrar_exclusion(cliente, cfg, registro):
     """HU-002. Selección según el contrato QA: tipología de exclusión, descartando identificación ausente ('NO APORTA'),
     por lotes ($first) y en orden ($orderby). Los descartados se cuentan y se reportan: no se pierden en silencio."""
@@ -133,17 +148,17 @@ def filtrar_exclusion(cliente, cfg, registro):
     descartar = seleccion["DescartarIdentificacionAusente"]
     filtro = f"{base} and {campo_id} ne '{literal}'" if descartar else base
     try:
-        filas = cliente.consultar(filtro=filtro, select=("IDRADICADO", negocio["CampoTipologia"]),
-                                  first=seleccion["LoteMaximo"], orderby=seleccion["Orden"])
+        filas = ids_de(cliente.consultar(filtro=filtro, select=("IDRADICADO", negocio["CampoTipologia"]),
+                                         first=seleccion["LoteMaximo"], orderby=seleccion["Orden"]), cfg)
         descartados = []
         if descartar:
-            descartados = [str(f["IDRADICADO"]) for f in cliente.consultar(
-                filtro=f"{base} and {campo_id} eq '{literal}'", select=("IDRADICADO",))]
+            descartados = ids_de(cliente.consultar(
+                filtro=f"{base} and {campo_id} eq '{literal}'", select=("IDRADICADO",)), cfg)
         if filas:
-            return {"ids": [str(f["IDRADICADO"]) for f in filas], "descartados": descartados,
+            return {"ids": filas, "descartados": descartados,
                     "motivo_sin_casos": None, "reintento": None}
         total = len(cliente.consultar(select=("IDRADICADO",)))
-    except (ErrorSolicitud, ErrorBloqueo, ErrorNoAutenticado, ErrorPermiso, ErrorNoDisponible, ErrorNoEncontrado) as error:
+    except ErrorZeus as error:
         raise DetenerEjecucion(mensaje_detencion(error)) from error
     motivo = "solo_descartados" if descartados else ("tipologia_ausente" if total else "bandeja_vacia")
     reintento = registrar_sin_casos(registro, cfg, motivo, total)
@@ -151,18 +166,35 @@ def filtrar_exclusion(cliente, cfg, registro):
 
 
 # ---------- HU-003 ----------
-def leer_crudo(cliente, id_radicado):
+def validar_registro(crudo, cfg):
+    """Frontera: el registro debe ser un objeto con IDRADICADO presente y campos escalares (texto o entero)."""
+    if not isinstance(crudo, dict):
+        return "la respuesta no es un registro"
+    identificador = crudo.get("IDRADICADO")
+    if isinstance(identificador, (bool, float, dict, list)) or es_ausente(identificador, cfg):
+        return "el registro no trae IDRADICADO"
+    for campo in CAMPOS_ESCALARES:
+        valor = crudo.get(campo)
+        if valor is not None and (isinstance(valor, (bool, float, dict, list, tuple, set)) or not isinstance(valor, (str, int))):
+            return f"el campo {campo} trae un tipo inesperado ({type(valor).__name__})"
+    return None
+
+
+def leer_crudo(cliente, id_radicado, cfg):
     try:
         crudo = cliente.radicado(id_radicado)
     except (ErrorSolicitud, ErrorNoEncontrado, ErrorNoDisponible, ErrorPermiso, ErrorZeus) as error:
         raise ExcepcionSistemaCaso(f"no se pudo leer el radicado {id_radicado}: {error}") from error
     if crudo is None:
         raise ExcepcionSistemaCaso(f"no se pudo leer el radicado {id_radicado}: respuesta vacía")
+    problema = validar_registro(crudo, cfg)
+    if problema:
+        raise ExcepcionSistemaCaso(f"no se pudo leer el radicado {id_radicado}: {problema}")
     return crudo
 
 
 def extraer(cliente, cfg, id_radicado):
-    return normalizar_caso(leer_crudo(cliente, id_radicado), cfg)
+    return normalizar_caso(leer_crudo(cliente, id_radicado, cfg), cfg)
 
 
 # ---------- HU-004 ----------
