@@ -69,6 +69,8 @@ _Contexto_: En el origen esta historia navega la bandeja "Por gestionar" de Zeus
 
 **Paginación**: el origen declara que el listado no tiene paginación. La semántica exacta de `$first` en el manual queda por confirmar (pendiente en `00-alcance-del-lab.md` §10).
 
+**Modo real y fixture (directriz de Villa, 2026-10-29)**: el cliente se implementa contra el contrato real de la API (C-19); el doble local es solo fixture offline del banco. Sin `client_secret`, autorización de uso y acceso de red a QA no se ejecuta contra la API real: se reporta como bloqueo.
+
 **Prioridad y complejidad**: se copian del origen (Must, S); la sustitución local no las cambia.
 
 **Procedencia**: HU de origen `HU-002` (proyecto OP798698, cliente CISA); aprobada por CISA en el correo de Amelia Escobar del 09/10/2026 («Entrega Oficial Documentación funcional»; C-08, resuelta); sesión de alineación del 26–27/10/2026: no aplica a esta historia. El origen confirma (2026-10-01) que la identificación se hará vía API de Zeus y (2026-09-29) que su documentación está disponible.

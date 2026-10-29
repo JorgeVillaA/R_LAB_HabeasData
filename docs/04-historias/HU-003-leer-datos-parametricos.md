@@ -88,6 +88,10 @@ _Contexto_: En el origen es el paso 4 (pestaña "Campos Adicionales" de Zeus Web
 
 **Datos**: sintéticos (nombres inventados, cédulas ficticias); los fixtures cubren sin canal, "No aporta", multivalor, padre/hijo, NIT y nombre invertido.
 
+**Modo real y fixture (directriz de Villa, 2026-10-29)**: el cliente se implementa contra el contrato real de la API (C-19); el doble local es solo fixture offline del banco. Sin `client_secret`, autorización de uso y acceso de red a QA no se ejecuta contra la API real: se reporta como bloqueo.
+
+Contra la API real, el ejemplo del manual trae `FECHADERECEPCION` como `dd/MM/yyyy` y el literal de ausencia en mayúsculas (C-18); se conservan tal cual y la ausencia no distingue mayúsculas.
+
 **Prioridad y complejidad**: se copian del origen (Must, M); la sustitución local no las cambia.
 
 **Procedencia**: HU de origen `HU-003` (proyecto OP798698, cliente CISA); el 09/10/2026 CISA fijó un criterio de aceptación nuevo (varios celulares en un campo), sin aprobar esta historia en ese correo (C-08, resuelta); sesión de alineación del 26–27/10/2026, Temas 7-9 (separador "/" y también para el correo; aprobación del 2026-10-27). Pendiente del origen que sigue abierto: cómo entrega la API real un campo con más de un valor.
