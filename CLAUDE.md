@@ -104,15 +104,13 @@ líneas; si hace falta más, va a un fichero y aquí solo la ruta.
 Estos puntos de extensión los leen los agentes `security-reviewer`, `stack-guardian`,
 `data-consistency-checker`, `ux-krug-reviewer`, `simple-design-reviewer` y `ux-fidelity-reviewer`:
 
-- **PRD técnico (fuente del stack)**: {{PRD_TECH_PATH}}
-- **Capa de servicios externos / IA (frontera)**: {{EXTERNAL_SERVICE_LAYER}}
-- **Lógica que debe ser determinista (no-IA)**: {{DETERMINISTIC_LAYER}}
-- **Categorías de datos sensibles / PII reguladas**: {{SENSITIVE_DATA_CATEGORIES}}
-- **Secretos server-side**: {{SERVER_SIDE_SECRETS}}
-- **Decisiones de alto impacto que exigen explicabilidad UX**: {{HIGH_STAKES_DECISIONS}}
-- **Fuente de diseño / referencia visual**: {{DESIGN_SOURCE}} (si no existe fuente aún, `/build:prototype` puede generarla en `docs/05-prototipo/`; la confirmación sigue siendo humana)
-
-(Si aparecen como `{{...}}`, ejecuta `/build:onboard` para parametrizarlos.)
+- **PRD técnico (fuente del stack)**: `docs/00-alcance-del-lab.md` + `specs/api-zeus-qa.md` + Diseño Técnico v1.2 de CISA (el lab no tiene PRD propio; no existe `docs/01-prd/`)
+- **Capa de servicios externos / IA (frontera)**: API de Zeus (QA real o fixture offline), Cobra (stub), portales de Policía y Procuraduría y servicio de captchas (dobles), NocoDB (repositorio local). No hay IA. La frontera es `Scripts/habeasdata/zeus.py` y `pasos.py`
+- **Lógica que debe ser determinista (no-IA)**: Toda la lógica de negocio: «No aporta» = ausente, clasificación de teléfono por dígitos, separación por `/`, completitud, umbral de nombres 0.80. Ninguna IA
+- **Categorías de datos sensibles / PII reguladas**: Nombre, tipo y número de identificación, correos y teléfonos de ciudadanos. En modo real se enmascaran (`redaccion.py`); en el lab, datos 100 % sintéticos
+- **Secretos server-side**: `client_secret` de Keycloak (Administrador de credenciales de Windows, credencial `R_LAB_HabeasData/Zeus/QA`) y tokens Bearer. Nunca en repo, JSON, variables del robot ni logs
+- **Decisiones de alto impacto que exigen explicabilidad UX**: Excepciones de negocio 1 a 4 y exclusión de datos de un ciudadano (derecho de habeas data): el motivo queda como comentario en Gestión → Detalle para revisión de Cartera
+- **Fuente de diseño / referencia visual**: No aplica (el robot no tiene UI propia; los dobles HTML se verifican en Chrome con captura del MCP) (si no existe fuente aún, `/build:prototype` puede generarla en `docs/05-prototipo/`; la confirmación sigue siendo humana)
 
 ### Requisitos
 
@@ -129,3 +127,13 @@ Estos puntos de extensión los leen los agentes `security-reviewer`, `stack-guar
 <!-- END trycore-build-learnings -->
 
 <!-- A partir de aquí, el equipo del proyecto puede agregar instrucciones específicas del cliente. -->
+
+## Convenciones del lab R_LAB_HabeasData (propias del proyecto; el arnés no las reescribe)
+
+- **Alcance y decisiones**: `docs/00-alcance-del-lab.md` es el contrato (dobles, stubs, contradicciones C-01 a C-22, directriz de la API real). El lab lo decide Villa.
+- **Modo de la API de Zeus**: `ZeusApi.Modo` = `fixture` (por defecto; el doble solo alimenta el banco) o `real` (QA de CISA). El modo real exige el `client_secret` en el Administrador de credenciales y `ZEUS_REAL_AUTORIZADO=1`; sin ellos se reporta como bloqueo, nunca se enmascara.
+- **Robot legible a cliente**: el flujo vive en bloques visibles de Studio (grupos por historia). El Python queda para E/S con secretos, lógica pura y logs; nunca contiene el flujo. No usar el comando nativo `request` (escribe secretos en el log de Studio).
+- **Chrome**: toda navegación web en Chrome (`openbrowser` con `extra:{default:"chrome"}` y `openUrl` aparte); sin verificación visual real no se declara verde.
+- **Verificación**: `validate_robot` perfil `trycore` en 0 errores y 0 avisos; matriz del banco en verde dos veces seguidas; el robot de Studio equivalente al orquestador (`banco/equivalencia_robot.py`).
+- **PII**: solo datos sintéticos; en modo real, redactar nombre, identificación, correos y teléfonos en toda evidencia. Las capturas de pantalla completa pueden mostrar contenido ajeno: usar Chrome maximizado.
+- **Git**: ramas `feature/EP-XXX`; el `git push` a `origin` lo hace Villa a mano (bloqueado para el agente).
