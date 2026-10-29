@@ -17,11 +17,13 @@ from habeasdata import ep001
 from habeasdata.config import cargar
 from habeasdata.redaccion import MASCARA, resumen_seguro
 from habeasdata.registro import Registro
-from habeasdata.zeus import ClienteZeus, ErrorBloqueo, ErrorNoAutenticado
+from habeasdata import credenciales
+from habeasdata.zeus import ClienteZeus, EscrituraComentario, ErrorBloqueo, ErrorNoAutenticado
 
 QA_BASE = "https://qaservices.cisa.gov.co/habeasdata/api/CamposAdicionalesXRadicadoHabeasData"
 QA_TOKEN = "https://qaservices.cisa.gov.co/sso/git_cisa/token"
-ENTORNO_REAL = {"ZEUS_REAL_AUTORIZADO": "1", "ZEUS_CLIENT_SECRET": "secreto-ficticio-de-prueba"}
+ENTORNO_REAL = {"ZEUS_REAL_AUTORIZADO": "1"}
+SECRETO_FICTICIO = "secreto-ficticio-de-prueba"
 
 
 class Respuesta(io.BytesIO):
@@ -54,8 +56,9 @@ class BaseReal(unittest.TestCase):
         self.cfg = cargar(self.tmp)
         self.registro = Registro(self.cfg, RELOJ_FIJO)
 
-    def cliente(self, entorno):
-        return ClienteZeus(self.cfg, self.registro, entorno, dormir=lambda s: None)
+    def cliente(self, entorno, secreto=SECRETO_FICTICIO, lector=None):
+        lector = lector or (lambda target: secreto)
+        return ClienteZeus(self.cfg, self.registro, entorno, dormir=lambda s: None, lector_secreto=lector)
 
 
 class TestContratoReal(BaseReal):
@@ -64,6 +67,8 @@ class TestContratoReal(BaseReal):
         self.assertEqual((real["UrlBase"], real["UrlToken"]), (QA_BASE, QA_TOKEN))
         self.assertEqual(real["ClientId"], "app_dab_habeasdata")
         self.assertEqual(real["Ambiente"], "QA")
+        self.assertEqual(real["CredencialTarget"], "R_LAB_HabeasData/Zeus/QA")
+        self.assertNotIn("ClientSecretEnv", real)  # el secreto no se declara en configuración ni en el entorno
 
     def test_el_modo_por_defecto_del_repo_es_fixture(self):
         self.assertEqual(cargar(REPO).proceso["ZeusApi"]["Modo"], "fixture")
@@ -79,6 +84,10 @@ class TestContratoReal(BaseReal):
                          QA_BASE + "?$select=IDRADICADO,PQRCORRESPONDEA")
         self.assertEqual(c.url_radicado(958797), QA_BASE + "/IDRADICADO/958797")
         self.assertEqual(c.url_consulta(), QA_BASE)
+        self.assertEqual(
+            decodificar(c.url_consulta(filtro="PQRCORRESPONDEA eq 'EXCLUSION DE DATOS' and NOIDENTIFICACIONDELCLIENTE ne 'NO APORTA'",
+                                       first=25, orderby="IDRADICADO desc")),
+            QA_BASE + "?$filter=PQRCORRESPONDEA eq 'EXCLUSION DE DATOS' and NOIDENTIFICACIONDELCLIENTE ne 'NO APORTA'&$first=25&$orderby=IDRADICADO desc")
 
     def test_token_se_pide_como_client_credentials_y_se_renueva_ante_401(self):
         llamadas = []
@@ -96,6 +105,7 @@ class TestContratoReal(BaseReal):
         self.assertEqual(filas, [{"IDRADICADO": 1}])
         token1, dato1, token2 = llamadas[0], llamadas[1], llamadas[2]
         forma = dict(urllib.parse.parse_qsl(token1[3].decode()))
+        self.assertEqual(forma["client_secret"], SECRETO_FICTICIO)  # viajó solo en el cuerpo del token
         self.assertEqual((token1[0], forma["grant_type"], forma["client_id"]), ("POST", "client_credentials", "app_dab_habeasdata"))
         self.assertEqual(token1[2]["Content-type"], "application/x-www-form-urlencoded")
         self.assertEqual(dato1[2]["Authorization"], "Bearer tok1")
@@ -114,24 +124,40 @@ class TestSalvaguardasReales(BaseReal):
                 self.cliente({"ZEUS_CLIENT_SECRET": "x"}).consultar()
         self.assertIn("autorización de uso", str(e.exception))
 
-    def test_sin_client_secret_no_hay_llamada(self):
+    def test_sin_client_secret_en_el_administrador_de_credenciales_no_hay_llamada(self):
         with self.sin_red():
             with self.assertRaises(ErrorBloqueo) as e:
-                self.cliente({"ZEUS_REAL_AUTORIZADO": "1"}).consultar()
-        self.assertIn("client_secret", str(e.exception))
+                self.cliente(ENTORNO_REAL, lector=lambda target: None).consultar()
+        self.assertIn("Administrador de credenciales", str(e.exception))
+        self.assertIn("R_LAB_HabeasData/Zeus/QA", str(e.exception))
+
+    def test_el_secreto_se_pide_al_administrador_con_el_target_configurado(self):
+        pedidos = []
+        cliente = self.cliente(ENTORNO_REAL, lector=lambda target: pedidos.append(target) or SECRETO_FICTICIO)
+        with mock.patch("urllib.request.urlopen", side_effect=error_http(QA_TOKEN, 401, {})):
+            with self.assertRaises(ErrorNoAutenticado):
+                cliente.renovar_token()
+        self.assertEqual(pedidos, ["R_LAB_HabeasData/Zeus/QA"])
+
+    def test_el_secreto_nunca_se_toma_del_entorno(self):
+        entorno = dict(ENTORNO_REAL, ZEUS_CLIENT_SECRET="en-el-entorno", ZEUS_DOBLE_CLIENT_SECRET="otro")
+        with self.sin_red():
+            with self.assertRaises(ErrorBloqueo):
+                self.cliente(entorno, lector=lambda target: None).consultar()
 
     def test_el_endpoint_de_escritura_pendiente_se_reporta_no_se_inventa(self):
         with self.sin_red():
             with self.assertRaises(ErrorBloqueo) as e:
-                self.cliente(ENTORNO_REAL).comentar("1", "x")
+                EscrituraComentario(self.cliente(ENTORNO_REAL)).comentar("1", "x")
         self.assertIn("C-09", str(e.exception))
 
     def test_procesar_sin_secreto_se_detiene_con_bloqueo_explicito(self):
         with self.sin_red():
-            resumen = ep001.procesar(self.cfg, self.cliente({"ZEUS_REAL_AUTORIZADO": "1"}), self.registro)
+            resumen = ep001.procesar(self.cfg, self.cliente(ENTORNO_REAL, lector=lambda target: None), self.registro)
         self.assertEqual(resumen["estado"], "detenido")
         self.assertEqual(resumen["notificacion"]["asunto"], "Detenido")
         self.assertIn("BLOQUEO", resumen["notificacion"]["motivo"])
+        self.assertEqual(resumen["modo"], "real")
         self.assertIn("BLOQUEO", self.registro.ruta_errores().read_text(encoding="utf-8"))
 
     def test_un_modo_desconocido_se_rechaza(self):
@@ -166,3 +192,23 @@ class TestRedaccionPII(BaseReal):
         for dato in ("real@dominio.com", "1234567890", "3101234567"):
             self.assertNotIn(dato, linea)
         self.assertIn("958797", linea)
+
+
+class TestAdministradorDeCredencialesDeWindows(unittest.TestCase):
+    """Ida y vuelta real contra el Administrador de credenciales (credencial temporal, se elimina al terminar)."""
+
+    @unittest.skipUnless(__import__("sys").platform == "win32", "solo Windows")
+    def test_lee_una_credencial_generica(self):
+        import subprocess
+        import uuid
+        target = f"R_LAB_HabeasData/prueba/{uuid.uuid4().hex}"
+        subprocess.run(["cmdkey", f"/generic:{target}", "/user:lab", "/pass:valor-ficticio-123"], check=True, capture_output=True)
+        try:
+            self.assertEqual(credenciales.leer_secreto(target), "valor-ficticio-123")
+        finally:
+            subprocess.run(["cmdkey", f"/delete:{target}"], capture_output=True)
+        self.assertIsNone(credenciales.leer_secreto(target))
+
+    def test_credencial_inexistente_devuelve_none(self):
+        self.assertIsNone(credenciales.leer_secreto("R_LAB_HabeasData/prueba/no-existe-jamas"))
+        self.assertIsNone(credenciales.leer_secreto(""))

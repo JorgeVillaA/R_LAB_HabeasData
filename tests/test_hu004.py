@@ -42,7 +42,7 @@ class TestHU004(PruebaConDoble):
         resumen = ep001.procesar(self.cfg, self.cliente, self.registro)
         con_comentario = {c["IDRADICADO"]: c["Detalle"] for c in self.doble.estado.comentarios}
         self.assertEqual(sorted(resumen["excepciones_negocio_1"]), sorted(con_comentario))
-        self.assertEqual(sorted(con_comentario), ["900002", "900009", "900010", "900011", "900015"])
+        self.assertEqual(sorted(con_comentario), ["900002", "900009", "900010", "900015"])  # 900011: descartado por el filtro
         self.assertIn("SIN CANAL DE CONTACTO", con_comentario["900002"])
         self.assertIn("Excepción de negocio 1", con_comentario["900009"])
 
@@ -81,3 +81,10 @@ class TestHU004(PruebaConDoble):
         self.assertEqual(resumen["estado"], "detenido")
         self.assertEqual(resumen["notificacion"]["asunto"], "Detenido")
         self.assertIn("Ejecución detenida", self.texto_log(self.registro.ruta_errores()))
+
+    def test_sin_numero_de_identificacion_va_a_excepcion_1_cuando_no_se_descarta(self):
+        self.cfg.proceso["SeleccionRadicados"]["DescartarIdentificacionAusente"] = False
+        resumen = ep001.procesar(self.cfg, self.cliente, self.registro)
+        self.assertIn("900011", resumen["excepciones_negocio_1"])
+        con_comentario = {c["IDRADICADO"]: c["Detalle"] for c in self.doble.estado.comentarios}
+        self.assertIn("NUMERO DE IDENTIFICACION", con_comentario["900011"])

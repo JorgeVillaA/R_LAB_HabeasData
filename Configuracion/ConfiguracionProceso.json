@@ -16,9 +16,16 @@
       "UrlToken": "https://qaservices.cisa.gov.co/sso/git_cisa/token",
       "UrlComentario": null,
       "ClientId": "app_dab_habeasdata",
-      "ClientSecretEnv": "ZEUS_CLIENT_SECRET",
+      "CredencialTarget": "R_LAB_HabeasData/Zeus/QA",
       "AutorizacionEnv": "ZEUS_REAL_AUTORIZADO"
     }
+  },
+  "SeleccionRadicados": {
+    "DescartarIdentificacionAusente": true,
+    "CampoIdentificacion": "NOIDENTIFICACIONDELCLIENTE",
+    "LiteralIdentificacionAusente": "NO APORTA",
+    "LoteMaximo": 25,
+    "Orden": "IDRADICADO desc"
   },
   "Negocio": {
     "TipologiaExclusion": "EXCLUSION DE DATOS",

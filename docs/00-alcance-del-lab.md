@@ -144,6 +144,8 @@ Resumen de estado (detalle debajo):
 | C-18 | Resuelta para el lab (confirmar con respuesta real) | HU-003, HU-004 |
 | C-19 | Resuelta por directriz de Villa; **ejecución real bloqueada** | HU-002, HU-003, HU-004 |
 | C-20 | Resuelta con la regla del validador (pendiente de revisión humana) | — |
+| C-21 | Resuelta con el manual (avisar a Villa) | — |
+| C-22 | **Abierta: decide Villa** | HU-002, HU-004 |
 
 ### C-01 — Cantidad de historias del lab — Resuelta
 - **Resolución**: quedan **9 HU** (HU-002, 003, 004, 006, 007, 026a, 008, 010, 011). El plan agrupaba HU-007 y HU-026a en una sola fila de su tabla de alcance porque HU-026a existe solo al servicio de HU-007 (unidad indivisible); eso explica que la tabla del plan tenga una fila menos que HU. El alcance no cambia.
@@ -233,6 +235,15 @@ Resumen de estado (detalle debajo):
 - **Resolución**: el proyecto de Studio sigue llamándose `R_LAB_HabeasData` y la tarea principal es `LabHabeasData`.
 - **Evidencia**: salida de `validate_robot`: «debe ser PascalCase descriptivo, sin guiones bajos ni especiales».
 
+### C-21 — Nombre de un campo en `specs/api-zeus-qa.md` — Resuelta con el manual (avisar a Villa)
+- **Problema**: la spec lista `EVIDENCIADLARESPUESTAENVIADA`; el manual de consumo (2026-10-07) trae `EVIDENCIADELARESPUESTAENVIADA`.
+- **Resolución**: el doble y los fixtures usan el nombre del manual, que es la fuente de la spec. EP-001 no consume ese campo, así que no hay efecto funcional; la spec parece tener un error tipográfico.
+
+### C-22 — El filtro compuesto de la spec frente a HU-004 — **Abierta: decide Villa**
+- **Problema**: `specs/api-zeus-qa.md` manda seleccionar con `... and NOIDENTIFICACIONDELCLIENTE ne 'NO APORTA'`. HU-004 (y el origen) mandan que un radicado sin número de identificación vaya a la excepción de negocio 1 con comentario para Cartera. Con el filtro compuesto esos radicados **nunca llegan al bot** y Cartera no recibe el comentario.
+- **Tratamiento provisional**: se sigue la spec (`SeleccionRadicados.DescartarIdentificacionAusente = true`) y los descartados **no se pierden en silencio**: se cuentan con una consulta complementaria y quedan en el log de auditoría, el reporte y el resumen. Con `false` el flujo vuelve al de HU-004 (cubierto por pruebas y por el escenario EP001-14 del banco).
+- **Decide**: Villa, entre (a) mantener el descarte y asumir que esos radicados se gestionan manualmente fuera del bot, o (b) desactivar el descarte para que HU-004 los comente.
+
 ## 10. Pendientes que este documento no cierra
 
 - C-16: la propuesta de las dos tablas maestras espera la aprobación de Villa; el endpoint real de escritura en Zeus (C-09) sigue con IT CISA.
@@ -259,6 +270,7 @@ Directriz de Villa para la construcción, que se suma a las reglas del lab:
 
 - **Cliente real, doble como fixture.** `Scripts/habeasdata/zeus.py` habla el contrato real: OAuth 2.0 client credentials (`app_dab_habeasdata`, realm `git_cisa`), token de 300 s con renovación ante 401, OData v4 y consulta individual por `IDRADICADO`. El doble de `dobles/zeus_api/` solo alimenta el banco determinista y las pruebas sin red.
 - **Modos.** `ConfiguracionProceso.ZeusApi.Modo`: `fixture` (por defecto, el que usa el banco, declarado en cada resultado) o `real` (QA de CISA).
-- **Salvaguardas del modo real** (bloqueos explícitos, sin llamadas de red): sin `ZEUS_CLIENT_SECRET` o sin `ZEUS_REAL_AUTORIZADO=1` el cliente se detiene; el endpoint de escritura no existe todavía, así que no se inventa uno (C-09).
+- **Contrato.** El cliente implementa `specs/api-zeus-qa.md` (QA, extraído del manual v1.1). Solo consulta: la escritura del comentario vive en `EscrituraComentario`, separada, y en modo real no existe endpoint entregado, así que se reporta como bloqueo y no se simula.
+- **Secreto.** El `client_secret` sale **solo** del Administrador de credenciales de Windows (credencial `R_LAB_HabeasData/Zeus/QA`, nombre declarado en configuración; el valor nunca). Sin él, o sin `ZEUS_REAL_AUTORIZADO=1`, el cliente se detiene antes de cualquier llamada de red.
 - **PII real.** En modo real, logs, reporte y resumen del robot enmascaran nombre, identificación, correos y teléfonos; toda evidencia con radicados reales debe redactarse.
 - **Navegador.** Toda navegación web del robot corre en Chrome: `openbrowser` con `extra:{default:"chrome"}` y `openUrl` aparte; la ejecución se verifica con `run_in_studio` y captura del MCP. Cualquier ejecución en otro navegador o sin ventana es defecto.

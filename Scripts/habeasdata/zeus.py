@@ -5,11 +5,12 @@
 - OData v4 sobre el endpoint: $filter, $select, $first, $orderby; consulta individual por IDRADICADO.
 - Modo `fixture` (por defecto): el mismo cliente contra el doble local, solo para el banco determinista y las
   pruebas reproducibles sin red. Modo `real`: contra qaservices.cisa.gov.co.
-- Salvaguardas del modo real (bloqueos explícitos, nunca se enmascaran): sin client_secret en el entorno no hay
-  llamada; sin autorización de uso declarada no hay llamada; el endpoint de escritura del comentario sigue
-  pendiente con IT de CISA, así que no se inventa uno.
+- El cliente de LECTURA solo consulta. Las escrituras (comentario en Gestión → Detalle, transiciones de estado) son
+  endpoints transaccionales aún sin entregar: viven aparte (`EscrituraComentario`) y nunca se simulan como si existieran.
+- Salvaguardas del modo real (bloqueos explícitos, nunca se enmascaran): el client_secret sale SOLO del Administrador
+  de credenciales de Windows; sin secreto o sin autorización de uso declarada no hay llamada de red.
 - Fallos de conexión o 5xx: NUMERO_REINTENTOS_SISTEMA reintentos con backoff (cada reintento queda en el log).
-- Las credenciales salen del entorno; nunca de JSON, fixtures ni logs.
+- Los secretos no van en código, JSON, fixtures, variables del robot ni logs (en modo fixture, las credenciales del doble salen del entorno).
 """
 import json
 import os
@@ -17,6 +18,8 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+
+from . import credenciales
 
 APLICATIVO = "Zeus API"
 MODOS = ("fixture", "real")
@@ -53,8 +56,9 @@ class ErrorBloqueo(ErrorZeus):
 
 
 class ClienteZeus:
-    def __init__(self, cfg, registro, entorno=None, dormir=time.sleep):
+    def __init__(self, cfg, registro, entorno=None, dormir=time.sleep, lector_secreto=credenciales.leer_secreto):
         self.cfg = cfg
+        self.lector_secreto = lector_secreto
         self.registro = registro
         self.entorno = os.environ if entorno is None else entorno
         self.dormir = dormir
@@ -108,11 +112,11 @@ class ClienteZeus:
     def _credenciales(self):
         if self.modo == "real":
             cliente = self.ajustes["ClientId"]
-            variable = self.ajustes["ClientSecretEnv"]
-            secreto = self.entorno.get(variable)
+            target = self.ajustes["CredencialTarget"]
+            secreto = self.lector_secreto(target)
             if not secreto:
                 raise ErrorBloqueo(
-                    f"BLOQUEO: falta el client_secret de Keycloak (variable {variable}); se pide por canal seguro, nunca en el repo")
+                    f"BLOQUEO: falta el client_secret de Keycloak en el Administrador de credenciales de Windows (credencial {target}); se pide por canal seguro, nunca en el repo")
             return cliente, secreto
         cliente = self.entorno.get(self.ajustes["ClientIdEnv"])
         secreto = self.entorno.get(self.ajustes["ClientSecretEnv"])
@@ -184,10 +188,18 @@ class ClienteZeus:
         valores = self._autorizada("GET", self.url_radicado(id_radicado))["value"]
         return valores[0] if valores else None
 
+
+class EscrituraComentario:
+    """Comentario en Gestión → Detalle. Contrato SUPUESTO del lab, solo contra el doble (C-09): en modo real no
+    existe endpoint entregado y se reporta como bloqueo en lugar de simularlo."""
+
+    def __init__(self, cliente):
+        self.cliente = cliente
+
     def comentar(self, id_radicado, detalle):
-        url = self.ajustes["UrlComentario"]
+        url = self.cliente.ajustes["UrlComentario"]
         if not url:
             raise ErrorBloqueo(
                 "BLOQUEO: el endpoint de escritura del comentario (Gestión → Detalle) no está entregado por IT de CISA (C-09)")
         cuerpo = json.dumps({"IDRADICADO": str(id_radicado), "Detalle": detalle}, ensure_ascii=False).encode("utf-8")
-        return self._autorizada("POST", url, cuerpo, "application/json")
+        return self.cliente._autorizada("POST", url, cuerpo, "application/json")

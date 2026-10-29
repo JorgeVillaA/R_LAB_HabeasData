@@ -14,7 +14,7 @@ import sys
 from .config import cargar
 from .redaccion import resumen_seguro
 from .registro import Registro
-from .zeus import (APLICATIVO, ClienteZeus, ErrorBloqueo, ErrorNoAutenticado, ErrorNoDisponible,
+from .zeus import (APLICATIVO, ClienteZeus, EscrituraComentario, ErrorBloqueo, ErrorNoAutenticado, ErrorNoDisponible,
                    ErrorNoEncontrado, ErrorPermiso, ErrorSolicitud, ErrorZeus)
 
 MODULO = "EP-001"
@@ -90,12 +90,23 @@ def validar_completitud(caso):
 
 # ---------- HU-002 ----------
 def filtrar_exclusion(cliente, cfg, registro):
-    negocio = cfg.proceso["Negocio"]
-    filtro = f"{negocio['CampoTipologia']} eq '{negocio['TipologiaExclusion']}'"
+    """HU-002. Selección según el contrato QA: tipología de exclusión, descartando identificación ausente ('NO APORTA'),
+    por lotes ($first) y en orden ($orderby). Los descartados se cuentan y se reportan: no se pierden en silencio."""
+    negocio, seleccion = cfg.proceso["Negocio"], cfg.proceso["SeleccionRadicados"]
+    base = f"{negocio['CampoTipologia']} eq '{negocio['TipologiaExclusion']}'"
+    campo_id, literal = seleccion["CampoIdentificacion"], seleccion["LiteralIdentificacionAusente"]
+    descartar = seleccion["DescartarIdentificacionAusente"]
+    filtro = f"{base} and {campo_id} ne '{literal}'" if descartar else base
     try:
-        filas = cliente.consultar(filtro=filtro, select=("IDRADICADO", negocio["CampoTipologia"]))
+        filas = cliente.consultar(filtro=filtro, select=("IDRADICADO", negocio["CampoTipologia"]),
+                                  first=seleccion["LoteMaximo"], orderby=seleccion["Orden"])
+        descartados = []
+        if descartar:
+            descartados = [str(f["IDRADICADO"]) for f in cliente.consultar(
+                filtro=f"{base} and {campo_id} eq '{literal}'", select=("IDRADICADO",))]
         if filas:
-            return {"ids": [str(f["IDRADICADO"]) for f in filas], "motivo_sin_casos": None, "reintento": None}
+            return {"ids": [str(f["IDRADICADO"]) for f in filas], "descartados": descartados,
+                    "motivo_sin_casos": None, "reintento": None}
         total = len(cliente.consultar(select=("IDRADICADO",)))
     except ErrorSolicitud as error:
         raise DetenerEjecucion(f"filtro o campo no reconocido por la API: {error}") from error
@@ -105,12 +116,12 @@ def filtrar_exclusion(cliente, cfg, registro):
         raise DetenerEjecucion(f"sin token válido para la API de Zeus: {error}") from error
     except (ErrorPermiso, ErrorNoDisponible, ErrorNoEncontrado) as error:
         raise DetenerEjecucion(f"bandeja inaccesible: {error}") from error
-    motivo = "tipologia_ausente" if total else "bandeja_vacia"
+    motivo = "solo_descartados" if descartados else ("tipologia_ausente" if total else "bandeja_vacia")
     cadencia = cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]
     registro.auditoria(f"0 casos ({motivo}); radicados en la consulta general: {total}; "
                        f"reintento en {cadencia['MinutosEntreReintentos']} min", MODULO)
     registro.reporte(None, None, "0 casos", None, motivo)
-    return {"ids": [], "motivo_sin_casos": motivo, "reintento": dict(cadencia)}
+    return {"ids": [], "descartados": descartados, "motivo_sin_casos": motivo, "reintento": dict(cadencia)}
 
 
 # ---------- HU-003 ----------
@@ -125,23 +136,25 @@ def extraer(cliente, cfg, id_radicado):
 
 
 # ---------- HU-004 ----------
-def registrar_excepcion_negocio_1(cliente, caso, motivos):
+def registrar_excepcion_negocio_1(escritura, caso, motivos):
     detalle = "Excepción de negocio 1 (datos incompletos), revisión manual de Cartera. Motivo: " + ", ".join(motivos)
     try:
-        cliente.comentar(caso["radicado_hijo"], detalle)
+        escritura.comentar(caso["radicado_hijo"], detalle)
     except ErrorZeus as error:
         raise ExcepcionSistemaCaso(f"no se pudo registrar el comentario del radicado {caso['radicado_hijo']}: {error}") from error
 
 
 # ---------- orquestación ----------
-def procesar(cfg=None, cliente=None, registro=None):
+def procesar(cfg=None, cliente=None, registro=None, escritura=None):
     cfg = cfg or cargar()
     registro = registro or Registro(cfg)
     cliente = cliente or ClienteZeus(cfg, registro)
+    escritura = escritura or EscrituraComentario(cliente)
     registro.asegurar_archivos()
     registro.auditoria("Inicio de ejecución EP-001", MODULO)
-    resumen = {"estado": "ok", "avanzan": [], "excepciones_negocio_1": [], "excepciones_sistema": [],
-               "casos": {}, "motivo_sin_casos": None, "reintento": None, "notificacion": None}
+    resumen = {"estado": "ok", "modo": cliente.modo, "avanzan": [], "excepciones_negocio_1": [],
+               "excepciones_sistema": [], "descartados_identificacion_ausente": [], "casos": {},
+               "motivo_sin_casos": None, "reintento": None, "notificacion": None}
     registro.auditoria("Ingreso a la API de Zeus", APLICATIVO)
     try:
         lista = filtrar_exclusion(cliente, cfg, registro)
@@ -153,6 +166,10 @@ def procesar(cfg=None, cliente=None, registro=None):
         registro.auditoria("Fin de ejecución EP-001 (detenida)", MODULO)
         return resumen
     resumen["motivo_sin_casos"], resumen["reintento"] = lista["motivo_sin_casos"], lista["reintento"]
+    resumen["descartados_identificacion_ausente"] = lista["descartados"]
+    for id_descartado in lista["descartados"]:
+        registro.auditoria(f"Radicado {id_descartado} descartado por identificación ausente (sin gestión del bot)", MODULO)
+        registro.reporte(id_descartado, None, "descartado: identificación ausente", None, "sin gestión del bot")
     registro.auditoria(f"{len(lista['ids'])} radicados de exclusión identificados", MODULO)
     for id_radicado in lista["ids"]:
         registro.auditoria(f"Inicio del radicado {id_radicado}", MODULO)
@@ -164,7 +181,7 @@ def procesar(cfg=None, cliente=None, registro=None):
                 resumen["avanzan"].append(id_radicado)
                 registro.reporte(id_radicado, caso["radicado_padre"], "avanza a validación de deuda", None, None)
             else:
-                registrar_excepcion_negocio_1(cliente, caso, veredicto["motivos"])
+                registrar_excepcion_negocio_1(escritura, caso, veredicto["motivos"])
                 resumen["excepciones_negocio_1"].append(id_radicado)
                 registro.reporte(id_radicado, caso["radicado_padre"], "excepción de negocio 1", "1",
                                  ", ".join(veredicto["motivos"]))

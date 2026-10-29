@@ -6,11 +6,12 @@
       "HU-002 filtro con casos",
       "HU-003 extracción",
       "HU-004 completo avanza",
-      "HU-004 excepción 1 con comentario"
+      "HU-004 excepción 1 con comentario",
+      "HU-002 descartados por identificación ausente (filtro compuesto)"
     ],
     "paso": true,
     "fallos": [],
-    "huella": "c7da79f74e18c2d8bd41c5e66fc366fb0873dcb8b49821d2adba85d98213dbb0"
+    "huella": "35dbcda2847154ba891f57c5965bced470acd1f347b19f5446f985cbf7e016c2"
   },
   {
     "id": "EP001-02-bandeja-vacia",
@@ -20,7 +21,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "641e03a5a8dc3454c87a018fbb14cfa293a3dfc1786816acbd8de235c5591e81"
+    "huella": "260fc48959ac8b09c02afddc88cd59f5974a57775e8bf67437f33304c8c81b8b"
   },
   {
     "id": "EP001-03-tipologia-ausente",
@@ -30,7 +31,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "7f37351791bba8edd9a6edf516f6f3bab9a4207e868f264c4862ec0b00ba3a41"
+    "huella": "02e2f7c1c93496ba088ce2a56063d23317232bd3a027d8f1037bc2d322a3b5a7"
   },
   {
     "id": "EP001-04-filtro-no-reconocido",
@@ -40,7 +41,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "7738b9128b88d273d680a2cb4f2f0061656e3de0aa02faa277844c06bcd55582"
+    "huella": "c711663b7bb5fe6e8a7302af78bb6239f9d9751b553cd60a3a8ca5f48f11e7c5"
   },
   {
     "id": "EP001-05-token-vencido-persistente",
@@ -50,7 +51,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "d9d88fec82283a02aaad4dcedde45ad69c808731192e3f02265ed65664d5de9b"
+    "huella": "eb585a47335268bc782dccadcdde14648982335976357d9af0afa740aa0af163"
   },
   {
     "id": "EP001-06-sin-roles-403",
@@ -60,7 +61,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "de449e226c8701f896e90920b68b95ba4f0c6e5ba2e1c649ab606c14de411a37"
+    "huella": "6ad87322f9c52272a77f0a8f9a4d6335f47035aa0494cf74ff9763185fc884a7"
   },
   {
     "id": "EP001-07-api-no-disponible",
@@ -70,7 +71,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "1383e4bc6e8d1078bbaba69affc6bdd5567507886b7bb0164915fa2410c47d63"
+    "huella": "5c975f17273ef23df7f3525cd62e3b67290137c8d7b495921c765684b1ed3537"
   },
   {
     "id": "EP001-08-radicado-no-legible-400",
@@ -80,7 +81,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "747d196c9c3aaeb290b3a1ff639fc568703953af5f4c55dad4a27c3fc0b0939f"
+    "huella": "b55e3c6114099b205befd37d563c544b69fc4ddc9efc530ffff7a186b03bd66a"
   },
   {
     "id": "EP001-09-radicado-no-encontrado-404",
@@ -90,7 +91,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "9eda07978dbb0eb8a638a4d51d064d59e06c1a1a98e78482c2252cd345d87dfd"
+    "huella": "c115553881678f4e478465f9f228e9112a6450eb8cf9fca90defc97b51d19f5f"
   },
   {
     "id": "EP001-10-comentario-rechazado-400",
@@ -100,7 +101,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "b922f26ac63f058c305d038866643d124fc90fa701a80ec3b2e9bfdcade8f7df"
+    "huella": "317ccf8eca60b00c0c5085db99a94cfcd0988e32c4578c42ff04dc8fb1f4c9d4"
   },
   {
     "id": "EP001-11-comentario-sin-autorizacion-401",
@@ -110,7 +111,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "4b2c6788ca9795451e23a202ab5eedd009a3852760516751dc7870b9fa041035"
+    "huella": "44d0f278d9f10b084dfcf99e4593d3606c0909c447e6c8d4d70e6f813e5db285"
   },
   {
     "id": "EP001-12-solo-casos-completos",
@@ -120,7 +121,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "df3961443ab9a77a77c800472f9af6e51d65ea62c1817f2c66492cb24bf0d3f6"
+    "huella": "189ea90e85d423dcf0358664e3b1930b6623a03a0c3b7d6f4272027dd41425d3"
   },
   {
     "id": "EP001-13-todos-incompletos",
@@ -130,6 +131,37 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "9601810d44567239090f9bbc49ea9a13fcea74c39230a1aede2b1085f0fd4c2d"
+    "huella": "b608fdd0c0e22ff517978cf19f2fec35ee2511885fc9f49e8b00ad2144d6c533"
+  },
+  {
+    "id": "EP001-14-sin-descartar-identificacion-ausente",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 filtro simple",
+      "HU-004 sin número de identificación → excepción 1 con comentario"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "02b2476920429ab1b9f7fe0905d7605ef770ae754a75192b6000761583f9eecf"
+  },
+  {
+    "id": "EP001-15-lote-con-first-y-orderby",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 $first y $orderby=IDRADICADO desc"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "a29fee1ea66589f997e0ce7b69708bae3a2814ef1d4fca4db2115a1c83f33939"
+  },
+  {
+    "id": "EP001-16-solo-descartados",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 colección vacía por filtro compuesto con descartados"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "11478d6aa42319ac23e0eae42f23f656bb4a43ee2461f98534ada3628c88d9aa"
   }
 ]

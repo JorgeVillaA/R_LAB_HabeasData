@@ -101,6 +101,8 @@ def verificar(escenario, resumen, comentarios, archivos):
         igual("motivo_sin_casos", resumen["motivo_sin_casos"], espera["motivo_sin_casos"])
     if "comentarios" in espera:
         igual("comentarios", comentarios, sorted(espera["comentarios"]))
+    if "descartados" in espera:
+        igual("descartados", sorted(resumen["descartados_identificacion_ausente"]), sorted(espera["descartados"]))
     if "reintento_minutos" in espera:
         igual("reintento_minutos", (resumen["reintento"] or {}).get("MinutosEntreReintentos"), espera["reintento_minutos"])
     if "notificacion_asunto" in espera:

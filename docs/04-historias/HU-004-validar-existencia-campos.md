@@ -77,6 +77,8 @@ _Contexto_: Control de completitud (Capability 1). Solo valida existencia, no fo
 
 En modo real el comentario de la excepción de negocio 1 **no se puede escribir**: el endpoint de escritura sigue pendiente con IT de CISA (C-09); el cliente lo reporta como bloqueo y el caso queda como excepción de sistema.
 
+**Alcance frente al filtro de HU-002 (C-22)**: con el filtro compuesto del contrato QA, un radicado cuyo número de identificación es «NO APORTA» no llega a esta historia y no recibe comentario; la decisión de mantenerlo o no es de Villa. El caso «sin número de identificación» se conserva en las pruebas con el descarte desactivado.
+
 **Prioridad y complejidad**: se copian del origen (Must, S); la sustitución local no las cambia.
 
 **Procedencia**: HU de origen `HU-004` (proyecto OP798698, cliente CISA); aprobada por CISA en el correo de Amelia Escobar del 09/10/2026 («Entrega Oficial Documentación funcional»; C-08, resuelta); la sesión de alineación del 26–27/10/2026 solo añadió el criterio de varios valores separados por "/" (Temas 7-9). El literal "No aporta" y la excepción para ciudadanos sin identificación vienen del origen (confirmación del 2026-10-20).
