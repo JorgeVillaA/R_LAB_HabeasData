@@ -54,17 +54,14 @@ def clasificar_telefono(valor, cfg):
     return "sin_clasificar"
 
 
-def normalizar_caso(registro_zeus, cfg):
-    """HU-003: datos del solicitante tal cual vienen (sin normalizar nombre), valores separados y clasificados."""
+def preparar_campos(registro_zeus, cfg):
+    """HU-003 (parseo): ausentes a None, valores de cada canal separados por «/». El nombre se conserva tal cual."""
     def limpio(campo):
         valor = registro_zeus.get(campo)
         return None if es_ausente(valor, cfg) else str(valor).strip()
 
     hijo = str(registro_zeus["IDRADICADO"])
     padre = limpio("RadicadoPadre")
-    correos = separar_valores(registro_zeus.get("CORREOELECTRONICOPARAEXCLUSION"), cfg)
-    telefonos = [{"valor": v, "clase": clasificar_telefono(v, cfg)}
-                 for v in separar_valores(registro_zeus.get("TELEFONODECONTACTO"), cfg)]
     return {
         "radicado_hijo": hijo,
         "radicado_padre": padre,
@@ -73,11 +70,23 @@ def normalizar_caso(registro_zeus, cfg):
         "tipo_identificacion": limpio("TIPODEIDENTIFICACION"),
         "numero_identificacion": limpio("NOIDENTIFICACIONDELCLIENTE"),
         "fecha_recepcion": limpio("FECHADERECEPCION"),
-        "correos": correos,
-        "telefonos": telefonos,
-        "canal_correo": bool(correos),
-        "canal_telefono": bool(telefonos),
+        "correos": separar_valores(registro_zeus.get("CORREOELECTRONICOPARAEXCLUSION"), cfg),
+        "telefonos_valores": separar_valores(registro_zeus.get("TELEFONODECONTACTO"), cfg),
     }
+
+
+def clasificar_telefonos(preparado, cfg):
+    """HU-003 (clasificación): cada teléfono por dígitos; deja los indicadores de canal presente."""
+    caso = {clave: valor for clave, valor in preparado.items() if clave != "telefonos_valores"}
+    caso["telefonos"] = [{"valor": v, "clase": clasificar_telefono(v, cfg)} for v in preparado["telefonos_valores"]]
+    caso["canal_correo"] = bool(caso["correos"])
+    caso["canal_telefono"] = bool(caso["telefonos"])
+    return caso
+
+
+def normalizar_caso(registro_zeus, cfg):
+    """HU-003: datos del solicitante tal cual vienen (sin normalizar nombre), valores separados y clasificados."""
+    return clasificar_telefonos(preparar_campos(registro_zeus, cfg), cfg)
 
 
 def validar_completitud(caso):
@@ -89,6 +98,32 @@ def validar_completitud(caso):
 
 
 # ---------- HU-002 ----------
+def mensaje_detencion(error):
+    """Motivo con el que una falla de la consulta detiene la corrida (punto de control crítico)."""
+    if isinstance(error, ErrorSolicitud):
+        return f"filtro o campo no reconocido por la API: {error}"
+    if isinstance(error, ErrorBloqueo):
+        return str(error)
+    if isinstance(error, ErrorNoAutenticado):
+        return f"sin token válido para la API de Zeus: {error}"
+    return f"bandeja inaccesible: {error}"
+
+
+def registrar_sin_casos(registro, cfg, motivo, total):
+    """0 casos: auditoría, reporte y cadencia de reintento (parámetro, no lógica)."""
+    cadencia = cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]
+    registro.auditoria(f"0 casos ({motivo}); radicados en la consulta general: {total}; "
+                       f"reintento en {cadencia['MinutosEntreReintentos']} min", MODULO)
+    registro.reporte(None, None, "0 casos", None, motivo)
+    return dict(cadencia)
+
+
+def registrar_descartados(registro, ids):
+    for id_descartado in ids:
+        registro.auditoria(f"Radicado {id_descartado} descartado por identificación ausente (sin gestión del bot)", MODULO)
+        registro.reporte(id_descartado, None, "descartado: identificación ausente", None, "sin gestión del bot")
+
+
 def filtrar_exclusion(cliente, cfg, registro):
     """HU-002. Selección según el contrato QA: tipología de exclusión, descartando identificación ausente ('NO APORTA'),
     por lotes ($first) y en orden ($orderby). Los descartados se cuentan y se reportan: no se pierden en silencio."""
@@ -108,31 +143,26 @@ def filtrar_exclusion(cliente, cfg, registro):
             return {"ids": [str(f["IDRADICADO"]) for f in filas], "descartados": descartados,
                     "motivo_sin_casos": None, "reintento": None}
         total = len(cliente.consultar(select=("IDRADICADO",)))
-    except ErrorSolicitud as error:
-        raise DetenerEjecucion(f"filtro o campo no reconocido por la API: {error}") from error
-    except ErrorBloqueo as error:
-        raise DetenerEjecucion(str(error)) from error
-    except ErrorNoAutenticado as error:
-        raise DetenerEjecucion(f"sin token válido para la API de Zeus: {error}") from error
-    except (ErrorPermiso, ErrorNoDisponible, ErrorNoEncontrado) as error:
-        raise DetenerEjecucion(f"bandeja inaccesible: {error}") from error
+    except (ErrorSolicitud, ErrorBloqueo, ErrorNoAutenticado, ErrorPermiso, ErrorNoDisponible, ErrorNoEncontrado) as error:
+        raise DetenerEjecucion(mensaje_detencion(error)) from error
     motivo = "solo_descartados" if descartados else ("tipologia_ausente" if total else "bandeja_vacia")
-    cadencia = cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]
-    registro.auditoria(f"0 casos ({motivo}); radicados en la consulta general: {total}; "
-                       f"reintento en {cadencia['MinutosEntreReintentos']} min", MODULO)
-    registro.reporte(None, None, "0 casos", None, motivo)
-    return {"ids": [], "descartados": descartados, "motivo_sin_casos": motivo, "reintento": dict(cadencia)}
+    reintento = registrar_sin_casos(registro, cfg, motivo, total)
+    return {"ids": [], "descartados": descartados, "motivo_sin_casos": motivo, "reintento": reintento}
 
 
 # ---------- HU-003 ----------
-def extraer(cliente, cfg, id_radicado):
+def leer_crudo(cliente, id_radicado):
     try:
         crudo = cliente.radicado(id_radicado)
     except (ErrorSolicitud, ErrorNoEncontrado, ErrorNoDisponible, ErrorPermiso, ErrorZeus) as error:
         raise ExcepcionSistemaCaso(f"no se pudo leer el radicado {id_radicado}: {error}") from error
     if crudo is None:
         raise ExcepcionSistemaCaso(f"no se pudo leer el radicado {id_radicado}: respuesta vacía")
-    return normalizar_caso(crudo, cfg)
+    return crudo
+
+
+def extraer(cliente, cfg, id_radicado):
+    return normalizar_caso(leer_crudo(cliente, id_radicado), cfg)
 
 
 # ---------- HU-004 ----------
@@ -167,9 +197,7 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None):
         return resumen
     resumen["motivo_sin_casos"], resumen["reintento"] = lista["motivo_sin_casos"], lista["reintento"]
     resumen["descartados_identificacion_ausente"] = lista["descartados"]
-    for id_descartado in lista["descartados"]:
-        registro.auditoria(f"Radicado {id_descartado} descartado por identificación ausente (sin gestión del bot)", MODULO)
-        registro.reporte(id_descartado, None, "descartado: identificación ausente", None, "sin gestión del bot")
+    registrar_descartados(registro, lista["descartados"])
     registro.auditoria(f"{len(lista['ids'])} radicados de exclusión identificados", MODULO)
     for id_radicado in lista["ids"]:
         registro.auditoria(f"Inicio del radicado {id_radicado}", MODULO)

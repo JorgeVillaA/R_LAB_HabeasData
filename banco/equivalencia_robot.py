@@ -1,0 +1,163 @@
+"""Equivalencia del robot de Studio con el orquestador Python, escenario por escenario.
+
+Corre cada escenario de banco/escenarios/<épica>.json dos veces contra el MISMO doble (fixture offline): una con el
+orquestador Python (`ep001.procesar`, el que usan el banco y las pruebas) y otra con el robot LabHabeasData ejecutado en
+Studio (`run_in_studio`). Compara estado, listas por resultado, descartados, motivo sin casos, aviso y comentarios.
+
+Requisitos de entorno (sin rutas fijas en el código):
+  RPA_AIO_SERVER            ruta de server.mjs del MCP rpa-aio
+  RPA_AIO_PROYECTO          carpeta del proyecto de Studio (R_LAB_HabeasData)
+  ZEUS_DOBLE_CLIENT_ID / ZEUS_DOBLE_CLIENT_SECRET   los mismos valores que tiene el proceso de Studio en su entorno
+Uso:  python banco/equivalencia_robot.py EP-001
+"""
+import ast
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+for carpeta in (REPO, REPO / "Scripts", REPO / "dobles" / "zeus_api", REPO / "banco"):
+    if str(carpeta) not in sys.path:
+        sys.path.insert(0, str(carpeta))
+
+from correr_matriz import mezclar, radicados_de  # noqa: E402
+from habeasdata import ep001  # noqa: E402
+from habeasdata.config import cargar  # noqa: E402
+from dobles.zeus_api.servidor import DobleZeus  # noqa: E402
+
+ESCRIBIR = ("token_ttl", "denegar", "fallas_radicado", "falla_comentario")
+
+
+def mcp(herramienta, argumentos, espera=300):
+    """Una llamada al MCP rpa-aio por stdio (JSON-RPC, una línea por mensaje)."""
+    proceso = subprocess.Popen(["node", os.environ["RPA_AIO_SERVER"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               stderr=subprocess.DEVNULL, text=True, encoding="utf-8")
+
+    def enviar(mensaje):
+        proceso.stdin.write(json.dumps(mensaje) + "\n")
+        proceso.stdin.flush()
+
+    def leer(identificador):
+        for linea in proceso.stdout:
+            if linea.strip():
+                mensaje = json.loads(linea)
+                if mensaje.get("id") == identificador:
+                    return mensaje.get("result") or mensaje.get("error")
+        raise RuntimeError("el MCP cerró sin responder")
+
+    try:
+        enviar({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
+            "protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "equivalencia", "version": "1"}}})
+        leer(1)
+        enviar({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        enviar({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": herramienta, "arguments": argumentos}})
+        resultado = leer(2)
+    finally:
+        proceso.kill()
+    texto = "".join(c.get("text", "") for c in resultado.get("content", []))
+    if resultado.get("isError"):
+        raise RuntimeError(f"{herramienta}: {texto[:300]}")
+    return json.loads(texto)
+
+
+def preparar_raiz(puerto, cambios_proceso):
+    raiz = Path(tempfile.mkdtemp(prefix="equiv_hd_"))
+    shutil.copytree(REPO / "Configuracion", raiz / "Configuracion")
+    ruta = raiz / "Configuracion" / "ConfiguracionProceso.json"
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    for clave in ("UrlBase", "UrlToken", "UrlComentario"):
+        datos["ZeusApi"]["Fixture"][clave] = datos["ZeusApi"]["Fixture"][clave].replace("8765", str(puerto))
+    datos["ZeusApi"]["BackoffSegundos"] = [0]
+    mezclar(datos, cambios_proceso)
+    ruta.write_text(json.dumps(datos), encoding="utf-8")
+    return raiz
+
+
+def ejecutar_robot(raiz):
+    robot = json.loads((REPO / "Robots" / "LabHabeasData.robot.json").read_text(encoding="utf-8"))
+    for variable in robot["vars"]:
+        if variable["name"] == "glbStrRutaRaiz":
+            variable["data"] = raiz.as_posix()
+    proyecto = os.environ["RPA_AIO_PROYECTO"]
+    mcp("write_robot", {"project": proyecto, "perfil": "trycore", "robot": robot})
+    resultado = mcp("run_in_studio", {"project": proyecto, "robot": robot["name"], "confirmar": True, "max_pasos": 50000})
+    if resultado.get("error"):
+        raise RuntimeError(f"el robot falló: {resultado['error']}")
+    variables = {v["nombre"]: v["valor"] for v in resultado["variables"]}
+    # El MCP recorta cada variable a 120 caracteres: se comparan las variables del robot una por una, no el resumen JSON.
+    def lista(nombre):
+        return [str(x) for x in ast.literal_eval(variables[nombre])]
+
+    motivo = variables["glbStrMotivoSinCasos"]
+    resumen = {
+        "estado": variables["glbStrEstado"],
+        "avanzan": lista("glbArrAvanzan"),
+        "excepciones_negocio_1": lista("glbArrExcepcionesNegocioUno"),
+        "excepciones_sistema": lista("glbArrExcepcionesSistema"),
+        "descartados_identificacion_ausente": lista("glbArrIdsDescartados"),
+        "motivo_sin_casos": None if motivo in ("None", "") else motivo,
+        "notificacion": {"asunto": variables["glbStrAsuntoAviso"]} if variables["glbStrAsuntoAviso"] else None,
+    }
+    return resumen, resultado["pasos"], resultado["errores_capturados"]
+
+
+def vista(resumen, comentarios):
+    return {
+        "estado": resumen["estado"],
+        "avanzan": resumen["avanzan"],
+        "excepciones_negocio_1": resumen["excepciones_negocio_1"],
+        "excepciones_sistema": resumen["excepciones_sistema"],
+        "descartados": resumen["descartados_identificacion_ausente"],
+        "motivo_sin_casos": resumen["motivo_sin_casos"],
+        "aviso": (resumen.get("notificacion") or {}).get("asunto"),
+        "comentarios": sorted(comentarios),
+    }
+
+
+def escenario(esc):
+    spec = esc["doble"]
+    doble = DobleZeus((os.environ["ZEUS_DOBLE_CLIENT_ID"], os.environ["ZEUS_DOBLE_CLIENT_SECRET"]),
+                      radicados_de(spec["radicados"])).iniciar()
+    puerto = doble.puerto
+    raiz = preparar_raiz(puerto, esc.get("proceso", {}))
+    try:
+        doble.estado.configurar({k: v for k, v in spec.items() if k in ESCRIBIR})
+        if spec.get("apagado"):
+            doble.detener()
+        py = ep001.procesar(cargar(raiz))
+        vista_py = vista(py, [c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
+        if not spec.get("apagado"):
+            doble.estado.configurar({"reiniciar": True})
+        resumen_robot, pasos, capturados = ejecutar_robot(raiz)
+        vista_robot = vista(resumen_robot, [c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
+        return vista_py, vista_robot, pasos, capturados
+    finally:
+        if not spec.get("apagado"):
+            doble.detener()
+        shutil.rmtree(raiz, ignore_errors=True)
+
+
+def principal():
+    epica = sys.argv[1]
+    escenarios = json.loads((REPO / "banco" / "escenarios" / f"{epica}.json").read_text(encoding="utf-8"))
+    resultados = []
+    for esc in escenarios:
+        vista_py, vista_robot, pasos, capturados = escenario(esc)
+        iguales = vista_py == vista_robot and capturados == 0
+        diferencias = {k: (vista_py[k], vista_robot[k]) for k in vista_py if vista_py[k] != vista_robot[k]}
+        resultados.append({"id": esc["id"], "equivalente": iguales, "pasos_robot": pasos, "errores_capturados": capturados,
+                           "diferencias": diferencias})
+        print(("IGUAL " if iguales else "DISTINTO"), esc["id"], f"pasos={pasos}", diferencias or "")
+    (REPO / "banco" / "resultados" / f"{epica}_equivalencia_robot.json").write_text(
+        json.dumps(resultados, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    todos = all(r["equivalente"] for r in resultados)
+    print(f"escenarios: {len(resultados)}  robot de Studio equivalente al orquestador Python en todos: {todos}")
+    return 0 if todos else 1
+
+
+if __name__ == "__main__":
+    sys.exit(principal())

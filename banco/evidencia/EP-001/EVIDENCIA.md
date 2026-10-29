@@ -2,6 +2,26 @@
 
 Fecha de las corridas: 2026-10-29. Datos 100 % sintéticos (fixtures de `fixtures/zeus/radicados.json`); sin PII.
 
+## Corrección de Villa (bloqueante para DoD): el flujo debe ser explicable a cliente
+
+La primera versión de `LabHabeasData` tenía 2 comandos raíz (`trycatch` + `log_message`) y todo el flujo dentro de un `execScriptPython` que importaba
+`Scripts/habeasdata/*.py`: una caja negra. **No cumplía.** Se refactorizó así:
+
+- **Estructura** (como `MainMonitoreoMarcas`): `trycatch` «Control de ejecución» → grupo `HU002HU003HU004 - Inicializar el Asistente` → `trycatch`
+  «Proceso principal» → grupos `HU002 - Filtrar radicados de Exclusión de Datos`, `HU003 - Leer datos paramétricos` y `HU004 - Validar campos
+  obligatorios` (los dos últimos dentro del `for` por radicado) → grupo `HU002HU003HU004 - Cierre y registro de ejecución`.
+- **95 comandos visibles**: 47 asignaciones, 19 decisiones (`evaluateIf`), 1 bucle, 5 grupos, 2 `trycatch`, 20 pasos de componente y 1 log; cada bloque lleva
+  su descripción (§6.1). Árbol completo en `flujo_LabHabeasData.md`.
+- **Qué quedó en Python** (`habeasdata.pasos`, una llamada por bloque): E/S con secretos (token con el `client_secret` del Administrador de credenciales y
+  consultas con Bearer), parseo y clasificación puros, y escritura de logs y reporte. Ningún bloque contiene el flujo.
+- **Por qué el HTTP no es el `request` nativo**: se probó y el comando escribe cabeceras y cuerpo en el log de Studio (apareció el `client_secret` de
+  prueba), lo que viola R-04 y R-11. Con el secreto real sería una fuga.
+- **Equivalencia**: `banco/equivalencia_robot.py` corre cada escenario del banco con el orquestador Python y con el robot en Studio contra el mismo
+  fixture: **16 de 16 equivalentes** (`banco/resultados/EP-001_equivalencia_robot.json`).
+- **Banco y pruebas sin cambios**: las 16 huellas de la matriz son idénticas a las previas al refactor, en 2 corridas.
+- **Pruebas de legibilidad** (`tests/test_robot_legible.py`): 9 de sus 12 comprobaciones rechazan el robot anterior.
+- **Chrome**: los bloques web siguen en Chrome (`openbrowser` con `extra:{default:"chrome"}` y `openUrl` aparte, en `VerificacionVisualDobles`); `LabHabeasData` no navega.
+
 ## Alcance de lo verificado
 
 - **Modo FIXTURE.** Todo lo de abajo corrió contra el doble offline de la API de Zeus, que solo sirve de fixture del banco
@@ -23,12 +43,13 @@ Fecha de las corridas: 2026-10-29. Datos 100 % sintéticos (fixtures de `fixture
 
 | Verificación | Resultado |
 |---|---|
-| `python -m unittest discover -s tests -t .` | 103 pruebas, OK (incluye una credencial temporal real en el Administrador de credenciales) |
+| `python -m unittest discover -s tests -t .` | 126 pruebas, OK (incluye una credencial temporal real en el Administrador de credenciales) |
 | `python banco/correr_matriz.py EP-001 --corridas 2` | 16 escenarios; todos pasan en las 2 corridas; huellas idénticas (determinismo); modo FIXTURE declarado |
-| `validate_robot` `perfil:"trycore"` — robot `LabHabeasData` | `ok: true`, 0 errores, 0 avisos |
+| `validate_robot` `perfil:"trycore"` — robot `LabHabeasData` (95 comandos) | `ok: true`, 0 errores, 0 avisos |
 | `validate_robot` `perfil:"trycore"` — robot `VerificacionVisualDobles` | `ok: true`, 0 errores, 0 avisos |
-| `run_in_studio` robot `LabHabeasData` | `EP-001 modo=fixture estado=ok avanzan=10 excepciones_negocio_1=4 excepciones_sistema=0`; 0 errores capturados (el 5.º caso, con identificación «NO APORTA», lo descarta el filtro compuesto; C-22) |
+| `run_in_studio` robot `LabHabeasData` (300 pasos) | `EP-001 modo=fixture estado=ok avanzan=10 excepciones_negocio_1=4 excepciones_sistema=0`; 0 errores capturados (el 5.º caso, con identificación «NO APORTA», lo descarta el filtro compuesto; C-22) |
 | `run_in_studio` robot `VerificacionVisualDobles` | 7 pasos ok; `Chrome: titulo=Doble local de la API de Zeus total=16` |
+| `python banco/equivalencia_robot.py EP-001` | 16 escenarios: robot de Studio equivalente al orquestador Python en todos |
 | Captura con el MCP `rpa-aio` | `zeus_doble_chrome_mcp.png`: Chrome (aviso «software automatizado… está controlando Chrome» = Studio) con el doble renderizado |
 | Mutación (9 mutantes sobre reglas de negocio y contrato) | 9 de 9 detectados por las pruebas (corrida previa a la refactorización de modos) |
 

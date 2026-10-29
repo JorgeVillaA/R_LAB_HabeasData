@@ -1,6 +1,6 @@
 {
  "name": "LabHabeasData",
- "description": "Tarea principal EP-001 (HU-002, HU-003, HU-004) contra el doble local de la API de Zeus. Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
+ "description": "Tarea principal EP-001: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos y HU-004 validar campos obligatorios, contra la API de Zeus (QA) o su fixture offline. Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
  "vars": [
   {
    "name": "glbBlnEstadoSistema",
@@ -29,17 +29,725 @@
   {
    "name": "glbStrResumen",
    "data": ""
+  },
+  {
+   "name": "glbStrEstado",
+   "data": "ok"
+  },
+  {
+   "name": "glbStrMotivoSinCasos",
+   "data": ""
+  },
+  {
+   "name": "glbStrMotivoDetencion",
+   "data": ""
+  },
+  {
+   "name": "glbDicInicio",
+   "data": ""
+  },
+  {
+   "name": "glbDicParametros",
+   "data": ""
+  },
+  {
+   "name": "glbDicAutenticacion",
+   "data": ""
+  },
+  {
+   "name": "glbDicSeleccion",
+   "data": ""
+  },
+  {
+   "name": "glbDicDescartados",
+   "data": ""
+  },
+  {
+   "name": "glbDicRegistroDescartados",
+   "data": ""
+  },
+  {
+   "name": "glbDicGeneral",
+   "data": ""
+  },
+  {
+   "name": "glbDicSinCasos",
+   "data": ""
+  },
+  {
+   "name": "glbDicDetencion",
+   "data": ""
+  },
+  {
+   "name": "glbStrAsuntoAviso",
+   "data": ""
+  },
+  {
+   "name": "glbIntTotalRadicados",
+   "data": "0"
+  },
+  {
+   "name": "glbArrIdsRadicados",
+   "data": ""
+  },
+  {
+   "name": "glbArrIdsDescartados",
+   "data": ""
+  },
+  {
+   "name": "glbArrAvanzan",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesNegocioUno",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesSistema",
+   "data": ""
+  },
+  {
+   "name": "locStrIdRadicado",
+   "data": ""
+  },
+  {
+   "name": "locStrFiltroBase",
+   "data": ""
+  },
+  {
+   "name": "locStrFiltroSeleccion",
+   "data": ""
+  },
+  {
+   "name": "locStrFiltroDescartados",
+   "data": ""
+  },
+  {
+   "name": "locStrSelect",
+   "data": ""
+  },
+  {
+   "name": "locIntLote",
+   "data": ""
+  },
+  {
+   "name": "locStrOrden",
+   "data": ""
+  },
+  {
+   "name": "locBlnLeido",
+   "data": "False"
+  },
+  {
+   "name": "locDicLectura",
+   "data": ""
+  },
+  {
+   "name": "locDicPreparado",
+   "data": ""
+  },
+  {
+   "name": "locDicCaso",
+   "data": ""
+  },
+  {
+   "name": "locDicComentario",
+   "data": ""
+  },
+  {
+   "name": "locDicResultado",
+   "data": ""
+  },
+  {
+   "name": "locDicEvento",
+   "data": ""
+  },
+  {
+   "name": "locArrMotivos",
+   "data": ""
   }
  ],
  "commands": [
   {
    "father": "trycatch",
-   "description": "Control de excepciones EP-001",
+   "description": "Control de ejecución",
    "children": [
     {
-     "father": "execScriptPython",
-     "description": "Ejecuta EP-001 contra el doble de Zeus",
-     "command": "import sys, json\nraiz = GetVar('glbStrRutaRaiz')\nsys.path.insert(0, raiz + '/Scripts')\nfor nombre in [m for m in sys.modules if m == 'habeasdata' or m.startswith('habeasdata.')]:\n    del sys.modules[nombre]\nfrom habeasdata import ep001\nfrom habeasdata.config import cargar\nfrom habeasdata.redaccion import resumen_seguro\ncfg = cargar(raiz)\nresumen = ep001.procesar(cfg)\nSetVar('glbStrResumen', json.dumps(resumen_seguro(resumen, cfg), ensure_ascii=False, default=str))\nSetVar('glbBlnEstadoProceso', str(resumen['estado'] == 'ok'))\nSetVar('glbStrObservaciones', 'EP-001 modo=' + cfg.proceso['ZeusApi']['Modo'] + ' estado=' + resumen['estado'] + ' avanzan=' + str(len(resumen['avanzan'])) + ' excepciones_negocio_1=' + str(len(resumen['excepciones_negocio_1'])) + ' excepciones_sistema=' + str(len(resumen['excepciones_sistema'])))"
+     "father": "group",
+     "description": "HU002HU003HU004 - Inicializar el Asistente",
+     "children": [
+      {
+       "father": "setVar",
+       "var": "glbStrEstado",
+       "command": "'ok'",
+       "description": "Estado de la ejecución"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrIdsRadicados",
+       "command": "[]",
+       "description": "Radicados seleccionados por HU-002"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrIdsDescartados",
+       "command": "[]",
+       "description": "Radicados descartados por identificación ausente (HU-002)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrAvanzan",
+       "command": "[]",
+       "description": "Radicados que avanzan a la validación de deuda (HU-004)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesNegocioUno",
+       "command": "[]",
+       "description": "Radicados en excepción de negocio 1 (HU-004)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesSistema",
+       "command": "[]",
+       "description": "Radicados en excepción de sistema (HU-003, HU-004)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbStrMotivoSinCasos",
+       "command": "None",
+       "description": "Motivo cuando la selección queda vacía (HU-002)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbStrMotivoDetencion",
+       "command": "''",
+       "description": "Motivo cuando la ejecución se detiene"
+      },
+      {
+       "father": "execScriptPython",
+       "description": "Carga los tres JSON de configuración, crea la estructura de carpetas y los dos logs del día",
+       "command": "import sys\nraiz = GetVar('glbStrRutaRaiz')\nsys.path.insert(0, raiz + '/Scripts')\nfor nombre in [m for m in sys.modules if m == 'habeasdata' or m.startswith('habeasdata.')]:\n    del sys.modules[nombre]\nfrom habeasdata import pasos\nSetVar('glbDicInicio', pasos.iniciar(raiz))"
+      },
+      {
+       "father": "execScriptPython",
+       "description": "Lee los parámetros de negocio de la configuración (tipología, campo, literal de ausencia, lote, orden)",
+       "command": "from habeasdata import pasos\nSetVar('glbDicParametros', pasos.parametros())"
+      }
+     ]
+    },
+    {
+     "father": "trycatch",
+     "description": "Proceso principal",
+     "children": [
+      {
+       "father": "group",
+       "description": "HU002 - Filtrar radicados de Exclusión de Datos",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Solicita el token OAuth (client_credentials, vigencia 300 s); el secreto sale del Administrador de credenciales",
+         "command": "from habeasdata import pasos\nSetVar('glbDicAutenticacion', pasos.solicitar_token())"
+        },
+        {
+         "father": "evaluateIf",
+         "description": "El token se obtuvo",
+         "command": "{glbDicAutenticacion}[\"ok\"] == True",
+         "children": [
+          {
+           "father": "setVar",
+           "var": "locStrFiltroBase",
+           "command": "{glbDicParametros}[\"negocio\"][\"CampoTipologia\"] + \" eq '\" + {glbDicParametros}[\"negocio\"][\"TipologiaExclusion\"] + \"'\"",
+           "description": "Arma el filtro OData de la tipología de exclusión"
+          },
+          {
+           "father": "setVar",
+           "var": "locStrFiltroSeleccion",
+           "command": "\"{locStrFiltroBase}\"",
+           "description": "El filtro de selección parte del filtro de la tipología"
+          },
+          {
+           "father": "evaluateIf",
+           "description": "Se descartan los radicados sin identificación (parámetro)",
+           "command": "{glbDicParametros}[\"seleccion\"][\"DescartarIdentificacionAusente\"] == True",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locStrFiltroSeleccion",
+             "command": "\"{locStrFiltroBase}\" + \" and \" + {glbDicParametros}[\"seleccion\"][\"CampoIdentificacion\"] + \" ne '\" + {glbDicParametros}[\"seleccion\"][\"LiteralIdentificacionAusente\"] + \"'\"",
+             "description": "Agrega al filtro: identificación distinta de «NO APORTA»"
+            }
+           ],
+           "else": []
+          },
+          {
+           "father": "setVar",
+           "var": "locStrSelect",
+           "command": "\"IDRADICADO,\" + {glbDicParametros}[\"negocio\"][\"CampoTipologia\"]",
+           "description": "Campos a proyectar con $select"
+          },
+          {
+           "father": "setVar",
+           "var": "locIntLote",
+           "command": "{glbDicParametros}[\"seleccion\"][\"LoteMaximo\"]",
+           "description": "Tamaño del lote ($first)"
+          },
+          {
+           "father": "setVar",
+           "var": "locStrOrden",
+           "command": "{glbDicParametros}[\"seleccion\"][\"Orden\"]",
+           "description": "Orden de la consulta ($orderby)"
+          },
+          {
+           "father": "execScriptPython",
+           "description": "Consulta los radicados de exclusión (GET OData con $filter, $select, $first y $orderby)",
+           "command": "from habeasdata import pasos\nSetVar('glbDicSeleccion', pasos.consultar_odata(GetVar('locStrFiltroSeleccion'), GetVar('locStrSelect'), GetVar('locIntLote'), GetVar('locStrOrden')))"
+          },
+          {
+           "father": "evaluateIf",
+           "description": "La consulta respondió",
+           "command": "{glbDicSeleccion}[\"ok\"] == True",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "glbArrIdsRadicados",
+             "command": "{glbDicSeleccion}[\"ids\"]",
+             "description": "Guarda los radicados seleccionados"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Se descartan los radicados sin identificación (parámetro)",
+             "command": "{glbDicParametros}[\"seleccion\"][\"DescartarIdentificacionAusente\"] == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locStrFiltroDescartados",
+               "command": "\"{locStrFiltroBase}\" + \" and \" + {glbDicParametros}[\"seleccion\"][\"CampoIdentificacion\"] + \" eq '\" + {glbDicParametros}[\"seleccion\"][\"LiteralIdentificacionAusente\"] + \"'\"",
+               "description": "Arma el filtro de los descartados: identificación igual a «NO APORTA»"
+              },
+              {
+               "father": "execScriptPython",
+               "description": "Consulta los radicados descartados para no perderlos en silencio",
+               "command": "from habeasdata import pasos\nSetVar('glbDicDescartados', pasos.consultar_odata(GetVar('locStrFiltroDescartados'), 'IDRADICADO'))"
+              },
+              {
+               "father": "evaluateIf",
+               "description": "La consulta de descartados respondió",
+               "command": "{glbDicDescartados}[\"ok\"] == True",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "glbArrIdsDescartados",
+                 "command": "{glbDicDescartados}[\"ids\"]",
+                 "description": "Guarda los radicados descartados"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Deja los descartados en el log de auditoría y en el reporte",
+                 "command": "from habeasdata import pasos\nSetVar('glbDicRegistroDescartados', pasos.registrar_descartados(GetVar('glbArrIdsDescartados')))"
+                }
+               ],
+               "else": [
+                {
+                 "father": "setVar",
+                 "var": "glbStrEstado",
+                 "command": "'detenido'",
+                 "description": "Marca la ejecución como detenida"
+                },
+                {
+                 "father": "setVar",
+                 "var": "glbStrMotivoDetencion",
+                 "command": "{glbDicDescartados}[\"mensaje\"]",
+                 "description": "Guarda el motivo de la detención"
+                }
+               ]
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La selección quedó vacía y no hubo fallos",
+             "command": "'{glbStrEstado}' == 'ok' and len({glbArrIdsRadicados}) == 0",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Consulta el total de radicados (consulta general, sin $filter)",
+               "command": "from habeasdata import pasos\nSetVar('glbDicGeneral', pasos.consultar_odata('', 'IDRADICADO'))"
+              },
+              {
+               "father": "evaluateIf",
+               "description": "La consulta general respondió",
+               "command": "{glbDicGeneral}[\"ok\"] == True",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "glbIntTotalRadicados",
+                 "command": "len({glbDicGeneral}[\"ids\"])",
+                 "description": "Total de radicados de la consulta general"
+                },
+                {
+                 "father": "evaluateIf",
+                 "description": "Todos los de la tipología fueron descartados",
+                 "command": "len({glbArrIdsDescartados}) > 0",
+                 "children": [
+                  {
+                   "father": "setVar",
+                   "var": "glbStrMotivoSinCasos",
+                   "command": "'solo_descartados'",
+                   "description": "Motivo: solo descartados"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "father": "evaluateIf",
+                   "description": "Hay radicados, pero ninguno de la tipología",
+                   "command": "{glbIntTotalRadicados} > 0",
+                   "children": [
+                    {
+                     "father": "setVar",
+                     "var": "glbStrMotivoSinCasos",
+                     "command": "'tipologia_ausente'",
+                     "description": "Motivo: tipología ausente"
+                    }
+                   ],
+                   "else": [
+                    {
+                     "father": "setVar",
+                     "var": "glbStrMotivoSinCasos",
+                     "command": "'bandeja_vacia'",
+                     "description": "Motivo: bandeja vacía"
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Registra «0 casos» y la cadencia del reintento (CADENCIA_REINTENTO_BANDEJA_VACIA)",
+                 "command": "from habeasdata import pasos\nSetVar('glbDicSinCasos', pasos.registrar_sin_casos(GetVar('glbStrMotivoSinCasos'), GetVar('glbIntTotalRadicados')))"
+                }
+               ],
+               "else": [
+                {
+                 "father": "setVar",
+                 "var": "glbStrEstado",
+                 "command": "'detenido'",
+                 "description": "Marca la ejecución como detenida"
+                },
+                {
+                 "father": "setVar",
+                 "var": "glbStrMotivoDetencion",
+                 "command": "{glbDicGeneral}[\"mensaje\"]",
+                 "description": "Guarda el motivo de la detención"
+                }
+               ]
+              }
+             ],
+             "else": []
+            }
+           ],
+           "else": [
+            {
+             "father": "setVar",
+             "var": "glbStrEstado",
+             "command": "'detenido'",
+             "description": "Marca la ejecución como detenida"
+            },
+            {
+             "father": "setVar",
+             "var": "glbStrMotivoDetencion",
+             "command": "{glbDicSeleccion}[\"mensaje\"]",
+             "description": "Guarda el motivo de la detención"
+            }
+           ]
+          }
+         ],
+         "else": [
+          {
+           "father": "setVar",
+           "var": "glbStrEstado",
+           "command": "'detenido'",
+           "description": "Marca la ejecución como detenida"
+          },
+          {
+           "father": "setVar",
+           "var": "glbStrMotivoDetencion",
+           "command": "{glbDicAutenticacion}[\"mensaje\"]",
+           "description": "Guarda el motivo de la detención"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "father": "evaluateIf",
+       "description": "Hay radicados que procesar",
+       "command": "'{glbStrEstado}' == 'ok' and len({glbArrIdsRadicados}) > 0",
+       "children": [
+        {
+         "father": "for",
+         "description": "Iteración por radicado de exclusión",
+         "command": "{\"iterable\": \"{glbArrIdsRadicados}\", \"count\": 0}",
+         "var": "locStrIdRadicado",
+         "children": [
+          {
+           "father": "setVar",
+           "var": "locBlnLeido",
+           "command": "False",
+           "description": "El radicado aún no se ha leído"
+          },
+          {
+           "father": "execScriptPython",
+           "description": "Deja constancia del inicio del radicado en el log de auditoría",
+           "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado')))"
+          },
+          {
+           "father": "group",
+           "description": "HU003 - Leer datos paramétricos",
+           "children": [
+            {
+             "father": "execScriptPython",
+             "description": "Lee el radicado por IDRADICADO (GET individual)",
+             "command": "from habeasdata import pasos\nSetVar('locDicLectura', pasos.leer_radicado(GetVar('locStrIdRadicado')))"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El radicado se pudo leer",
+             "command": "{locDicLectura}[\"ok\"] == True",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Limpia «No aporta» y vacíos (= ausente) y separa los valores de cada canal por «/»",
+               "command": "from habeasdata import pasos\nSetVar('locDicPreparado', pasos.preparar_campos(GetVar('locDicLectura')))"
+              },
+              {
+               "father": "execScriptPython",
+               "description": "Clasifica cada teléfono por dígitos: celular, fijo o sin clasificar",
+               "command": "from habeasdata import pasos\nSetVar('locDicCaso', pasos.clasificar_telefonos(GetVar('locDicPreparado')))"
+              },
+              {
+               "father": "setVar",
+               "var": "locBlnLeido",
+               "command": "True",
+               "description": "El radicado quedó leído"
+              }
+             ],
+             "else": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la excepción de sistema del radicado (log de errores y reporte)",
+               "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicLectura'))['mensaje'])"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistema",
+               "command": "{glbArrExcepcionesSistema} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "father": "group",
+           "description": "HU004 - Validar campos obligatorios",
+           "children": [
+            {
+             "father": "evaluateIf",
+             "description": "El radicado quedó leído",
+             "command": "{locBlnLeido} == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locArrMotivos",
+               "command": "[]",
+               "description": "Lista de motivos de incompletitud"
+              },
+              {
+               "father": "evaluateIf",
+               "description": "Falta el nombre del cliente",
+               "command": "{locDicCaso}[\"nombre\"] is None",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locArrMotivos",
+                 "command": "{locArrMotivos} + ['NOMBRE DEL CLIENTE']",
+                 "description": "Agrega el motivo"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "Falta el tipo de identificación",
+               "command": "{locDicCaso}[\"tipo_identificacion\"] is None",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locArrMotivos",
+                 "command": "{locArrMotivos} + ['TIPO DE IDENTIFICACION']",
+                 "description": "Agrega el motivo"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "Falta el número de identificación",
+               "command": "{locDicCaso}[\"numero_identificacion\"] is None",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locArrMotivos",
+                 "command": "{locArrMotivos} + ['NUMERO DE IDENTIFICACION']",
+                 "description": "Agrega el motivo"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "No hay ningún canal de contacto (ni correo ni teléfono)",
+               "command": "not {locDicCaso}[\"canal_correo\"] and not {locDicCaso}[\"canal_telefono\"]",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locArrMotivos",
+                 "command": "{locArrMotivos} + ['SIN CANAL DE CONTACTO']",
+                 "description": "Agrega el motivo"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "El caso está completo",
+               "command": "len({locArrMotivos}) == 0",
+               "children": [
+                {
+                 "father": "execScriptPython",
+                 "description": "Registra el avance a la validación de deuda en el reporte",
+                 "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "glbArrAvanzan",
+                 "command": "{glbArrAvanzan} + ['{locStrIdRadicado}']",
+                 "description": "Anota el radicado en los que avanzan"
+                }
+               ],
+               "else": [
+                {
+                 "father": "execScriptPython",
+                 "description": "Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle",
+                 "command": "from habeasdata import pasos\nSetVar('locDicComentario', pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
+                },
+                {
+                 "father": "evaluateIf",
+                 "description": "El comentario quedó registrado",
+                 "command": "{locDicComentario}[\"ok\"] == True",
+                 "children": [
+                  {
+                   "father": "execScriptPython",
+                   "description": "Registra la excepción de negocio 1 en el reporte",
+                   "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
+                  },
+                  {
+                   "father": "setVar",
+                   "var": "glbArrExcepcionesNegocioUno",
+                   "command": "{glbArrExcepcionesNegocioUno} + ['{locStrIdRadicado}']",
+                   "description": "Anota el radicado en excepciones de negocio 1"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "father": "execScriptPython",
+                   "description": "Registra la excepción de sistema (no se pudo escribir el comentario)",
+                   "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"
+                  },
+                  {
+                   "father": "setVar",
+                   "var": "glbArrExcepcionesSistema",
+                   "command": "{glbArrExcepcionesSistema} + ['{locStrIdRadicado}']",
+                   "description": "Anota el radicado en excepciones de sistema"
+                  }
+                 ]
+                }
+               ]
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "execScriptPython",
+           "description": "Deja constancia del fin del radicado en el log de auditoría",
+           "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado')))"
+          }
+         ]
+        }
+       ],
+       "else": []
+      }
+     ],
+     "else": [
+      {
+       "father": "setVar",
+       "var": "glbBlnEstadoSistema",
+       "command": "False",
+       "description": "Marca fallo de sistema en el proceso principal"
+      },
+      {
+       "father": "setVar",
+       "var": "glbStrEstado",
+       "command": "'detenido'",
+       "description": "Estado de la ejecución: detenido por excepción de sistema"
+      }
+     ]
+    },
+    {
+     "father": "group",
+     "description": "HU002HU003HU004 - Cierre y registro de ejecución",
+     "children": [
+      {
+       "father": "evaluateIf",
+       "description": "La ejecución se detuvo",
+       "command": "'{glbStrEstado}' == 'detenido'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Registra la detención en el log de errores y prepara el aviso «Detenido»",
+         "command": "from habeasdata import pasos\nSetVar('glbDicDetencion', pasos.registrar_detencion(GetVar('glbStrMotivoDetencion')))"
+        },
+        {
+         "father": "setVar",
+         "var": "glbStrAsuntoAviso",
+         "command": "{glbDicDetencion}[\"notificacion\"][\"asunto\"]",
+         "description": "Asunto del aviso que se enviará al equipo técnico"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "execScriptPython",
+       "description": "Cierra la ejecución y deja el resumen sin PII (en modo real los datos personales se enmascaran)",
+       "command": "import json\nfrom habeasdata import pasos\no = pasos.objeto\ndetencion = o(GetVar('glbDicDetencion')) if GetVar('glbStrEstado') == 'detenido' else {}\nresumen = {'estado': GetVar('glbStrEstado'), 'modo': o(GetVar('glbDicInicio'))['modo'],\n           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),\n           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),\n           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),\n           'motivo_sin_casos': o(GetVar('glbStrMotivoSinCasos')), 'notificacion': detencion.get('notificacion')}\nSetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"
+      },
+      {
+       "father": "setVar",
+       "var": "glbStrObservaciones",
+       "command": "'EP-001 modo=' + {glbDicInicio}[\"modo\"] + ' estado=' + '{glbStrEstado}' + ' avanzan=' + str(len({glbArrAvanzan})) + ' excepciones_negocio_1=' + str(len({glbArrExcepcionesNegocioUno})) + ' excepciones_sistema=' + str(len({glbArrExcepcionesSistema}))",
+       "description": "Observación final de la corrida"
+      },
+      {
+       "father": "setVar",
+       "var": "glbBlnEstadoProceso",
+       "command": "'{glbStrEstado}' == 'ok'",
+       "description": "El proceso terminó sin detenerse"
+      }
+     ]
     }
    ],
    "else": [
@@ -53,7 +761,7 @@
      "father": "setVar",
      "var": "glbStrObservaciones",
      "command": "'Excepcion de sistema en EP-001'",
-     "description": "Observacion"
+     "description": "Observación de la excepción de sistema"
     }
    ]
   },
@@ -61,7 +769,7 @@
    "father": "log_message",
    "option": "info",
    "command": "{glbStrObservaciones}",
-   "description": "Traza final"
+   "description": "Traza final de la ejecución"
   }
  ]
 }
