@@ -1,0 +1,135 @@
+[
+  {
+    "id": "EP001-01-happy-completo",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 filtro con casos",
+      "HU-003 extracción",
+      "HU-004 completo avanza",
+      "HU-004 excepción 1 con comentario"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "c7da79f74e18c2d8bd41c5e66fc366fb0873dcb8b49821d2adba85d98213dbb0"
+  },
+  {
+    "id": "EP001-02-bandeja-vacia",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 colección vacía y consulta general vacía"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "641e03a5a8dc3454c87a018fbb14cfa293a3dfc1786816acbd8de235c5591e81"
+  },
+  {
+    "id": "EP001-03-tipologia-ausente",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 colección vacía con radicados ajenos"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "7f37351791bba8edd9a6edf516f6f3bab9a4207e868f264c4862ec0b00ba3a41"
+  },
+  {
+    "id": "EP001-04-filtro-no-reconocido",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 400 detiene"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "7738b9128b88d273d680a2cb4f2f0061656e3de0aa02faa277844c06bcd55582"
+  },
+  {
+    "id": "EP001-05-token-vencido-persistente",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 401 detiene"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "d9d88fec82283a02aaad4dcedde45ad69c808731192e3f02265ed65664d5de9b"
+  },
+  {
+    "id": "EP001-06-sin-roles-403",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 403 detiene"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "de449e226c8701f896e90920b68b95ba4f0c6e5ba2e1c649ab606c14de411a37"
+  },
+  {
+    "id": "EP001-07-api-no-disponible",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 sin conexión tras reintentos detiene"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "1383e4bc6e8d1078bbaba69affc6bdd5567507886b7bb0164915fa2410c47d63"
+  },
+  {
+    "id": "EP001-08-radicado-no-legible-400",
+    "modo": "fixture",
+    "ramas": [
+      "HU-003 400 por radicado: excepción de sistema y continúa"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "747d196c9c3aaeb290b3a1ff639fc568703953af5f4c55dad4a27c3fc0b0939f"
+  },
+  {
+    "id": "EP001-09-radicado-no-encontrado-404",
+    "modo": "fixture",
+    "ramas": [
+      "HU-003 404 por radicado: excepción de sistema y continúa"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "9eda07978dbb0eb8a638a4d51d064d59e06c1a1a98e78482c2252cd345d87dfd"
+  },
+  {
+    "id": "EP001-10-comentario-rechazado-400",
+    "modo": "fixture",
+    "ramas": [
+      "HU-004 escritura rechazada: excepción de sistema"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "b922f26ac63f058c305d038866643d124fc90fa701a80ec3b2e9bfdcade8f7df"
+  },
+  {
+    "id": "EP001-11-comentario-sin-autorizacion-401",
+    "modo": "fixture",
+    "ramas": [
+      "HU-004 escritura 401 persistente: excepción de sistema"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "4b2c6788ca9795451e23a202ab5eedd009a3852760516751dc7870b9fa041035"
+  },
+  {
+    "id": "EP001-12-solo-casos-completos",
+    "modo": "fixture",
+    "ramas": [
+      "HU-004 ninguna excepción"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "df3961443ab9a77a77c800472f9af6e51d65ea62c1817f2c66492cb24bf0d3f6"
+  },
+  {
+    "id": "EP001-13-todos-incompletos",
+    "modo": "fixture",
+    "ramas": [
+      "HU-004 todos van a excepción 1"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "9601810d44567239090f9bbc49ea9a13fcea74c39230a1aede2b1085f0fd4c2d"
+  }
+]

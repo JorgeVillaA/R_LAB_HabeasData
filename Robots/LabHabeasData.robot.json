@@ -1,0 +1,67 @@
+{
+ "name": "LabHabeasData",
+ "description": "Tarea principal EP-001 (HU-002, HU-003, HU-004) contra el doble local de la API de Zeus. Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
+ "vars": [
+  {
+   "name": "glbBlnEstadoSistema",
+   "data": "True"
+  },
+  {
+   "name": "glbBlnEstadoProceso",
+   "data": "True"
+  },
+  {
+   "name": "glbStrObservaciones",
+   "data": ""
+  },
+  {
+   "name": "glbIntReintentos",
+   "data": "3"
+  },
+  {
+   "name": "glbIntReintentosLogin",
+   "data": "3"
+  },
+  {
+   "name": "glbStrRutaRaiz",
+   "data": ""
+  },
+  {
+   "name": "glbStrResumen",
+   "data": ""
+  }
+ ],
+ "commands": [
+  {
+   "father": "trycatch",
+   "description": "Control de excepciones EP-001",
+   "children": [
+    {
+     "father": "execScriptPython",
+     "description": "Ejecuta EP-001 contra el doble de Zeus",
+     "command": "import sys, json\nraiz = GetVar('glbStrRutaRaiz')\nsys.path.insert(0, raiz + '/Scripts')\nfor nombre in [m for m in sys.modules if m == 'habeasdata' or m.startswith('habeasdata.')]:\n    del sys.modules[nombre]\nfrom habeasdata import ep001\nfrom habeasdata.config import cargar\nfrom habeasdata.redaccion import resumen_seguro\ncfg = cargar(raiz)\nresumen = ep001.procesar(cfg)\nSetVar('glbStrResumen', json.dumps(resumen_seguro(resumen, cfg), ensure_ascii=False, default=str))\nSetVar('glbBlnEstadoProceso', str(resumen['estado'] == 'ok'))\nSetVar('glbStrObservaciones', 'EP-001 modo=' + cfg.proceso['ZeusApi']['Modo'] + ' estado=' + resumen['estado'] + ' avanzan=' + str(len(resumen['avanzan'])) + ' excepciones_negocio_1=' + str(len(resumen['excepciones_negocio_1'])) + ' excepciones_sistema=' + str(len(resumen['excepciones_sistema'])))"
+    }
+   ],
+   "else": [
+    {
+     "father": "setVar",
+     "var": "glbBlnEstadoSistema",
+     "command": "False",
+     "description": "Marca fallo de sistema"
+    },
+    {
+     "father": "setVar",
+     "var": "glbStrObservaciones",
+     "command": "'Excepcion de sistema en EP-001'",
+     "description": "Observacion"
+    }
+   ]
+  },
+  {
+   "father": "log_message",
+   "option": "info",
+   "command": "{glbStrObservaciones}",
+   "description": "Traza final"
+  }
+ ]
+}

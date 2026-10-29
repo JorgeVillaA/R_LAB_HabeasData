@@ -1,0 +1,34 @@
+{
+  "Globales": {
+    "Proyecto": "R_LAB_HabeasData",
+    "Version": "V1.0.0",
+    "Navegador": "chrome",
+    "Idioma": "es"
+  },
+  "Trazabilidad": {
+    "PrefijoArchivo": "LAB0001HDATA00",
+    "Ip": "127.0.0.1",
+    "AplicativoModulo": "R_LAB_HabeasData"
+  },
+  "Notificaciones": {
+    "CorreoDetenido": "equipo-tecnico@lab.invalid",
+    "CorreoUrgente": "equipo-tecnico@lab.invalid",
+    "AsuntoDetenido": "Detenido",
+    "AsuntoUrgente": "Urgente"
+  },
+  "RutasVentanas": {
+    "RutasProceso": {
+      "RutaRaiz": ".",
+      "Configuracion": "Configuracion",
+      "LogsSistema": "Logs/Sistema",
+      "LogsAuditoria": "Logs/Auditoria",
+      "CapturasProceso": "CapturasPantalla/Proceso",
+      "CapturasError": "CapturasPantalla/Error",
+      "Temporales": "Archivos Temporales",
+      "Documentos": "Documentos",
+      "Scripts": "Scripts",
+      "Reportes": "Reportes"
+    },
+    "VentanaEjecucion": "07:00-19:00"
+  }
+}
