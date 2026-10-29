@@ -1,0 +1,75 @@
+{
+  "_comment": "Tipos de asset que este paquete sabe generar (protocolo-cliente-runtime §6). Declaración forward-compatible con v0.9: hoy la skill setup-architecture (/build:architect) los genera como archivos en docs/adr/ desde las plantillas de skills/setup-architecture/assets/ y los PROPONE (nunca publica); cuando exista el Agent Orchestrator Runtime, la misma skill los propondrá vía API (POST /projects/{id}/context/proposals) sin cambiar su salida. Este manifiesto declara EXACTAMENTE los tipos que la skill produce — ni más ni menos; tipos futuros (p.ej. arch.style/arch.patterns/stack.profile como documentos independientes del §6 del protocolo) se añadirán cuando exista una salida que los materialice. Aditivos → auto-publicados en el registro; breaking → propuestos para un ADMIN.",
+  "meta_schema_version": 1,
+  "types": [
+    {
+      "type_key": "arch.drivers",
+      "title": "Catálogo de drivers y ASRs",
+      "category": "Arquitectura",
+      "content_format": "markdown+frontmatter",
+      "frontmatter_schema": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "status": {"type": "string", "enum": ["living-document"]}
+        },
+        "required": ["id"]
+      },
+      "body_sections": [
+        {"id": "objetivos-negocio", "title": "Objetivos de negocio (OE)", "required": true},
+        {"id": "funcionales", "title": "Requisitos funcionales primarios (UC)", "required": true},
+        {"id": "escenarios-qa", "title": "Escenarios de atributos de calidad (QA)", "required": true},
+        {"id": "restricciones", "title": "Restricciones (CON)", "required": false},
+        {"id": "concerns", "title": "Concerns (CRN)", "required": false},
+        {"id": "plan-iteraciones", "title": "Plan de iteraciones", "required": false},
+        {"id": "matriz-prioridad", "title": "Matriz de priorización", "required": false}
+      ],
+      "cardinality": "single",
+      "generation": {"source": "plugin", "skill": "setup-architecture"},
+      "descriptor_version": 1
+    },
+    {
+      "type_key": "arch.adr",
+      "title": "Decisión de arquitectura (ADR-ADD)",
+      "category": "Arquitectura",
+      "content_format": "markdown+frontmatter",
+      "frontmatter_schema": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "title": {"type": "string"},
+          "status": {"type": "string", "enum": ["proposed", "accepted", "superseded", "deprecated"]},
+          "add": {"type": "object"}
+        },
+        "required": ["id", "title", "status"]
+      },
+      "body_sections": [
+        {"id": "objetivo-drivers", "title": "Objetivo de la iteración y drivers (Pasos 2-3)", "required": true},
+        {"id": "conceptos", "title": "Conceptos de diseño: tácticas y estilos (Paso 4)", "required": true},
+        {"id": "instanciacion", "title": "Instanciación: responsabilidades e interfaces (Paso 5)", "required": true},
+        {"id": "vistas-decision", "title": "Vistas y registro de la decisión (Paso 6)", "required": true},
+        {"id": "analisis", "title": "Análisis del diseño / ATAM (Paso 7)", "required": true},
+        {"id": "consecuencias", "title": "Consecuencias", "required": false},
+        {"id": "trazabilidad", "title": "Trazabilidad", "required": true}
+      ],
+      "cardinality": "multiple",
+      "generation": {"source": "plugin", "skill": "setup-architecture"},
+      "descriptor_version": 1
+    },
+    {
+      "type_key": "arch.backlog",
+      "title": "Backlog arquitectónico (cobertura driver↔ADR)",
+      "category": "Arquitectura",
+      "content_format": "markdown",
+      "frontmatter_schema": {"type": "object"},
+      "body_sections": [
+        {"id": "tablero-drivers", "title": "Tablero por driver", "required": true},
+        {"id": "riesgos-abiertos", "title": "Riesgos arquitectónicos abiertos", "required": true},
+        {"id": "bitacora-iteraciones", "title": "Bitácora de iteraciones", "required": true}
+      ],
+      "cardinality": "single",
+      "generation": {"source": "plugin", "skill": "setup-architecture"},
+      "descriptor_version": 1
+    }
+  ]
+}

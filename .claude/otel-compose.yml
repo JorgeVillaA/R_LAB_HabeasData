@@ -1,0 +1,11 @@
+# docker-compose generado por otel-setup.py (#86, P12). Collector supervisado:
+#   docker compose -f .claude/otel-compose.yml up -d
+services:
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-config.yaml"]
+    ports: ["4318:4318"]
+    volumes:
+      - "./otel-collector.yaml:/etc/otelcol-config.yaml:ro"
+      - "../docs/.reviews:/data"

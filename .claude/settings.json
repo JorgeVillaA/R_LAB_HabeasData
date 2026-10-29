@@ -1,0 +1,138 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/session-start.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/load-build-state.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/gitflow-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/destructive-guard.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/stack-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/scaffold-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/design-source-guard.sh\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/lint-typecheck.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/coherence-flag.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/context-monitor.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/event-emitter.sh\""
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/context-monitor.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/build-gate-check.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/reflect-nudge.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/release-gate-nudge.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/dual-compare.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/context-monitor.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/session-stop.sh\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(openspec validate *)",
+      "Bash(openspec list *)",
+      "Bash(openspec show *)"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "\"${CLAUDE_PLUGIN_ROOT:-$CLAUDE_PROJECT_DIR/.claude}/hooks/build/statusline-bridge.sh\""
+  },
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318"
+  }
+}

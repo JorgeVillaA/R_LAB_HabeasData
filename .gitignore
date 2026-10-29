@@ -1,0 +1,47 @@
+# ── trycore-build-harness (auto) ───────────────────────
+.claude/state/build-state.json
+.claude/state/runtime.credentials
+.claude/state/context.lock
+.claude/state/runtime-projection.json
+.claude/state/.runtime-http-status
+.claude/state/outbox/
+.claude/state/epic-proposals.json
+.claude/state/graph-status.json
+.claude/state/graph-sync-proposals.json
+.claude/state/heartbeat.pid
+.claude/state/heartbeat-sessions.json
+.claude/state/heartbeat-status.json
+.claude/state/happy-path/
+.claude/agents/build/
+.claude/commands/opsx/
+.claude/commands/build/
+.claude/hooks/build/
+.claude/scripts/lib/
+.claude/skills/building-a-micro-change/
+.claude/skills/building-a-slice/
+.claude/skills/managing-parallel-front/
+.claude/skills/openspec-apply-change/
+.claude/skills/openspec-archive-change/
+.claude/skills/openspec-bulk-archive-change/
+.claude/skills/openspec-continue-change/
+.claude/skills/openspec-explore/
+.claude/skills/openspec-ff-change/
+.claude/skills/openspec-new-change/
+.claude/skills/openspec-onboard/
+.claude/skills/openspec-sync-specs/
+.claude/skills/openspec-verify-change/
+.claude/skills/prototyping-screens/
+.claude/skills/releasing-a-version/
+.claude/skills/setup-architecture/
+.claude/.build-harness-version
+# ── /trycore-build-harness ──────────────────────
+
+# ── ejecución del bot (lineamientos Trycore, anexo V1.0) ──
+# Acumulan por fecha y pueden contener PII de pruebas: no se versionan.
+Logs/
+CapturasPantalla/
+Archivos Temporales/
+Reportes/
+# NocoDB local del lab (SQLite interno)
+nocodb-data/
+

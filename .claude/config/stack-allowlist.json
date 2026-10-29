@@ -1,0 +1,12 @@
+{
+  "_comment": "Allowlist de dependencias del proyecto. Derivada de la sección de requisitos técnicos del PRD. El hook stack-guard.sh bloquea dependencias fuera de `allow` al editar package.json.",
+  "source": "docs/01-prd/<tu-prd>.md#requisitos-tecnicos",
+  "version": "1.0",
+  "runtime": {
+    "node": ">=18.18",
+    "packageManager": "npm"
+  },
+  "allow": [],
+  "deny_examples": [],
+  "rationale": {}
+}

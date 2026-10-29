@@ -1,0 +1,16 @@
+# OpenTelemetry Collector — generado por otel-setup.py (#86, P12).
+# Recibe los eventos OTLP de Claude Code y los vuelca a un fichero que lee
+# `graph-otel-phases` (formato del exportador `file`, OTLP anidado).
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+exporters:
+  file:
+    path: "/data/otel-api-requests.jsonl"
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [file]

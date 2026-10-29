@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trycore.com/spec-build-harness/build-state.schema.json",
+  "title": "Build Harness State",
+  "description": "Single source of truth para el handoff secuencial entre agentes de construcción. Lo escriben build-orchestrator y los gates; lo lee load-build-state.sh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "harness_phase", "scaffold", "active_slice", "history", "releases"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "harness_phase": {
+      "type": "string",
+      "enum": ["authoring", "active"],
+      "description": "Señal INFORMATIVA auto-detectada: authoring = aún no hay package.json; active = scaffold de código presente. El gate de avance es `scaffold.confirmed`, NO esta señal."
+    },
+    "scaffold": { "$ref": "#/$defs/scaffold" },
+    "design_source": { "$ref": "#/$defs/design_source" },
+    "active_slice": {
+      "description": "El slice (épica) en construcción. null si no hay ninguno activo.",
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/slice" }
+      ]
+    },
+    "history": {
+      "type": "array",
+      "description": "Slices archivados, en orden cronológico.",
+      "items": { "$ref": "#/$defs/slice" }
+    },
+    "releases": {
+      "type": "array",
+      "description": "Release Gates (outer loop). Una entrada por línea de release del Story Map auditada en bloque.",
+      "items": { "$ref": "#/$defs/release" }
+    },
+    "parallel_front": {
+      "description": "Coordinación outer-loop de worktrees inter-épica (C). null = modo secuencial normal.",
+      "oneOf": [ { "type": "null" }, { "$ref": "#/$defs/parallel_front" } ]
+    },
+    "project_kind": {
+      "type": ["string", "null"],
+      "enum": ["greenfield", "brownfield", null],
+      "description": "Tipo de proyecto. brownfield = ya construido (el requisito de épica caparazón NO aplica y no se pregunta); greenfield = app nueva (activa el gate foundation); null = indeterminado (lo resuelve /build:onboard con el humano). Detección automática en trycore-build init."
+    },
+    "project_kind_source": {
+      "type": ["string", "null"],
+      "enum": ["auto", "human", null],
+      "description": "Quién fijó project_kind: auto (heurística del CLI, solo con certeza) | human (confirmado en onboard ante ambigüedad)."
+    },
+    "foundation": { "$ref": "#/$defs/foundation" }
+  },
+  "$defs": {
+    "scaffold": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Gate de PROYECTO (Paso 1 fundamental): el scaffold runnable existe. Precondición EXPLÍCITA y restrictiva — solo pasa a confirmed=true por confirmación humana, nunca del arnés (vía building-a-slice Fase 0 / dor-dod-gatekeeper), nunca por auto-detección. El arnés NO genera el scaffold.",
+      "required": ["confirmed"],
+      "properties": {
+        "confirmed": { "type": "boolean", "description": "true solo tras confirmación humana de que el esqueleto runnable existe." },
+        "confirmed_by": { "type": ["string", "null"], "description": "Agente/skill que registró la confirmación." },
+        "confirmed_at": { "type": ["string", "null"], "format": "date-time" },
+        "notes": { "type": "string", "description": "Evidencia libre (p.ej. 'build/dev arranca vacío sin error')." }
+      }
+    },
+    "design_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Gate de PROYECTO para slices con UI: existe una fuente de diseño declarada (prototipo/export). Espejo de scaffold: confirmed pasa a true SOLO por confirmación humana, nunca por auto-detección. El prototipo puede generarse con /build:prototype (skill prototyping-screens); confirmed sigue siendo exclusivamente humano. applies=false apaga todo el mecanismo (proyecto sin UI).",
+      "required": ["applies", "confirmed"],
+      "properties": {
+        "applies": { "type": "boolean", "description": "¿el proyecto tiene UI / hay diseño que respetar? false → mecanismo N/A." },
+        "confirmed": { "type": "boolean", "description": "true solo tras confirmación humana de que existe una fuente de diseño declarada." },
+        "confirmed_by": { "type": ["string", "null"], "description": "Agente/skill que registró la confirmación." },
+        "confirmed_at": { "type": ["string", "null"], "format": "date-time" },
+        "source": { "type": "string", "description": "Puntero a la fuente: ruta/URL del prototipo o export (el DESIGN_SOURCE del dominio)." },
+        "notes": { "type": "string", "description": "Evidencia libre (p.ej. 'prototipo en docs/… revisado y vigente')." }
+      }
+    },
+    "foundation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Gate de PROYECTO (solo greenfield): la épica caparazón — navegación/menús, layout/panel central, homepage, login/authN, redirecciones/guards — debe construirse y archivarse ANTES que cualquier épica business. El contrato es la checklist (podada por el humano en /build:onboard según el tipo de app); cada ítem applies=true exige evidence en el DoD (patrón wiring_checklist, nada de palabra de honor). El arnés propone el borrador de la épica pero solo lo escribe con aprobación humana explícita.",
+      "required": ["required"],
+      "properties": {
+        "required": { "type": "boolean", "description": "true solo en greenfield con contrato confirmado en onboard. false = N/A (brownfield o proyecto sin caparazón exigible)." },
+        "epic": {
+          "oneOf": [ { "type": "null" }, { "type": "string", "pattern": "^EP-[0-9]{3}$" } ],
+          "description": "La épica caparazón del backlog. null mientras no exista (el gate del DoR bloquea business igual)."
+        },
+        "completed_at": { "type": ["string", "null"], "format": "date-time", "description": "Cuándo se archivó la épica caparazón con toda la checklist evidenciada. null = pendiente." },
+        "checklist": {
+          "type": "array",
+          "description": "Contrato del caparazón. Ids canónicos: navegacion-menus, layout-panel-central, homepage, login-authn, redirecciones-guards (podables; extensible por proyecto).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["item", "applies"],
+            "properties": {
+              "item": { "type": "string", "description": "Id kebab-case del ítem del contrato." },
+              "applies": { "type": "boolean", "description": "false = podado en onboard (p.ej. homepage en una API sin UI)." },
+              "evidence": { "type": "string", "description": "Evidencia de ejecución que demuestra el ítem construido (test/comando/screenshot). Vacío mientras pendiente." }
+            }
+          }
+        }
+      }
+    },
+    "slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["epica", "hus", "openspec_change", "branch", "phase", "gates", "updated_at", "updated_by"],
+      "properties": {
+        "epica": { "type": "string", "pattern": "^EP-[0-9]{3}$", "description": "Unidad de construcción del slice." },
+        "hus": {
+          "type": "array",
+          "description": "HU de la épica cubiertas por este change. Trazabilidad al alcance interno; al menos una.",
+          "items": { "type": "string", "pattern": "^HU-[0-9]{3}$" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "openspec_change": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "branch": { "type": "string", "pattern": "^(feature|fix|chore)/[a-z0-9._-]+$" },
+        "branch_drift": { "type": "string", "description": "Rama git real cuando difiere de branch (lo escribe el reconciliador)." },
+        "phase": {
+          "type": "string",
+          "enum": ["dor", "change", "red", "green", "refactor", "smoke", "api", "data", "dod", "pr", "archived"]
+        },
+        "gates": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Inner loop (por slice): dor, tdd, journey_smoke, coherence_link, data, fidelity, api(null), wiring_verified, dod. Los gates pesados (stack, security, smell, ux, coherence) se cerraron por slice en la era anterior y hoy viven en releases[]; se mantienen como propiedades opcionales para validar historial.",
+          "required": ["dor", "tdd", "dod"],
+          "properties": {
+            "dor": { "type": "boolean" },
+            "tdd": { "type": "boolean" },
+            "journey_smoke": { "type": "boolean", "description": "El backbone-hasta-aquí camina end-to-end (verificado con la skill verify/run + runner fuera-de-chat integration-check)." },
+            "coherence_link": { "type": "boolean", "description": "Enlace change↔épica válido (change-epic-coherence, barato, por slice)." },
+            "data": { "type": "boolean" },
+            "fidelity": { "type": ["boolean", "null"], "description": "Gate VIVO de inner loop, computado en fase smoke por ux-fidelity-reviewer. Aplica cuando el slice toca UI (en un proyecto con design_source.applies===true); si el slice NO toca UI, es null aunque el proyecto tenga UI. ESTRICTO para UI: solo cierra con VERIFICACIÓN VISUAL REAL vía MCP de devtools de navegador (screenshot app vs prototipo). true = FIEL (o DESVIACIONES justificadas, vía MCP); false = DESVIACIONES sin justificar O verificación visual no realizada (INCONCLUSO ya NO pasa para UI); null = N/A (slice sin UI). NO es legado (los legados viven en releases[])." },
+            "wiring_verified": { "type": "boolean", "description": "Gate de cierre del inner loop (A4): un subagente adversarial INDEPENDIENTE de contexto virgen (wiring-adversarial-verifier) intentó refutar el slice (stubs, rutas sin cablear, AC sin test, items de wiring_checklist[] aún failing) y NO encontró huecos. dod NO puede ser true hasta que wiring_verified sea true. Lo inicializa el gatekeeper en false en el DoR." },
+            "api": { "type": ["boolean", "null"], "description": "null = N/A (slice sin endpoints)." },
+            "ux": { "type": ["boolean", "null"], "description": "null = N/A (slice sin UI). Legado: hoy se audita en releases[]." },
+            "stack": { "type": "boolean", "description": "Legado por-slice; deps las cubre el hook stack-guard.sh, la arquitectura se audita en releases[]." },
+            "security": { "type": "boolean", "description": "Legado por-slice; hoy se audita en releases[]." },
+            "smell": { "type": "boolean", "description": "Legado por-slice; hoy se audita en releases[]." },
+            "coherence": { "type": "boolean", "description": "Legado por-slice (trazabilidad 3-way completa); hoy se audita en releases[]." },
+            "dod": { "type": "boolean" }
+          }
+        },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "updated_by": { "type": "string", "description": "Agente o hook que escribió el estado." },
+        "notes": { "type": "string", "description": "Nota libre opcional (p.ej. changes/branches adicionales de una épica construida en varios pasos)." },
+        "reflected": { "type": "boolean", "description": "True si /build:reflect ya capturó los aprendizajes de este slice archivado (ciclo autocorrectivo). Mientras sea false/ausente, reflect-nudge.sh sugiere reflexionar al cerrar sesión." },
+        "reflected_at": { "type": "string", "format": "date-time", "description": "Cuándo se reflexionó (ISO-8601 UTC). Lo escribe /build:reflect." },
+        "wiring_checklist": {
+          "type": "array",
+          "description": "Handoff FINO del cableado (A1): un item por escenario AC de cada HU y por punto de integración entre capas (SPA↔gateway↔core↔worker↔persistencia). Nace failing; pasa a passing SOLO tras prueba real ejecutada (con evidence), nunca por inspección. Sobrevive al reset de contexto: una sesión fresca lee los failing de disco y NO declara 'hecho' si quedan. El wiring-adversarial-verifier audita estos items antes de cerrar wiring_verified. Ausente/vacío en slices triviales. Incluye los items BND-<frontera>-<forma> (kind integration_point, ref boundary:<id>#<kind>) de fronteras declaradas en config/build-config.json#boundaries[].",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "ref", "status"],
+            "properties": {
+              "id": { "type": "string", "description": "Identificador estable del item (p.ej. HU-003-AC2 o INT-spa-gateway)." },
+              "kind": { "type": "string", "enum": ["hu_ac", "integration_point"], "description": "hu_ac = escenario Given/When/Then de una HU; integration_point = cableado entre dos capas, o intercambio real con una frontera externa (items BND-*)." },
+              "ref": { "type": "string", "description": "A qué apunta: el AC (HU-XXX#escenario) o el par de capas (capaA→capaB)." },
+              "status": { "type": "string", "enum": ["failing", "passing"], "description": "failing al nacer; passing SOLO tras prueba real ejecutada." },
+              "evidence": { "type": "string", "description": "Evidencia de ejecución que justificó passing (test, comando, salida). Vacío mientras failing." },
+              "verified_at_sha": { "type": "string", "description": "OPCIONAL. Sha del commit en que la evidence de este item fue reproducida por última vez. Lo estampa el build-orchestrator al aplicar un veredicto del wiring-adversarial-verifier. Habilita la re-verificación incremental: en pasadas posteriores el verificador solo re-ejecuta la evidencia de items cuyo código cambió desde este sha (git diff <sha>..HEAD -- <rutas del item>); los demás conservan veredicto. Ausente = el item nunca fue verificado por el verificador (se re-ejecuta siempre)." }
+            }
+          }
+        },
+        "progress_log": {
+          "type": "array",
+          "description": "Bitácora de progreso que sobrevive al reset de contexto (A1): permite a una sesión fresca/headless retomar el cableado sin 'creer que ya está'. Append-only; complementa a git history y los logs de build.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["at", "by", "note"],
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "by": { "type": "string", "description": "Agente/sesión que dejó la nota." },
+              "note": { "type": "string", "description": "Qué se hizo / qué falta (hito conciso)." }
+            }
+          }
+        },
+        "sub_slices": {
+          "type": "array",
+          "description": "Descomposición de una épica grande (A3): si supera el umbral del gate de tamaño (>3 HU ó ≥3 capas tocadas), se trocea en sub-slices verificables construidos DE A UNO, con journey_smoke verde entre cada uno. Ausente/vacío = épica atómica (no superó el umbral). Acota además el tamaño de wiring_checklist[] por paso.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title", "status"],
+            "properties": {
+              "id": { "type": "string", "description": "Identificador del sub-slice (p.ej. EP-003-a)." },
+              "title": { "type": "string" },
+              "hus": { "type": "array", "items": { "type": "string", "pattern": "^HU-[0-9]{3}$" }, "description": "Subconjunto de hus[] cubierto por este sub-slice." },
+              "status": { "type": "string", "enum": ["pending", "done"], "description": "done SOLO con su journey_smoke verde." },
+              "journey_smoke": { "type": "boolean", "description": "El backbone-hasta-este-sub-slice camina end-to-end." }
+            }
+          }
+        },
+        "layer": { "type": "string", "enum": ["foundational", "business"], "default": "business", "description": "Clasificación (taxonomía existente del arnés): foundational (auth/datos/design-system/arquitectura base) nunca va en paralelo; business = épica de negocio (paralelizable si es disjunta). Gatea el front paralelo (C)." },
+        "files_scope": { "type": "array", "items": { "type": "string" }, "description": "Globs de archivos que la épica toca. Fuente de la disjunción inter-épica (G2)." },
+        "session_continuity": {
+          "type": "object", "additionalProperties": false,
+          "description": "Handoff de sesión (A): permite resume sin pérdida tras presión de contexto.",
+          "properties": {
+            "last_session": { "type": ["string", "null"] },
+            "stopped_at": { "type": ["string", "null"], "description": "p.ej. 'context exhaustion at 24% (ISO)'." },
+            "resume_hint": { "type": ["string", "null"], "description": "Siguiente acción concisa." },
+            "critical_recorded": { "type": "boolean", "description": "Guard once-per-session del auto-handoff." },
+            "auto_continue": { "type": "boolean", "description": "true cuando context.auto_checkpoint disparó continuación automática (§4.4)." }
+          }
+        }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release_id", "epicas", "status", "created_at", "updated_by"],
+      "properties": {
+        "release_id": { "type": "string", "description": "Mapea a una línea de release del Story Map (p.ej. R1-mvp)." },
+        "epicas": {
+          "type": "array",
+          "description": "Épicas cubiertas por esta release.",
+          "items": { "type": "string", "pattern": "^EP-[0-9]{3}$" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "status": { "type": "string", "enum": ["pending", "passed", "failed"] },
+        "gates": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Gates pesados del Release Gate (outer loop). Ausentes mientras status=pending.",
+          "properties": {
+            "security": { "type": ["boolean", "null"] },
+            "smell": { "type": ["boolean", "null"] },
+            "ux": { "type": ["boolean", "null"], "description": "null = N/A (release sin UI)." },
+            "coherence": { "type": ["boolean", "null"] },
+            "stack_arch": { "type": ["boolean", "null"] },
+            "integration": { "type": ["boolean", "null"], "description": "Journey completo recorrido con deps reales." }
+          }
+        },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_by": { "type": "string" }
+      }
+    },
+    "parallel_front": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "opened_at", "updated_by", "members", "merge_order"],
+      "properties": {
+        "status": { "type": "string", "enum": ["active", "draining"] },
+        "opened_at": { "type": "string", "format": "date-time" },
+        "updated_by": { "type": "string" },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["epica", "worktree", "files_scope", "merge_status"],
+            "properties": {
+              "epica": { "type": "string", "pattern": "^EP-[0-9]{3}$" },
+              "worktree": {
+                "type": "object", "additionalProperties": false,
+                "required": ["path", "branch", "created_at"],
+                "properties": {
+                  "path": { "type": "string" },
+                  "branch": { "type": "string", "pattern": "^(feature|fix|chore)/[a-z0-9._-]+$" },
+                  "created_at": { "type": "string", "format": "date-time" }
+                }
+              },
+              "files_scope": { "type": "array", "items": { "type": "string" } },
+              "journey_smoke": { "type": "boolean" },
+              "merge_status": { "type": "string", "enum": ["pending", "merged", "conflict"] }
+            }
+          }
+        },
+        "merge_order": { "type": "array", "items": { "type": "string", "pattern": "^EP-[0-9]{3}$" } }
+      }
+    }
+  }
+}
