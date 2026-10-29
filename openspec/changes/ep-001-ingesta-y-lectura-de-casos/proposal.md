@@ -34,5 +34,6 @@ EP-001 es la puerta de entrada del robot R_HabeasData: sin una ingesta confiable
 ## Trazabilidad
 
 - Épica: EP-001 — Ingesta y lectura de casos (`docs/03-backlog/epicas.md`).
-- HU cubiertas: HU-002, HU-003, HU-004 (`docs/04-historias/`).
+- Historias: HU-002, HU-003, HU-004
+- Documentos de las HU: `docs/04-historias/`.
 - Fuera de esta épica: HU-001 (token OAuth, insumo para el PO), HU-005 y HU-009 (stubs de Cobra).

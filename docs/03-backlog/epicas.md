@@ -46,6 +46,8 @@ La agrupación por épica es funcional, no cronológica: HU-010 (EP-003) corre *
 **Capabilities incluidas**:
 - C1 — Extracción, lectura y control de completitud.
 
+**OpenSpec change**: `ep-001-ingesta-y-lectura-de-casos`.
+
 **Historias del lab** (3 HU):
 - HU-002 — Filtrar los radicados de «Exclusión de Datos» (filtro OData). **Must**, S.
 - HU-003 — Leer los datos paramétricos del radicado. **Must**, M.

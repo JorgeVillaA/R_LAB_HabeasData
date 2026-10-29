@@ -8,6 +8,8 @@ estado: lista
 ---
 # Filtrar radicados de Exclusión de Datos
 
+> **OpenSpec change**: `ep-001-ingesta-y-lectura-de-casos` (épica EP-001).
+
 ## 1. Declaración de la historia
 
 Como **analista de operaciones**,
