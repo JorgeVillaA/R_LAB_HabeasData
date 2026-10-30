@@ -2,7 +2,11 @@
   "ZeusApi": {
     "Modo": "fixture",
     "TimeoutSegundos": 10,
-    "BackoffSegundos": [1, 2, 4],
+    "BackoffSegundos": [
+      1,
+      2,
+      4
+    ],
     "Fixture": {
       "UrlBase": "http://127.0.0.1:8765/habeasdata/api/CamposAdicionalesXRadicadoHabeasData",
       "UrlToken": "http://127.0.0.1:8765/sso/git_cisa/token",
@@ -39,5 +43,29 @@
   "CADENCIA_REINTENTO_BANDEJA_VACIA": {
     "MinutosEntreReintentos": 60,
     "MaximoReintentosDiarios": 3
+  },
+  "Portales": {
+    "Modo": "fixture",
+    "TimeoutSegundos": 10,
+    "BackoffSegundos": [
+      1,
+      2,
+      4
+    ],
+    "Fixture": {
+      "UrlPolicia": "http://127.0.0.1:8766/policia/WebJudicial/index.xhtml",
+      "UrlProcuraduria": "http://127.0.0.1:8766/procuraduria/consulta-de-antecedentes.aspx",
+      "UrlCaptchas": "http://127.0.0.1:8767/resolver"
+    },
+    "Real": {
+      "UrlPolicia": "https://antecedentes.policia.gov.co:7005/WebJudicial/",
+      "UrlProcuraduria": "https://apps.procuraduria.gov.co/webcert/consulta-de-antecedentes.aspx",
+      "UrlCaptchas": "http://127.0.0.1:8767/resolver",
+      "AutorizacionEnv": "PORTALES_REAL_AUTORIZADO",
+      "VentanaOperativa": {
+        "Desde": "06:00",
+        "Hasta": "20:00"
+      }
+    }
   }
 }
