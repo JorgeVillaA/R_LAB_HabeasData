@@ -23,8 +23,15 @@ class TestRobotInterpretado(unittest.TestCase):
         with mock.patch.dict(os.environ, ENTORNO):
             for esc in ESCENARIOS:
                 with self.subTest(esc["id"]):
-                    vista_py, vista_robot, _, _ = eq.escenario(esc, eq.ejecutar_robot_interpretado)
-                    self.assertEqual(vista_py, vista_robot)
+                    vista_py, vista_robot, _, capturadas = eq.escenario(esc, eq.ejecutar_robot_interpretado)
+                    self.assertEqual(vista_py, vista_robot)  # incluye el motivo de la detención, no solo el asunto
+                    self.assertEqual(capturadas, 0, "un trycatch tragó una excepción: el robot reventó en vez de decidir")
+
+    def test_el_json_del_robot_coincide_con_su_generador(self):
+        sys.path.insert(0, str(REPO / "Robots"))
+        import generar_labhabeasdata as gen
+        self.assertEqual(json.loads(json.dumps(gen.ROBOT)),
+                         json.loads((REPO / "Robots" / "LabHabeasData.robot.json").read_text(encoding="utf-8")))
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ class Interprete:
         self.variables["glbStrRutaRaiz"] = str(raiz)
         self.comandos = robot["commands"]
         self.bloques = 0
+        self.capturadas = 0  # excepciones que tragó un trycatch: en un escenario sano deben ser 0
 
     def sustituir(self, texto):
         def valor(m):
@@ -54,6 +55,7 @@ class Interprete:
             try:
                 self.secuencia(c.get("children"))
             except Exception:  # noqa: BLE001 (como el trycatch de Studio)
+                self.capturadas += 1
                 self.secuencia(c.get("else"))
         elif padre == "log_message":
             pass
@@ -63,14 +65,18 @@ class Interprete:
             raise NotImplementedError(padre)
 
 
-def ejecutar_robot(robot, raiz):
-    """Corre el robot y devuelve (variables finales, módulos `habeasdata` importados antes de empezar para restaurarlos)."""
+def correr(interprete):
+    """Ejecuta el robot y devuelve las variables finales; restaura los módulos `habeasdata` y el sys.path que toca el robot."""
     antes = {n: m for n, m in sys.modules.items() if n == "habeasdata" or n.startswith("habeasdata.")}
     ruta = list(sys.path)
     try:
-        return Interprete(robot, raiz).ejecutar()
+        return interprete.ejecutar()
     finally:
         for nombre in [n for n in sys.modules if n == "habeasdata" or n.startswith("habeasdata.")]:
             del sys.modules[nombre]
         sys.modules.update(antes)
         sys.path[:] = ruta
+
+
+def ejecutar_robot(robot, raiz):
+    return correr(Interprete(robot, raiz))

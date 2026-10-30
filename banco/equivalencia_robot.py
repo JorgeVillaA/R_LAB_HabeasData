@@ -122,19 +122,21 @@ def resumen_de_variables(variables):
         "excepciones_sistema": [str(x) for x in variables["glbArrExcepcionesSistema"]],
         "descartados_identificacion_ausente": [str(x) for x in variables["glbArrIdsDescartados"]],
         "motivo_sin_casos": estado["motivo_sin_casos"] or None,
-        "notificacion": {"asunto": variables["glbStrAsuntoAviso"]} if variables["glbStrAsuntoAviso"] else None,
+        "notificacion": ({"asunto": variables["glbStrAsuntoAviso"], "motivo": estado["motivo_detencion"]}
+                         if variables["glbStrAsuntoAviso"] else None),
     }
 
 
 def ejecutar_robot_interpretado(raiz):
     import interprete_robot
     robot = json.loads((REPO / "Robots" / "LabHabeasData.robot.json").read_text(encoding="utf-8"))
-    variables = interprete_robot.ejecutar_robot(robot, raiz.as_posix())
-    return resumen_de_variables(variables), 0, 0
+    interprete = interprete_robot.Interprete(robot, raiz.as_posix())
+    variables = interprete_robot.correr(interprete)
+    return resumen_de_variables(variables), interprete.bloques, interprete.capturadas
 
 
-def vista(resumen, comentarios):
-    return {
+def vista(resumen, comentarios, motivo=True):
+    vista_ = {
         "estado": resumen["estado"],
         "avanzan": resumen["avanzan"],
         "excepciones_negocio_1": resumen["excepciones_negocio_1"],
@@ -142,8 +144,12 @@ def vista(resumen, comentarios):
         "descartados": resumen["descartados_identificacion_ausente"],
         "motivo_sin_casos": resumen["motivo_sin_casos"],
         "aviso": (resumen.get("notificacion") or {}).get("asunto"),
+        "motivo_detencion": (resumen.get("notificacion") or {}).get("motivo"),
         "comentarios": sorted(comentarios),
     }
+    if not motivo:  # Studio recorta cada variable a 120 caracteres: allí solo se compara el asunto del aviso
+        del vista_["motivo_detencion"]
+    return vista_
 
 
 def escenario(esc, ejecutor=None):
@@ -158,11 +164,11 @@ def escenario(esc, ejecutor=None):
         if spec.get("apagado"):
             doble.detener()
         py = ep001.procesar(cargar(raiz))
-        vista_py = vista(py, [c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
+        vista_py = vista(py, motivo=ejecutor is not ejecutar_robot, comentarios=[c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
         if not spec.get("apagado"):
             doble.estado.configurar({"reiniciar": True})
         resumen_robot, pasos, capturados = ejecutor(raiz)
-        vista_robot = vista(resumen_robot, [c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
+        vista_robot = vista(resumen_robot, motivo=ejecutor is not ejecutar_robot, comentarios=[c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
         return vista_py, vista_robot, pasos, capturados
     finally:
         if not spec.get("apagado"):
@@ -181,8 +187,11 @@ def principal():
         resultados.append({"id": esc["id"], "equivalente": iguales, "pasos_robot": pasos, "errores_capturados": capturados,
                            "diferencias": diferencias})
         print(("IGUAL " if iguales else "DISTINTO"), esc["id"], f"pasos={pasos}", diferencias or "")
-    (REPO / "banco" / "resultados" / f"{epica}_equivalencia_robot.json").write_text(
-        json.dumps(resultados, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    sufijo = "_interprete" if "--interprete" in sys.argv else ""
+    sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip()
+    (REPO / "banco" / "resultados" / f"{epica}_equivalencia_robot{sufijo}.json").write_text(
+        json.dumps({"head_at_run": sha, "anchored_at": {"sha": sha, "robot": "Robots/LabHabeasData.robot.json"},
+                    "escenarios": resultados}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     todos = all(r["equivalente"] for r in resultados)
     print(f"escenarios: {len(resultados)}  robot de Studio equivalente al orquestador Python en todos: {todos}")
     return 0 if todos else 1

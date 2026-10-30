@@ -51,6 +51,18 @@ class TestPasos(PruebaPasos):
         self.assertFalse(resultado["ok"])
         self.assertIn("no reconocido", resultado["mensaje"])
 
+    def test_consulta_con_fila_sin_idradicado_detiene_en_el_paso_del_robot(self):
+        pasos.solicitar_token()
+        with mock.patch.object(pasos._sesion.cliente, "consultar", return_value=[{"PQRCORRESPONDEA": "OTRA"}]):
+            resultado = pasos.consultar_odata("")
+        self.assertEqual((resultado["ok"], resultado["detenido"]), (False, True))
+
+    def test_la_detencion_deja_el_motivo_en_el_log_de_errores_y_en_el_aviso(self):
+        resultado = pasos.registrar_detencion("motivo-de-prueba-xyz")
+        self.assertEqual(resultado["notificacion"]["motivo"], "motivo-de-prueba-xyz")
+        texto = "".join(p.read_text(encoding="utf-8") for p in (self.raiz / "Logs" / "Sistema").rglob("*ERRORES*.csv"))
+        self.assertIn("motivo-de-prueba-xyz", texto)
+
     def test_leer_preparar_y_clasificar_como_los_bloques_del_robot(self):
         pasos.solicitar_token()
         lectura = pasos.leer_radicado("900007")
