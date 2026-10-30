@@ -124,8 +124,14 @@ def verificar(escenario, resumen, comentarios, archivos):
 def una_corrida(escenarios):
     resultados = []
     for escenario in escenarios:
-        resumen, comentarios, archivos, lineas, modo = correr_escenario(escenario)
-        fallos = verificar(escenario, resumen, comentarios, archivos)
+        if "portales" in escenario or "identidad" in escenario["espera"]:  # EP-002: identidad con clones de portales
+            import banco_ep002
+            resumen, comentarios, consultas, archivos, texto_logs, lineas, modo = banco_ep002.correr_escenario(escenario)
+            fallos = banco_ep002.verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs)
+            comentarios = {"comentarios": comentarios, "consultas": consultas}
+        else:
+            resumen, comentarios, archivos, lineas, modo = correr_escenario(escenario)
+            fallos = verificar(escenario, resumen, comentarios, archivos)
         normalizado = json.dumps({"modo": modo, "resumen": resumen, "comentarios": comentarios, "archivos": archivos,
                                   "lineas_auditoria": lineas}, sort_keys=True, ensure_ascii=False, default=str)
         resultados.append({"id": escenario["id"], "modo": modo, "ramas": escenario["ramas"], "paso": not fallos, "fallos": fallos,
