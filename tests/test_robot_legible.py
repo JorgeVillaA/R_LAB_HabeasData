@@ -113,7 +113,7 @@ class TestEstructuraLegible(unittest.TestCase):
         grupos_ep002 = [g for g in TODOS if g["father"] == "group" and g["description"].split(" - ")[0] in
                         ("HU006", "HU007", "HU026a", "HU008", "HU006HU007HU008")]
         dentro = {id(x) for g in grupos_ep002 for x, _ in recorrer([g])}
-        init_ep002 = 13  # listas, códigos, Chrome, portales y URLs que agrega la inicialización
+        init_ep002 = 17  # listas, códigos, Chrome, portales y URLs de la inicialización + inicio y fin de la identidad
         ep001 = [c for c in propios if id(c) not in dentro]
         self.assertLessEqual(len(ep001), 84 + init_ep002)
         self.assertLessEqual([c["father"] for c in ep001].count("setVar"), 36 + 11)

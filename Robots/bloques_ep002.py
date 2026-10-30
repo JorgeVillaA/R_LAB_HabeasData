@@ -55,6 +55,8 @@ def construir(h):
            "{'etapa': 'inicio', 'via': None, 'puntaje': None, 'motivo': None, 'codigo': None, 'nombre_portal': None}"),
         si("El radicado avanzó (HU-004) y la identidad está habilitada: prepara los datos del caso",
            "{glbDicPortales}['habilitada'] == True and " + AVANZA, [
+               paso("Deja constancia del inicio de la identidad del radicado en el log de auditoría", "locDicEvento",
+                    "pasos.evento('Inicio de la identidad del radicado ' + GetVar('locStrIdRadicado'), 'EP-002')"),
                paso("Clasifica el documento: cédula, NIT de 10 dígitos y código del tipo en la Procuraduría", "locDicDocumento",
                     "pasos.clasificar_documento(GetVar('locDicCaso'))"),
                sv("Número de documento a consultar", "locStrDocumento", "{locDicDocumento}['numero']"),

@@ -578,6 +578,19 @@
       },
       {
        "father": "evaluateIf",
+       "description": "La identidad está habilitada y la selección terminó bien: deja constancia de su inicio",
+       "command": "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del inicio de la validación de identidad en el log de auditoría",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio de la validación de identidad EP-002 (modo ' + pasos.objeto(GetVar('glbDicPortales'))['modo'] + ')', 'EP-002'))"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
        "description": "Hay radicados que procesar",
        "command": "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) > 0",
        "children": [
@@ -779,6 +792,11 @@
              "description": "El radicado avanzó (HU-004) y la identidad está habilitada: prepara los datos del caso",
              "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrAvanzan}",
              "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Deja constancia del inicio de la identidad del radicado en el log de auditoría",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio de la identidad del radicado ' + GetVar('locStrIdRadicado'), 'EP-002'))"
+              },
               {
                "father": "execScriptPython",
                "description": "Clasifica el documento: cédula, NIT de 10 dígitos y código del tipo en la Procuraduría",
@@ -1639,6 +1657,19 @@
            "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado')))"
           }
          ]
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
+       "description": "La identidad está habilitada y la selección terminó bien: deja constancia de su fin",
+       "command": "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del fin de la validación de identidad en el log de auditoría",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin de la validación de identidad EP-002', 'EP-002'))"
         }
        ],
        "else": []

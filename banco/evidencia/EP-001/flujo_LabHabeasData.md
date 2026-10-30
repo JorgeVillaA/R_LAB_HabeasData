@@ -1,6 +1,6 @@
 # Flujo del robot LabHabeasData (EP-001: HU-002, HU-003, HU-004)
 
-Comandos por tipo: click_web=9, evaluateIf=55, execScriptPython=30, for=2, group=10, log_message=1, openUrl=2, openbrowser=1, sendkey_web=4, setVar=82, textObject=4, trycatch=5, waitforobject=6. Total: 211.
+Comandos por tipo: click_web=9, evaluateIf=57, execScriptPython=33, for=2, group=10, log_message=1, openUrl=2, openbrowser=1, sendkey_web=4, setVar=82, textObject=4, trycatch=5, waitforobject=6. Total: 216.
 
 - **Control de errores**: Control de ejecución
   - **Grupo**: HU002HU003HU004 - Inicializar el Asistente
@@ -62,6 +62,8 @@ Comandos por tipo: click_web=9, evaluateIf=55, execScriptPython=30, for=2, group
           - **Asignar**: Marca la ejecución como detenida y guarda el motivo del paso que falló
         *(en caso contrario)*
         - **Asignar**: Marca la ejecución como detenida y guarda el motivo del paso que falló
+    - **Si**: La identidad está habilitada y la selección terminó bien: deja constancia de su inicio
+      - **Paso (componente)**: Deja constancia del inicio de la validación de identidad en el log de auditoría
     - **Si**: Hay radicados que procesar
       - **Para cada**: Iteración por radicado de exclusión
         - **Paso (componente)**: Deja constancia del inicio del radicado en el log de auditoría
@@ -97,6 +99,7 @@ Comandos por tipo: click_web=9, evaluateIf=55, execScriptPython=30, for=2, group
         - **Grupo**: HU006 - Consultar la Policía Nacional (Chrome)
           - **Asignar**: Estado de la identidad del radicado (empieza en «inicio»)
           - **Si**: El radicado avanzó (HU-004) y la identidad está habilitada: prepara los datos del caso
+            - **Paso (componente)**: Deja constancia del inicio de la identidad del radicado en el log de auditoría
             - **Paso (componente)**: Clasifica el documento: cédula, NIT de 10 dígitos y código del tipo en la Procuraduría
             - **Asignar**: Número de documento a consultar
             - **Asignar**: Nombre del caso en Zeus (la pregunta del captcha puede requerirlo)
@@ -212,6 +215,8 @@ Comandos por tipo: click_web=9, evaluateIf=55, execScriptPython=30, for=2, group
             - **Asignar**: Anota el radicado en gestión manual
             - **Asignar**: Guarda el código de error del radicado
         - **Paso (componente)**: Deja constancia del fin del radicado en el log de auditoría
+    - **Si**: La identidad está habilitada y la selección terminó bien: deja constancia de su fin
+      - **Paso (componente)**: Deja constancia del fin de la validación de identidad en el log de auditoría
     *(en caso contrario)*
     - **Asignar**: Marca fallo de sistema en el proceso principal
     - **Asignar**: Estado de la ejecución: detenido por excepción de sistema

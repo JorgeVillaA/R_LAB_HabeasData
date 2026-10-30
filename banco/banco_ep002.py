@@ -28,6 +28,7 @@ from habeasdata.config import cargar  # noqa: E402
 from habeasdata.portales import ClientePortales  # noqa: E402
 from habeasdata.registro import Registro  # noqa: E402
 from habeasdata.zeus import ClienteZeus  # noqa: E402
+from equivalencia_robot import rastro  # noqa: E402
 from tests.soporte_ep002 import padrones  # noqa: E402
 
 CLAVES_LISTA = ("validadas", "excepciones_negocio_3", "gestion_manual", "revision_humana", "sin_nombre",
@@ -77,7 +78,8 @@ def correr_escenario(escenario, robot=False):
         portales = ClientePortales(cfg, dormir=lambda s: None)
         captchas = ServicioCaptchas(datos["Portales"]["Fixture"]["UrlCaptchas"], 3, (0,), 5, dormir=lambda s: None)
         resumen = ep002.procesar(cfg, cliente, registro, ep001.EscrituraComentario(cliente), portales, captchas)
-        comentarios = sorted(c["IDRADICADO"] for c in zeus.estado.comentarios)
+        resumen["rastro"] = rastro(raiz)
+        comentarios = sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)
         consultas = {"policia": len(web.estado.consultas["policia"]), "procuraduria": len(web.estado.consultas["procuraduria"]),
                      "casilla_marcada": sum(1 for c in web.estado.consultas["policia"] if c["recaptcha"])}
         archivos = sorted(p.relative_to(raiz).as_posix() for p in raiz.rglob("*.csv"))
@@ -106,7 +108,7 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
     if "vias" in espera:
         igual("vias", {k: v for k, v in resumen["via"].items() if k in espera["vias"]}, espera["vias"])
     if "comentarios" in espera:
-        igual("comentarios", comentarios, sorted(espera["comentarios"]))
+        igual("comentarios", [c[0] for c in comentarios], sorted(espera["comentarios"]))
     for portal, tope in espera.get("consultas_maximas", {}).items():
         if consultas[portal] > tope:
             fallos.append(f"consultas a {portal}: {consultas[portal]} > {tope}")
@@ -123,8 +125,12 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
 
 
 def vista_de_resumen(resumen, comentarios):
+    # El detalle del motivo de un fallo de portal difiere (el parser conoce el HTTP; Chrome solo ve el selector ausente): se
+    # compara hasta el CÓDIGO del error.
+    rastro_ = dict(resumen["rastro"], errores=sorted(re.sub(r"^(.*?Radicado \d+: [A-Z_]+):.*$", r"", f) for f in resumen["rastro"]["errores"]))
+    resumen = dict(resumen, rastro=rastro_)
     return {"estado": resumen["estado"], **{k: sorted(resumen[k]) for k in CLAVES_LISTA}, "codigos": resumen["codigos"],
-            "comentarios": comentarios}
+            "comentarios": comentarios, "rastro": resumen["rastro"]}
 
 
 def vista_del_robot(raiz, zeus, studio=False):
@@ -149,16 +155,16 @@ def vista_del_robot(raiz, zeus, studio=False):
         resumen = {"estado": re.search(r"'estado': '(\w+)'", v["glbDicEstado"]).group(1), "codigos": ast.literal_eval(v["glbDicCodigos"]),
                    "validadas": lista("glbArrValidadas"), "excepciones_negocio_3": lista("glbArrExcepcionesNegocioTres"),
                    "gestion_manual": lista("glbArrGestionManual"), "revision_humana": lista("glbArrRevisionHumana"),
-                   "sin_nombre": lista("glbArrSinNombre"), "excepciones_sistema_identidad": lista("glbArrExcepcionesSistemaIdentidad")}
-        return vista_de_resumen(resumen, sorted(c["IDRADICADO"] for c in zeus.estado.comentarios)), r["errores_capturados"]
+                   "sin_nombre": lista("glbArrSinNombre"), "excepciones_sistema_identidad": lista("glbArrExcepcionesSistemaIdentidad"), "rastro": rastro(raiz)}
+        return vista_de_resumen(resumen, sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)), r["errores_capturados"]
     interprete = interprete_robot.Interprete(robot, raiz.as_posix())
     with mock.patch.dict(os.environ, ENTORNO):
         v = interprete_robot.correr(interprete)
     resumen = {"estado": v["glbDicEstado"]["estado"], "codigos": dict(v["glbDicCodigos"]),
                "validadas": v["glbArrValidadas"], "excepciones_negocio_3": v["glbArrExcepcionesNegocioTres"],
                "gestion_manual": v["glbArrGestionManual"], "revision_humana": v["glbArrRevisionHumana"],
-               "sin_nombre": v["glbArrSinNombre"], "excepciones_sistema_identidad": v["glbArrExcepcionesSistemaIdentidad"]}
-    return vista_de_resumen(resumen, sorted(c["IDRADICADO"] for c in zeus.estado.comentarios)), interprete.capturadas
+               "sin_nombre": v["glbArrSinNombre"], "excepciones_sistema_identidad": v["glbArrExcepcionesSistemaIdentidad"], "rastro": rastro(raiz)}
+    return vista_de_resumen(resumen, sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)), interprete.capturadas
 
 
 def principal_studio(ids=None):

@@ -92,8 +92,8 @@ def parametros():
                cadencia=cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"])
 
 
-def evento(texto):
-    _sesion.registro.auditoria(texto, MODULO)
+def evento(texto, modulo=None):
+    _sesion.registro.auditoria(texto, modulo or MODULO)
     return _ok()
 
 

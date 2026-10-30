@@ -235,7 +235,18 @@ CIERRE = grupo("HU002HU003HU004 - Cierre y registro de ejecución", [
 
 CONTROL = {"father": "trycatch", "description": "Control de ejecución", "children": [
     INICIALIZAR,
-    {"father": "trycatch", "description": "Proceso principal", "children": [HU002, ITERACION], "else": [
+    {"father": "trycatch", "description": "Proceso principal", "children": [
+        HU002,
+        si("La identidad está habilitada y la selección terminó bien: deja constancia de su inicio",
+           "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del inicio de la validación de identidad en el log de auditoría", "locDicEvento",
+                 "pasos.evento('Inicio de la validación de identidad EP-002 (modo ' + pasos.objeto(GetVar('glbDicPortales'))['modo'] + ')', 'EP-002')")]),
+        ITERACION,
+        si("La identidad está habilitada y la selección terminó bien: deja constancia de su fin",
+           "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del fin de la validación de identidad en el log de auditoría", "locDicEvento",
+                 "pasos.evento('Fin de la validación de identidad EP-002', 'EP-002')")]),
+    ], "else": [
         sv("Marca fallo de sistema en el proceso principal", "glbBlnEstadoSistema", "False"),
         sv("Estado de la ejecución: detenido por excepción de sistema", "glbDicEstado", "dict({glbDicEstado}, estado='detenido', motivo_detencion='Excepción de sistema en el proceso principal')"),
     ]},
