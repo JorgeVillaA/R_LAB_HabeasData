@@ -1,0 +1,121 @@
+{
+  "head_at_run": "3ddd905",
+  "anchored_at": {
+    "sha": "3ddd905",
+    "robot": "Robots/LabHabeasData.robot.json"
+  },
+  "escenarios": [
+    {
+      "id": "EP001-01-happy-completo",
+      "equivalente": true,
+      "pasos_robot": 286,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-02-bandeja-vacia",
+      "equivalente": true,
+      "pasos_robot": 42,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-03-tipologia-ausente",
+      "equivalente": true,
+      "pasos_robot": 42,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-04-filtro-no-reconocido",
+      "equivalente": true,
+      "pasos_robot": 29,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-05-token-vencido-persistente",
+      "equivalente": true,
+      "pasos_robot": 29,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-06-sin-roles-403",
+      "equivalente": true,
+      "pasos_robot": 29,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-07-api-no-disponible",
+      "equivalente": true,
+      "pasos_robot": 24,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-08-radicado-no-legible-400",
+      "equivalente": true,
+      "pasos_robot": 284,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-09-radicado-no-encontrado-404",
+      "equivalente": true,
+      "pasos_robot": 284,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-10-comentario-rechazado-400",
+      "equivalente": true,
+      "pasos_robot": 286,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-11-comentario-sin-autorizacion-401",
+      "equivalente": true,
+      "pasos_robot": 286,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-12-solo-casos-completos",
+      "equivalente": true,
+      "pasos_robot": 87,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-13-todos-incompletos",
+      "equivalente": true,
+      "pasos_robot": 96,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-14-sin-descartar-identificacion-ausente",
+      "equivalente": true,
+      "pasos_robot": 300,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-15-lote-con-first-y-orderby",
+      "equivalente": true,
+      "pasos_robot": 90,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-16-solo-descartados",
+      "equivalente": true,
+      "pasos_robot": 41,
+      "errores_capturados": 0,
+      "diferencias": {}
+    }
+  ]
+}

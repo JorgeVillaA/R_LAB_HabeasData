@@ -45,3 +45,15 @@ Se abrió Studio y se corrió `banco/equivalencia_robot.py EP-001` sobre HEAD. R
 **Consecuencia para la evidencia:** la equivalencia en Studio no se reproduce hoy en esta sesión de Studio; la equivalencia lógica sí, al 100 %. Para tenerla en Studio hay que **relanzar Studio con esas dos variables** y repetir la corrida.
 
 **Estado de gates:** se mantienen `wiring_verified` y `dod` en verdadero, con esta salvedad explícita: la equivalencia está probada por intérprete en HEAD; la vía Studio queda condicionada al entorno de arranque.
+
+### Resolución (misma fecha)
+
+Se eliminó la dependencia del entorno del proceso de Studio:
+
+1. `Scripts/habeasdata/zeus.py`: en modo `fixture`, si la variable de entorno no está, las credenciales se leen de la configuración (`ZeusApi.Fixture.ClientId` / `ClientSecret`). El modo `real` no cambia: sigue exigiendo el secreto del Administrador de credenciales.
+2. `banco/equivalencia_robot.py`: la configuración temporal que usa cada escenario lleva las credenciales sintéticas del doble, así que el robot de Studio las encuentra en su configuración y no en su entorno. Además, el script fija por defecto el par sintético para que una corrida no falle por olvidarlo.
+3. Lanzador `R_LAB_HabeasData.bat` (carpeta del proyecto de Studio): exporta las dos variables antes de arrancar, por compatibilidad.
+
+**Re-ejecución en Studio tras el arreglo: 16/16 equivalente.** Artefacto `banco/resultados/EP-001_equivalencia_robot.json` regenerado. Suite completa: **155 pruebas OK**.
+
+Con esto desaparece la salvedad: la equivalencia queda verificada por las dos vías (Studio e intérprete) en HEAD.
