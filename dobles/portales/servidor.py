@@ -106,13 +106,13 @@ def con_oculto(base, campo, valor):
 
 def habilitada(base, id_):
     """Quita disabled del elemento con ese id (el JS del clon lo habilitaba; aquí la lógica la manda el servidor)."""
-    return re.sub(r'(<\w+[^>]*id="%s"[^>]*?)\s+(?:disabled="disabled"|aria-disabled="true")' % re.escape(id_),
+    return re.sub(r'(<\w+[^>]*\bid="%s"[^>]*?)\s+(?:disabled="disabled"|aria-disabled="true")' % re.escape(id_),
                   lambda m: m.group(1), base, count=2)
 
 
 def sin_manejador_de_clic(base, id_):
     """Quita el onclick del elemento con ese id (el original cancela el envío con `return false`)."""
-    return re.sub(r'(<\w+[^>]*id="%s"[^>]*?)\s+onclick="[^"]*"' % re.escape(id_), lambda m: m.group(1), base, count=1)
+    return re.sub(r'(<\w+[^>]*\bid="%s"[^>]*?)\s+onclick="[^"]*"' % re.escape(id_), lambda m: m.group(1), base, count=1)
 
 
 MARCA_RECAPTCHA = ("document.getElementById('recaptchaCheck').checked=true;"
@@ -384,7 +384,7 @@ def crear_servidor(estado, puerto=0):
             base = sin_scripts(clon_html("policia", "antecedentes.html"))
             base = con_oculto(base, "javax.faces.ViewState", secrets.token_hex(8))
             base = sin_manejador_de_clic(base, "j_idt17")
-            base = re.sub(r'(<span[^>]*id="recaptchaCheckbox")', lambda m: m.group(1) + ' onclick="%s"' % MARCA_RECAPTCHA, base, count=1)
+            base = re.sub(r'(<span[^>]*\bid="recaptchaCheckbox")', lambda m: m.group(1) + ' onclick="%s"' % MARCA_RECAPTCHA, base, count=1)
             if estado.policia_modo == "cuota":
                 base = con_html(base, "captchaAntecedentes",
                                 "<div id=\"msgCaptcha\">Este sitio supera la cuota gratuita de reCAPTCHA. "

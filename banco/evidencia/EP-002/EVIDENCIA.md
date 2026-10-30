@@ -38,3 +38,23 @@ Una primera corrida en Chrome dio 18 de 19: el escenario del reto de imágenes t
 3. Insumos B3 (métrica de nombres) y B2 (regla del «primer nombre»): propuestos por el agente, **a aprobar por Villa**.
 4. Filas de `Transacciones` (D-08) y `MaestraCelulares/MaestraCorreos` (D-17): EP-003; hoy el rastro de EP-002 va al reporte de gestión y a los logs.
 5. Reintentos de portal caído en el robot (ver arriba).
+
+---
+
+## Tarea 3.4 — re-ejecución del 2026-10-30 (HEAD `e60f992`). NO está verde
+
+Corrección de nota: la fila «Robot en Studio y Chrome vs orquestador: 19 de 19» de arriba es de `e9d83e2` (antes del cambio al front fiel de `b830846`) y **no vale para el HEAD actual**. Ese artefacto sigue en el historial de git.
+
+| Verificación (HEAD `e60f992`) | Resultado |
+|---|---|
+| `python -m unittest discover -s tests -t .` | 200 pruebas, OK (`EP-002_suite.log`) |
+| `validate_robot` perfil `trycore` (`LabHabeasData`) | 0 errores, 0 avisos |
+| `python banco/banco_ep002.py` (robot en Studio y Chrome vs orquestador, 20 escenarios) | **4 de 20 equivalentes** (06, 10, 16, 18); `EP-002_equivalencia_robot.json`, `EP-002_corrida_studio.log` |
+| `python banco/equivalencia_robot.py EP-002` | 20 de 20, pero **no ejercita EP-002**: fuerza `Identidad.Habilitada=false` y compara solo el flujo de EP-001 (`EP-002_equivalencia_flujo_EP001_sin_identidad.json`). No es evidencia de 3.4 |
+
+Hallazgos de la corrida:
+1. **Credenciales del doble**: `feature/EP-002` no tenía el fallback a configuración (estaba en `fffdce6` de `feature/EP-001`); sin él, Studio detenía la corrida con «Credenciales del doble no definidas». Traído por cherry-pick (`e60f992`). `banco_ep002.py` ahora inyecta el par sintético en la configuración temporal.
+2. **Defecto del clon** (corregido): en `dobles/portales/servidor.py` tres regex tenían un byte 0x08 literal en lugar de `\b` (introducido en `b830846`). `sin_manejador_de_clic`, `habilitada` y la marca de la casilla del clon de la Policía nunca coincidían: el botón de refresco conservaba `onclick="return false"` y Chrome fallaba con «element not interactable» (`EP-002_equivalencia_robot_FALLO_pre_correccion_regex.json`).
+3. **Causa abierta**: con el clon corregido siguen fallando 16 escenarios en Studio y Chrome. En la traza, el envío de la consulta a la Procuraduría responde «Sesión sin términos aceptados» (la sesión del clon no conserva `acepto` en Chrome) y la lectura de `lblPregunta` falla después. Por HTTP directo (urllib) con las mismas peticiones que Chrome el clon responde bien, y las corridas sueltas en Chrome dieron resultados distintos entre sí. No se determinó si el fallo está en el clon, en el robot o en el estado de Chrome/Studio. Se probaron dos cambios al robot (espera tras el refresco y una espera de resultado distinguible): no cambiaron el resultado y rompían 11 pruebas del navegador emulado, así que se revirtieron.
+
+Pendiente: diagnosticar la causa abierta con el navegador a la vista (capturas del MCP de Chrome) antes de marcar la tarea 3.4 en `tasks.md`.

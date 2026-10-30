@@ -40,12 +40,15 @@ def correr_escenario(escenario, robot=False):
     filas = radicados_de(especificacion["radicados"])
     filas = [dict(f, **especificacion.get("campos", {}).get(str(f["IDRADICADO"]), {})) for f in filas]
     import os
-    credenciales = ((os.environ["ZEUS_DOBLE_CLIENT_ID"], os.environ["ZEUS_DOBLE_CLIENT_SECRET"]) if robot == "studio"
-                    else CREDENCIALES)
-    zeus = DobleZeus(credenciales, filas).iniciar()
+    zeus = DobleZeus(CREDENCIALES, filas).iniciar()
     web = DoblePortales().iniciar()
     servicio = DobleCaptchas().iniciar()
     raiz = preparar_raiz(zeus.puerto, escenario.get("proceso", {}))
+    if robot == "studio":  # Studio no hereda el entorno de este proceso: el par sintético del doble va en la configuración temporal
+        ruta = raiz / "Configuracion" / "ConfiguracionProceso.json"
+        datos = json.loads(ruta.read_text(encoding="utf-8"))
+        datos["ZeusApi"]["Fixture"]["ClientId"], datos["ZeusApi"]["Fixture"]["ClientSecret"] = CREDENCIALES
+        ruta.write_text(json.dumps(datos), encoding="utf-8")
     try:
         zeus.estado.configurar({k: v for k, v in especificacion.items() if k in ("token_ttl", "denegar", "fallas_radicado", "falla_comentario")})
         ajustes = escenario.get("portales", {})

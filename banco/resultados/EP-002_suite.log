@@ -1,0 +1,19 @@
+..................C:\Users\jazz\AppData\Local\hermes\tools\python-3.14.9+20261021-win32-x64\Lib\tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 400: 'Bad Request'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+C:\Users\jazz\AppData\Local\hermes\tools\python-3.14.9+20261021-win32-x64\Lib\tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 404: 'Not Found'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+C:\Users\jazz\AppData\Local\hermes\tools\python-3.14.9+20261021-win32-x64\Lib\tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 401: 'Unauthorized'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+...............C:\Users\jazz\AppData\Local\hermes\tools\python-3.14.9+20261021-win32-x64\Lib\tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 403: 'Forbidden'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+.......................................................C:\Users\jazz\AppData\Local\hermes\tools\python-3.14.9+20261021-win32-x64\Lib\tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 503: 'Service Unavailable'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+..C:\Users\jazz\AppData\Local\hermes\tools\python-3.14.9+20261021-win32-x64\Lib\tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 422: 'Unprocessable Content'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+..............................................................................................C:\Users\jazz\AppData\Local\hermes\tools\python-3.14.9+20261021-win32-x64\Lib\tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 401: 'x'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+................
+----------------------------------------------------------------------
+Ran 200 tests in 190.589s
+
+OK
