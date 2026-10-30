@@ -292,7 +292,7 @@
       {
        "father": "execScriptPython",
        "description": "Lee los parámetros de negocio de la configuración (tipología, campo, literal de ausencia, lote, orden)",
-       "command": "from habeasdata import pasos\nSetVar('glbDicParametros', pasos.parametros())"
+       "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicParametros', pasos.parametros())"
       },
       {
        "father": "setVar",
@@ -345,7 +345,7 @@
       {
        "father": "execScriptPython",
        "description": "Lee el modo, las URL de los portales y los reintentos del captcha; en modo real exige autorización y ventana operativa",
-       "command": "from habeasdata import pasos\nSetVar('glbDicPortales', pasos.portales())"
+       "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicPortales', pasos.portales())"
       },
       {
        "father": "evaluateIf",
@@ -386,7 +386,7 @@
         {
          "father": "execScriptPython",
          "description": "Solicita el token OAuth (client_credentials, vigencia 300 s); el secreto sale del Administrador de credenciales",
-         "command": "from habeasdata import pasos\nSetVar('glbDicAutenticacion', pasos.solicitar_token())"
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicAutenticacion', pasos.solicitar_token())"
         },
         {
          "father": "evaluateIf",
@@ -416,7 +416,7 @@
           {
            "father": "execScriptPython",
            "description": "Consulta los radicados de exclusión (GET OData con $filter, $select, $first y $orderby)",
-           "command": "from habeasdata import pasos\nSetVar('glbDicSeleccion', pasos.consultar_seleccion(GetVar('locDicConsulta')))"
+           "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicSeleccion', pasos.consultar_seleccion(GetVar('locDicConsulta')))"
           },
           {
            "father": "evaluateIf",
@@ -443,7 +443,7 @@
               {
                "father": "execScriptPython",
                "description": "Consulta los radicados descartados para no perderlos en silencio",
-               "command": "from habeasdata import pasos\nSetVar('glbDicDescartados', pasos.consultar_odata(GetVar('locStrFiltroDescartados'), 'IDRADICADO'))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicDescartados', pasos.consultar_odata(GetVar('locStrFiltroDescartados'), 'IDRADICADO'))"
               },
               {
                "father": "evaluateIf",
@@ -459,7 +459,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Deja los descartados en el log de auditoría y en el reporte",
-                 "command": "from habeasdata import pasos\nSetVar('glbDicRegistroDescartados', pasos.registrar_descartados(GetVar('glbArrIdsDescartados')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicRegistroDescartados', pasos.registrar_descartados(GetVar('glbArrIdsDescartados')))"
                 }
                ],
                "else": [
@@ -482,7 +482,7 @@
               {
                "father": "execScriptPython",
                "description": "Consulta el total de radicados (consulta general, sin $filter)",
-               "command": "from habeasdata import pasos\nSetVar('glbDicGeneral', pasos.consultar_odata('', 'IDRADICADO'))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicGeneral', pasos.consultar_odata('', 'IDRADICADO'))"
               },
               {
                "father": "evaluateIf",
@@ -534,7 +534,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Registra «0 casos» y la cadencia del reintento (CADENCIA_REINTENTO_BANDEJA_VACIA)",
-                 "command": "from habeasdata import pasos\nSetVar('glbDicSinCasos', pasos.registrar_sin_casos(pasos.objeto(GetVar('glbDicEstado'))['motivo_sin_casos'], pasos.objeto(GetVar('glbDicEstado'))['total_radicados']))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicSinCasos', pasos.registrar_sin_casos(pasos.objeto(GetVar('glbDicEstado'))['motivo_sin_casos'], pasos.objeto(GetVar('glbDicEstado'))['total_radicados']))"
                 }
                ],
                "else": [
@@ -585,7 +585,7 @@
           {
            "father": "execScriptPython",
            "description": "Deja constancia del inicio del radicado en el log de auditoría",
-           "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado')))"
+           "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado')))"
           },
           {
            "father": "group",
@@ -594,7 +594,7 @@
             {
              "father": "execScriptPython",
              "description": "Lee el radicado por IDRADICADO (GET individual)",
-             "command": "from habeasdata import pasos\nSetVar('locDicLectura', pasos.leer_radicado(GetVar('locStrIdRadicado')))"
+             "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicLectura', pasos.leer_radicado(GetVar('locStrIdRadicado')))"
             },
             {
              "father": "evaluateIf",
@@ -604,19 +604,19 @@
               {
                "father": "execScriptPython",
                "description": "Limpia «No aporta» y vacíos (= ausente) y separa los valores de cada canal por «/»",
-               "command": "from habeasdata import pasos\nSetVar('locDicPreparado', pasos.preparar_campos(GetVar('locDicLectura')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPreparado', pasos.preparar_campos(GetVar('locDicLectura')))"
               },
               {
                "father": "execScriptPython",
                "description": "Clasifica cada teléfono por dígitos: celular, fijo o sin clasificar",
-               "command": "from habeasdata import pasos\nSetVar('locDicCaso', pasos.clasificar_telefonos(GetVar('locDicPreparado')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicCaso', pasos.clasificar_telefonos(GetVar('locDicPreparado')))"
               }
              ],
              "else": [
               {
                "father": "execScriptPython",
                "description": "Registra la excepción de sistema del radicado (log de errores y reporte)",
-               "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicLectura'))['mensaje'])"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicLectura'))['mensaje'])"
               },
               {
                "father": "setVar",
@@ -702,7 +702,7 @@
               {
                "father": "execScriptPython",
                "description": "Registra el avance a la validación de deuda en el reporte",
-               "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
               },
               {
                "father": "setVar",
@@ -721,7 +721,7 @@
               {
                "father": "execScriptPython",
                "description": "Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle",
-               "command": "from habeasdata import pasos\nSetVar('locDicComentario', pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicComentario', pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
               },
               {
                "father": "evaluateIf",
@@ -731,7 +731,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Registra la excepción de negocio 1 en el reporte",
-                 "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicResultado', pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
                 },
                 {
                  "father": "setVar",
@@ -744,7 +744,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Registra la excepción de sistema (no se pudo escribir el comentario)",
-                 "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"
                 },
                 {
                  "father": "setVar",
@@ -777,7 +777,7 @@
               {
                "father": "execScriptPython",
                "description": "Clasifica el documento: cédula, NIT de 10 dígitos y código del tipo en la Procuraduría",
-               "command": "from habeasdata import pasos\nSetVar('locDicDocumento', pasos.clasificar_documento(GetVar('locDicCaso')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicDocumento', pasos.clasificar_documento(GetVar('locDicCaso')))"
               },
               {
                "father": "setVar",
@@ -923,7 +923,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Lee el texto de la página de la Policía",
-                 "command": "from habeasdata import pasos\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
                 }
                ],
                "else": []
@@ -1040,7 +1040,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Lee el texto del resultado de la Policía",
-                 "command": "from habeasdata import pasos\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
                 }
                ],
                "else": []
@@ -1245,7 +1245,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Envía pregunta, documento y nombre al servicio de captchas",
-                 "command": "from habeasdata import pasos\nSetVar('locDicCaptcha', pasos.resolver_captcha(GetVar('locStrPregunta'), GetVar('locStrDocumento'), GetVar('locStrNombre')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicCaptcha', pasos.resolver_captcha(GetVar('locStrPregunta'), GetVar('locStrDocumento'), GetVar('locStrNombre')))"
                 },
                 {
                  "father": "setVar",
@@ -1340,7 +1340,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Lee el bloque «Datos del ciudadano»",
-                 "command": "from habeasdata import pasos\nSetVar('locDicPaginaProc', pasos.leer_pagina_procuraduria(GetVar('locStrTexto')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPaginaProc', pasos.leer_pagina_procuraduria(GetVar('locStrTexto')))"
                 }
                ],
                "else": []
@@ -1451,7 +1451,7 @@
               {
                "father": "execScriptPython",
                "description": "Calcula el puntaje y lo compara con UMBRAL_COINCIDENCIA_NOMBRES",
-               "command": "from habeasdata import pasos\nSetVar('locDicVeredicto', pasos.comparar_nombres(GetVar('locStrNombre'), pasos.objeto(GetVar('locDicIdentidad'))['nombre_portal']))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicVeredicto', pasos.comparar_nombres(GetVar('locStrNombre'), pasos.objeto(GetVar('locDicIdentidad'))['nombre_portal']))"
               }
              ],
              "else": []
@@ -1492,7 +1492,7 @@
               {
                "father": "execScriptPython",
                "description": "Comentario de la excepción de negocio 3 (revisión de Cartera)",
-               "command": "from habeasdata import pasos\nSetVar('locDicComentarioIdentidad', pasos.comentar_excepcion_3(GetVar('locDicCaso'), pasos.objeto(GetVar('locDicIdentidad'))['via'], GetVar('locDicVeredicto')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicComentarioIdentidad', pasos.comentar_excepcion_3(GetVar('locDicCaso'), pasos.objeto(GetVar('locDicIdentidad'))['via'], GetVar('locDicVeredicto')))"
               }
              ],
              "else": []
@@ -1525,7 +1525,7 @@
               {
                "father": "execScriptPython",
                "description": "Registra el resultado de identidad (sin nombres ni identificaciones)",
-               "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.registrar_identidad(GetVar('locStrIdRadicado'), GetVar('locDicCaso'), GetVar('locDicIdentidad')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_identidad(GetVar('locStrIdRadicado'), GetVar('locDicCaso'), GetVar('locDicIdentidad')))"
               }
              ],
              "else": []
@@ -1631,7 +1631,7 @@
           {
            "father": "execScriptPython",
            "description": "Deja constancia del fin del radicado en el log de auditoría",
-           "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado')))"
+           "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado')))"
           }
          ]
         }
@@ -1666,7 +1666,7 @@
         {
          "father": "execScriptPython",
          "description": "Registra la detención en el log de errores y prepara el aviso «Detenido»",
-         "command": "from habeasdata import pasos\nSetVar('glbDicDetencion', pasos.registrar_detencion(pasos.objeto(GetVar('glbDicEstado'))['motivo_detencion']))"
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicDetencion', pasos.registrar_detencion(pasos.objeto(GetVar('glbDicEstado'))['motivo_detencion']))"
         },
         {
          "father": "setVar",
@@ -1680,7 +1680,7 @@
       {
        "father": "execScriptPython",
        "description": "Cierra la ejecución y deja el resumen sin PII (en modo real los datos personales se enmascaran)",
-       "command": "import json\nfrom habeasdata import pasos\no = pasos.objeto\ndetencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}\nresumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],\n           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),\n           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),\n           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),\n           'motivo_sin_casos': o(GetVar('glbDicEstado'))['motivo_sin_casos'], 'notificacion': detencion.get('notificacion')}\nSetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"
+       "command": "import json\nfrom habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\no = pasos.objeto\ndetencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}\nresumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],\n           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),\n           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),\n           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),\n           'motivo_sin_casos': o(GetVar('glbDicEstado'))['motivo_sin_casos'], 'notificacion': detencion.get('notificacion')}\nSetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"
       },
       {
        "father": "setVar",

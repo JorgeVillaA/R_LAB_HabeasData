@@ -584,6 +584,34 @@
   }
  },
  {
+  "id": "EP002-20-cedula-sin-resultado-en-ninguna-fuente",
+  "ramas": [
+   "HU-007 cédula sin resultado en Policía ni Procuraduría → gestión manual"
+  ],
+  "doble": {
+   "radicados": [
+    "900001"
+   ]
+  },
+  "portales": {
+   "vaciar_policia": true,
+   "sin_nombre": [
+    [
+     "1",
+     "1000000001"
+    ]
+   ]
+  },
+  "espera": {
+   "identidad": true,
+   "estado": "ok",
+   "gestion_manual": [
+    "900001"
+   ],
+   "excepciones_sistema_identidad": []
+  }
+ },
+ {
   "id": "EP002-19-ciudadano-con-antecedentes-igual-valida",
   "ramas": [
    "HU-007 con antecedentes: el estado no altera la identidad"

@@ -34,7 +34,7 @@ def py(descripcion, *lineas):
 
 
 def paso(descripcion, variable, llamada):
-    return py(descripcion, "from habeasdata import pasos", f"SetVar('{variable}', {llamada})")
+    return py(descripcion, "from habeasdata import pasos", "pasos.asegurar(GetVar('glbStrRutaRaiz'))", f"SetVar('{variable}', {llamada})")
 
 
 def sv(descripcion, variable, expresion):
@@ -149,6 +149,7 @@ HU003 = grupo("HU003 - Leer datos paramétricos", [
     ], [
         py("Registra la excepción de sistema del radicado (log de errores y reporte)",
            "from habeasdata import pasos",
+           "pasos.asegurar(GetVar('glbStrRutaRaiz'))",
            "pasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicLectura'))['mensaje'])"),
         sv("Anota el radicado en excepciones de sistema", "glbArrExcepcionesSistema", anexar("glbArrExcepcionesSistema", "'{locStrIdRadicado}'")),
     ]),
@@ -187,6 +188,7 @@ HU004 = grupo("HU004 - Validar campos obligatorios", [
         ], [
             py("Registra la excepción de sistema (no se pudo escribir el comentario)",
                "from habeasdata import pasos",
+               "pasos.asegurar(GetVar('glbStrRutaRaiz'))",
                "pasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"),
             sv("Anota el radicado en excepciones de sistema", "glbArrExcepcionesSistema",
                anexar("glbArrExcepcionesSistema", "'{locStrIdRadicado}'")),
@@ -214,6 +216,7 @@ CIERRE = grupo("HU002HU003HU004 - Cierre y registro de ejecución", [
     py("Cierra la ejecución y deja el resumen sin PII (en modo real los datos personales se enmascaran)",
        "import json",
        "from habeasdata import pasos",
+       "pasos.asegurar(GetVar('glbStrRutaRaiz'))",
        "o = pasos.objeto",
        "detencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}",
        "resumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],",

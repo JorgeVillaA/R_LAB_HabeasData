@@ -62,6 +62,9 @@ ESCENARIOS = [
     esc("18-tipo-de-documento-sin-consulta", ["Realidad: PEP no tiene consulta en la Procuraduría"], ["900013"],
         {"gestion_manual": ["900013"], "consultas_maximas": {"procuraduria": 0}},
         doble={"campos": {"900013": {"TIPODEIDENTIFICACION": "PEP"}}}),
+    esc("20-cedula-sin-resultado-en-ninguna-fuente", ["HU-007 cédula sin resultado en Policía ni Procuraduría → gestión manual"], ["900001"],
+        {"gestion_manual": ["900001"], "excepciones_sistema_identidad": []},
+        {"vaciar_policia": True, "sin_nombre": [["1", "1000000001"]]}),
     esc("19-ciudadano-con-antecedentes-igual-valida", ["HU-007 con antecedentes: el estado no altera la identidad"], ["900001"],
         {"validadas": ["900001"]}, {"vaciar_policia": True, "con_antecedentes": [["1", "1000000001"]]}),
 ]

@@ -10,6 +10,7 @@ import json
 import re
 import sys
 
+ULTIMO = None  # el último intérprete que corrió: lo lee el generador del mapa de salud
 COMANDOS_WEB = ("openbrowser", "openUrl", "click_web", "sendkey_web", "waitforobject", "textObject")
 SUSTITUCION = re.compile(r"\{((?:glb|loc)[A-Za-z0-9_]+)\}")
 
@@ -21,6 +22,7 @@ class Interprete:
         self.comandos = robot["commands"]
         self.bloques = 0
         self.navegador = None
+        self.ejecutados = set()  # rutas de los bloques que corrieron (mapa de salud por bloque)
         self.capturadas = 0  # excepciones que tragó un trycatch: en un escenario sano deben ser 0
 
     def sustituir(self, texto):
@@ -55,29 +57,34 @@ class Interprete:
         self.secuencia(self.comandos)
         return self.variables
 
-    def secuencia(self, comandos):
-        for comando in comandos or []:
-            self.comando(comando)
+    def secuencia(self, comandos, ruta=""):
+        """Ejecuta una lista de bloques; `ruta` identifica cada uno («1.2.3», «e» = rama else) para el mapa de salud."""
+        for numero, comando in enumerate(comandos or [], 1):
+            self.comando(comando, f"{ruta}.{numero}" if ruta else str(numero))
 
-    def comando(self, c):
+    def comando(self, c, ruta):
         self.bloques += 1
+        self.ejecutados.add(ruta)
         padre = c["father"]
         if padre == "setVar":
             self.variables[c["var"]] = self.evaluar(c["command"])
         elif padre == "evaluateIf":
-            self.secuencia(c.get("children") if self.evaluar(c["command"]) else c.get("else"))
+            if self.evaluar(c["command"]):
+                self.secuencia(c.get("children"), ruta)
+            else:
+                self.secuencia(c.get("else"), ruta + ".e")
         elif padre == "for":
             for elemento in self.evaluar(json.loads(c["command"])["iterable"]):
                 self.variables[c["var"]] = str(elemento)
-                self.secuencia(c.get("children"))
+                self.secuencia(c.get("children"), ruta)
         elif padre == "group":
-            self.secuencia(c.get("children"))
+            self.secuencia(c.get("children"), ruta)
         elif padre == "trycatch":
             try:
-                self.secuencia(c.get("children"))
+                self.secuencia(c.get("children"), ruta)
             except Exception:  # noqa: BLE001 (como el trycatch de Studio)
                 self.capturadas += 1
-                self.secuencia(c.get("else"))
+                self.secuencia(c.get("else"), ruta + ".e")
         elif padre == "log_message":
             pass
         elif padre in COMANDOS_WEB:
@@ -90,6 +97,8 @@ class Interprete:
 
 def correr(interprete):
     """Ejecuta el robot y devuelve las variables finales; restaura los módulos `habeasdata` y el sys.path que toca el robot."""
+    global ULTIMO
+    ULTIMO = interprete
     antes = {n: m for n, m in sys.modules.items() if n == "habeasdata" or n.startswith("habeasdata.")}
     ruta = list(sys.path)
     try:

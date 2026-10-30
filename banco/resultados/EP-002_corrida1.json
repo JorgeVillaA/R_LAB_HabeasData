@@ -183,6 +183,16 @@
     "huella": "8b09cfbf8630999794f0b23fc9065ddb65d707cd97182d14f8e8e72886efcc69"
   },
   {
+    "id": "EP002-20-cedula-sin-resultado-en-ninguna-fuente",
+    "modo": "fixture",
+    "ramas": [
+      "HU-007 cédula sin resultado en Policía ni Procuraduría → gestión manual"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "203c96854d3a5b5c38f4ec88a082d9e2f4c36a136a2d6977f09e61d70a1f829e"
+  },
+  {
     "id": "EP002-19-ciudadano-con-antecedentes-igual-valida",
     "modo": "fixture",
     "ramas": [

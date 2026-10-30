@@ -26,7 +26,36 @@ class _Sesion:
         self.escritura = EscrituraComentario(self.cliente)
 
 
-_sesion = None
+class _SesionPerezosa:
+    """Sesión del robot con entrada explícita: la raíz. `asegurar(raiz)` la reconstruye si no existe (prueba por bloque en
+    Studio, D-21): ningún paso depende de que otro haya corrido antes en el mismo proceso."""
+
+    def __init__(self):
+        self._real = None
+        self.raiz = None
+
+    def abrir(self, raiz):
+        self._real, self.raiz = _Sesion(cargar(raiz)), str(raiz)
+        return self._real
+
+    def asegurar(self, raiz):
+        if self._real is None or self.raiz != str(raiz):
+            self.abrir(raiz)
+
+    def __getattr__(self, nombre):
+        real = self.__dict__.get("_real")
+        if real is None:
+            raise RuntimeError("sesión no abierta: el bloque debe llamar a pasos.asegurar(raíz) con glbStrRutaRaiz")
+        return getattr(real, nombre)
+
+
+_sesion = _SesionPerezosa()
+
+
+def asegurar(raiz):
+    """Entrada explícita de cada bloque: abre la sesión desde la raíz si no está abierta (idempotente)."""
+    _sesion.asegurar(raiz)
+    return _ok()
 
 
 def objeto(valor):
@@ -50,8 +79,7 @@ def _fallo(mensaje, **datos):
 # ---------- inicialización y cierre ----------
 def iniciar(raiz):
     """Carga los tres JSON, crea la estructura de carpetas y los dos logs del día, y abre la sesión."""
-    global _sesion
-    _sesion = _Sesion(cargar(raiz))
+    _sesion.abrir(raiz)
     _sesion.registro.asegurar_archivos()
     _sesion.registro.auditoria("Inicio de ejecución EP-001", MODULO)
     return _ok(modo=_sesion.cliente.modo, lote=_sesion.cfg.proceso["SeleccionRadicados"])
