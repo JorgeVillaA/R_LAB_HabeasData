@@ -38,6 +38,11 @@ class TestEstructuraLegible(unittest.TestCase):
             "HU002 - Filtrar radicados de Exclusión de Datos",
             "HU003 - Leer datos paramétricos",
             "HU004 - Validar campos obligatorios",
+            "HU006 - Consultar la Policía Nacional (Chrome)",
+            "HU007 - Consultar la Procuraduría (Chrome)",
+            "HU026a - Resolver el captcha de pregunta (servicio de captchas)",
+            "HU008 - Comparar nombres (umbral 0.80, sin depender del orden)",
+            "HU006HU007HU008 - Registrar el resultado de identidad",
             "HU002HU003HU004 - Cierre y registro de ejecución",
         ]
         self.assertEqual(GRUPOS, esperados)
@@ -63,7 +68,7 @@ class TestEstructuraLegible(unittest.TestCase):
     def test_el_flujo_tiene_decisiones_y_bucle_visibles(self):
         padres = [c["father"] for c in TODOS]
         self.assertGreaterEqual(padres.count("evaluateIf"), 15)
-        self.assertEqual(padres.count("for"), 1)
+        self.assertEqual(padres.count("for"), 2)  # por radicado + intentos del captcha (HU-026a)
 
     def test_el_python_no_es_contenedor_del_flujo(self):
         for bloque in PYTHON:
@@ -101,9 +106,17 @@ class TestEstructuraLegible(unittest.TestCase):
                        "locStrFiltroBase", "locStrFiltroSeleccion", "locStrSelect", "locIntLote", "locStrOrden"):
             self.assertNotIn(suelto, nombres)
 
-    def test_tope_de_bloques_tras_consolidar(self):  # antes: 95 comandos, 47 setVar
-        self.assertLessEqual(len(TODOS), 84)
-        self.assertLessEqual([c["father"] for c in TODOS].count("setVar"), 36)
+    def test_tope_de_bloques_de_ep001_tras_consolidar(self):  # antes: 95 comandos, 47 setVar (EP-002 se mide aparte)
+        ep002 = [c for c in ROBOT["commands"][0]["children"][1]["children"]
+                 if c["father"] == "evaluateIf" or c["father"] == "group"]
+        propios = [c for c, _ in recorrer(ROBOT["commands"])]
+        grupos_ep002 = [g for g in TODOS if g["father"] == "group" and g["description"].split(" - ")[0] in
+                        ("HU006", "HU007", "HU026a", "HU008", "HU006HU007HU008")]
+        dentro = {id(x) for g in grupos_ep002 for x, _ in recorrer([g])}
+        init_ep002 = 13  # listas, códigos, Chrome, portales y URLs que agrega la inicialización
+        ep001 = [c for c in propios if id(c) not in dentro]
+        self.assertLessEqual(len(ep001), 84 + init_ep002)
+        self.assertLessEqual([c["father"] for c in ep001].count("setVar"), 36 + 11)
 
     def test_los_motivos_de_incompletitud_coinciden_con_las_reglas_de_python(self):
         en_robot = []

@@ -67,5 +67,8 @@
         "Hasta": "20:00"
       }
     }
+  },
+  "Identidad": {
+    "Habilitada": true
   }
 }

@@ -8,7 +8,11 @@ las decisiones, el bucle por radicado y los contadores viven en bloques visibles
 Uso:  python Robots/generar_labhabeasdata.py   (escribe el JSON junto a este archivo)
 """
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from bloques_ep002 import construir as construir_ep002  # noqa: E402
 
 DESTINO = Path(__file__).resolve().parent / "LabHabeasData.robot.json"
 P = '{glbDicParametros}'
@@ -78,6 +82,20 @@ INICIALIZAR = grupo("HU002HU003HU004 - Inicializar el Asistente", [
        "SetVar('glbDicInicio', pasos.iniciar(raiz))"),
     paso("Lee los parámetros de negocio de la configuración (tipología, campo, literal de ausencia, lote, orden)",
          "glbDicParametros", "pasos.parametros()"),
+    sv("Radicados con identidad validada (HU-008)", "glbArrValidadas", "[]"),
+    sv("Radicados en excepción de negocio 3 (HU-008)", "glbArrExcepcionesNegocioTres", "[]"),
+    sv("Radicados en revisión humana (HU-006)", "glbArrRevisionHumana", "[]"),
+    sv("Radicados con respuesta sin nombre (HU-007)", "glbArrSinNombre", "[]"),
+    sv("Radicados derivados a gestión manual (HU-006, HU-007, HU-026a)", "glbArrGestionManual", "[]"),
+    sv("Radicados en excepción de sistema de identidad", "glbArrExcepcionesSistemaIdentidad", "[]"),
+    sv("Códigos de error de identidad por radicado", "glbDicCodigos", "{}"),
+    sv("Chrome aún no está abierto", "glbBlnChromeAbierto", "False"),
+    paso("Lee el modo, las URL de los portales y los reintentos del captcha; en modo real exige autorización y ventana operativa",
+         "glbDicPortales", "pasos.portales()"),
+    si("Los portales no se pueden usar (falta autorización o ventana operativa)", '{glbDicPortales}["ok"] == False',
+       detener("{glbDicPortales}")),
+    sv("URL del portal de la Policía", "glbStrUrlPolicia", "{glbDicPortales}['url_policia']"),
+    sv("URL del portal de la Procuraduría", "glbStrUrlProcuraduria", "{glbDicPortales}['url_procuraduria']"),
 ])
 
 HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
@@ -182,6 +200,7 @@ ITERACION = si("Hay radicados que procesar", "{glbDicEstado}['estado'] == 'ok' a
              "pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado'))"),
         HU003,
         HU004,
+        *construir_ep002({"paso": paso, "sv": sv, "si": si, "grupo": grupo, "para": para, "anexar": anexar}),
         paso("Deja constancia del fin del radicado en el log de auditoría", "locDicEvento",
              "pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado'))"),
     ]),
@@ -229,14 +248,22 @@ VARIABLES = [("glbBlnEstadoSistema", "True"), ("glbBlnEstadoProceso", "True"), (
              ("glbDicDetencion", ""), ("glbStrAsuntoAviso", ""), 
              ("glbArrIdsRadicados", ""), ("glbArrIdsDescartados", ""), ("glbArrAvanzan", ""),
              ("glbArrExcepcionesNegocioUno", ""), ("glbArrExcepcionesSistema", ""),
+             ("glbArrValidadas", ""), ("glbArrExcepcionesNegocioTres", ""), ("glbArrRevisionHumana", ""), ("glbArrSinNombre", ""),
+             ("glbArrGestionManual", ""), ("glbArrExcepcionesSistemaIdentidad", ""), ("glbDicCodigos", ""), ("glbBlnChromeAbierto", "False"),
+             ("glbDicPortales", ""), ("glbStrUrlPolicia", ""), ("glbStrUrlProcuraduria", ""),
+             ("locDicDocumento", ""), ("locDicIdentidad", ""), ("locDicPagina", ""), ("locDicPaginaProc", ""), ("locStrTexto", ""),
+             ("locStrDocumento", ""), ("locStrNombre", ""), ("locStrCodigoTipo", ""), ("locStrPregunta", ""), ("locStrRespuesta", ""),
+             ("locDicCaptcha", ""), ("locArrIntentos", ""), ("locIntIntento", ""), ("locDicVeredicto", ""),
+             ("locDicComentarioIdentidad", ""),
              ("locStrIdRadicado", ""), ("locDicConsulta", ""), ("locStrFiltroDescartados", ""),
              ("locDicLectura", ""), ("locDicPreparado", ""), ("locDicCaso", ""), ("locDicComentario", ""),
              ("locDicResultado", ""), ("locDicEvento", ""), ("locArrMotivos", "")]
 
 ROBOT = {
     "name": "LabHabeasData",
-    "description": ("Tarea principal EP-001: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos y "
-                    "HU-004 validar campos obligatorios, contra la API de Zeus (QA) o su fixture offline. "
+    "description": ("Tarea principal EP-001 y EP-002: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos, "
+                    "HU-004 validar campos obligatorios, HU-006/HU-007/HU-026a identidad en Policía y Procuraduría (Chrome) y HU-008 "
+                    "comparar nombres, contra la API de Zeus (QA) y los portales (reales o clones). "
                     "Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0"),
     "vars": [{"name": nombre, "data": dato} for nombre, dato in VARIABLES],
     "commands": [CONTROL, {"father": "log_message", "option": "info", "command": "{glbStrObservaciones}",

@@ -75,6 +75,7 @@ def preparar_raiz(puerto, cambios_proceso):
     for clave in ("UrlBase", "UrlToken", "UrlComentario"):
         datos["ZeusApi"]["Fixture"][clave] = datos["ZeusApi"]["Fixture"][clave].replace("8765", str(puerto))
     datos["ZeusApi"]["BackoffSegundos"] = [0]
+    datos["Identidad"] = {"Habilitada": False}  # la equivalencia de EP-001 no consulta portales; EP-002 tiene la suya
     mezclar(datos, cambios_proceso)
     ruta.write_text(json.dumps(datos), encoding="utf-8")
     return raiz
@@ -152,6 +153,22 @@ def vista(resumen, comentarios, motivo=True):
     return vista_
 
 
+def filas_csv(raiz, patron, columna_fecha):
+    """Filas de los CSV de una corrida sin la columna de fecha (así se comparan orquestador y robot)."""
+    filas = []
+    for ruta in sorted(raiz.rglob(patron)):
+        for linea in ruta.read_text(encoding="utf-8").splitlines()[1:]:
+            columnas = linea.split(";")
+            del columnas[columna_fecha]
+            filas.append(";".join(columnas))
+    return sorted(filas)
+
+
+def rastro(raiz):
+    """Lo que el proceso deja escrito: reporte de gestión y log de errores (criterios de aceptación de las HU)."""
+    return {"reporte": filas_csv(raiz, "*INFORMEGESTION*.csv", 0), "errores": filas_csv(raiz, "*LOG_DE_ERRORES*.csv", 1)}
+
+
 def escenario(esc, ejecutor=None):
     ejecutor = ejecutor or ejecutar_robot
     spec = esc["doble"]
@@ -167,9 +184,13 @@ def escenario(esc, ejecutor=None):
         vista_py = vista(py, motivo=ejecutor is not ejecutar_robot, comentarios=[c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
         if not spec.get("apagado"):
             doble.estado.configurar({"reiniciar": True})
-        resumen_robot, pasos, capturados = ejecutor(raiz)
+        raiz_robot = preparar_raiz(puerto, esc.get("proceso", {}))  # carpeta propia: sus filas no se mezclan con las del orquestador
+        rastro_py = rastro(raiz)
+        resumen_robot, pasos, capturados = ejecutor(raiz_robot)
+        rastro_robot = rastro(raiz_robot)
+        shutil.rmtree(raiz_robot, ignore_errors=True)
         vista_robot = vista(resumen_robot, motivo=ejecutor is not ejecutar_robot, comentarios=[c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
-        return vista_py, vista_robot, pasos, capturados
+        return dict(vista_py, **rastro_py), dict(vista_robot, **rastro_robot), pasos, capturados
     finally:
         if not spec.get("apagado"):
             doble.detener()

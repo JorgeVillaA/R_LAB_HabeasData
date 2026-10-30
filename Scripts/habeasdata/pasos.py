@@ -166,3 +166,98 @@ def registrar_excepcion_sistema(id_radicado, mensaje):
     _sesion.registro.error(mensaje, MODULO)
     _sesion.registro.reporte(id_radicado, None, "excepción de sistema", None, mensaje)
     return _ok()
+
+
+# ---------- EP-002: identidad (HU-006, HU-007, HU-026a, HU-008) ----------
+# La navegación por los portales vive en bloques de Chrome de Studio; aquí solo van la configuración, la lectura del TEXTO
+# de la página (lógica pura), el servicio de captchas, la comparación de nombres y los registros.
+def portales():
+    """Modo, URLs y reintentos de los portales (todo sale de la configuración). En modo real exige autorización y ventana."""
+    from .portales import ClientePortales, ErrorBloqueoPortal
+    cfg = _sesion.cfg
+    identidad = cfg.proceso.get("Identidad", {"Habilitada": True})
+    if not identidad["Habilitada"]:
+        return _ok(habilitada=False, modo="fixture", url_policia="", url_procuraduria="", max_captcha=0, umbral=0)
+    try:
+        cliente = ClientePortales(cfg)
+    except ErrorBloqueoPortal as error:
+        return _fallo(error, detenido=True, habilitada=True)
+    a = cliente.ajustes
+    return _ok(habilitada=True, modo=cliente.modo, url_policia=a["UrlPolicia"], url_procuraduria=a["UrlProcuraduria"],
+               max_captcha=int(cfg.maestro["CAPTCHA_MAX_REINTENTOS"]), umbral=cfg.maestro["UMBRAL_COINCIDENCIA_NOMBRES"])
+
+
+def clasificar_documento(caso):
+    """Lógica pura: ¿cédula?, ¿NIT de exactamente 10 dígitos? y código del desplegable de la Procuraduría."""
+    from . import ep002
+    from .portales import TIPOS_PROCURADURIA
+    caso = objeto(caso)
+    numero = str(caso.get("numero_identificacion") or "")
+    tipo = ep002.tipo_normalizado(caso)
+    return _ok(cedula=tipo == "CEDULA DE CIUDADANIA", nit=tipo == "NIT", nit_valido=ep002.nit_valido(numero),
+               codigo_tipo=TIPOS_PROCURADURIA.get(tipo), numero=numero, nombre=str(caso.get("nombre") or ""))
+
+
+def leer_pagina_policia(texto):
+    """Lógica pura sobre el texto visible de la página de la Policía."""
+    import re
+    texto = str(texto or "")
+    minus = texto.lower()
+    nombre = re.search(r"Apellidos y Nombres:\s*(.+)", texto)
+    return _ok(cuota="supera la cuota gratuita" in minus, reto="seleccione todas las im" in minus,
+               sin_resultado="no se encontraron registros" in minus, nombre=nombre.group(1).strip() if nombre else None)
+
+
+def leer_pagina_procuraduria(texto):
+    """Lógica pura sobre el texto visible de la página de la Procuraduría (bloque «Datos del ciudadano»)."""
+    import re
+    texto = str(texto or "")
+    minus = texto.lower()
+    nombre = re.search(r"Nombre:\s*(.+)", texto) if "datos del ciudadano" in minus else None
+    estado = re.search(r"Estado:\s*(.+)", texto) if nombre else None
+    return _ok(nombre=nombre.group(1).strip() if nombre else None, estado=estado.group(1).strip() if estado else None,
+               incorrecta="respuesta a la pregunta es incorrecta" in minus,
+               sin_nombre="no se encontr" in minus and "informaci" in minus)
+
+
+def resolver_captcha(pregunta, documento, nombre):
+    """HU-026a: la pregunta va al servicio de captchas; el bot no calcula la respuesta. Códigos de error del servicio."""
+    from .captcha import ErrorCaptcha, ServicioCaptchas
+    cfg = _sesion.cfg
+    servicio = ServicioCaptchas(_ajustes_portales(cfg)["UrlCaptchas"], cfg.maestro["NUMERO_REINTENTOS_SISTEMA"],
+                                cfg.proceso["Portales"]["BackoffSegundos"], cfg.proceso["Portales"]["TimeoutSegundos"])
+    try:
+        return _ok(respuesta=servicio.resolver(str(pregunta), str(documento), str(nombre)), codigo=None)
+    except ErrorCaptcha as error:
+        return _fallo(error, respuesta=None, codigo=error.codigo)
+
+
+def _ajustes_portales(cfg):
+    """Ajustes de URL del modo vigente, sin las comprobaciones de autorización (esas las hace `portales()`)."""
+    ajustes = cfg.proceso["Portales"]
+    return ajustes["Real" if ajustes["Modo"] == "real" else "Fixture"]
+
+
+def comparar_nombres(nombre_zeus, nombre_portal):
+    """HU-008 (lógica pura): puntaje de coincidencia contra el umbral parametrizado."""
+    from . import nombres
+    return _ok(**nombres.comparar(str(nombre_zeus), str(nombre_portal), _sesion.cfg.maestro["UMBRAL_COINCIDENCIA_NOMBRES"]))
+
+
+def comentar_excepcion_3(caso, via, veredicto):
+    from . import ep002
+    from .zeus import ErrorZeus
+    caso = objeto(caso)
+    try:
+        _sesion.escritura.comentar(caso["radicado_hijo"], ep002.comentario_excepcion_3(objeto(veredicto), via))
+    except ErrorZeus as error:
+        return _fallo(error)
+    return _ok()
+
+
+def registrar_identidad(id_radicado, caso, identidad):
+    """Deja el resultado de identidad en el reporte y los logs (sin nombres ni identificaciones)."""
+    from . import ep002
+    caso, i = objeto(caso), objeto(identidad)
+    ep002.registrar(_sesion.registro, id_radicado, caso["radicado_padre"], i["etapa"], i["via"], i["puntaje"], i["motivo"], i["codigo"])
+    return _ok()

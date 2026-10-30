@@ -10,6 +10,7 @@ import json
 import re
 import sys
 
+COMANDOS_WEB = ("openbrowser", "openUrl", "click_web", "sendkey_web", "waitforobject", "textObject")
 SUSTITUCION = re.compile(r"\{((?:glb|loc)[A-Za-z0-9_]+)\}")
 
 
@@ -19,6 +20,7 @@ class Interprete:
         self.variables["glbStrRutaRaiz"] = str(raiz)
         self.comandos = robot["commands"]
         self.bloques = 0
+        self.navegador = None
         self.capturadas = 0  # excepciones que tragó un trycatch: en un escenario sano deben ser 0
 
     def sustituir(self, texto):
@@ -29,6 +31,25 @@ class Interprete:
 
     def evaluar(self, expresion):
         return eval(self.sustituir(expresion), {"__builtins__": __builtins__})  # noqa: S307 (JSON propio del repo)
+
+    def web(self, c):
+        """Comandos web de Studio contra el navegador emulado (clones de los portales)."""
+        from navegador_emulado import Navegador
+        padre, orden = c["father"], c.get("command")
+        if padre == "openbrowser":
+            self.navegador = Navegador()
+            return
+        if padre == "openUrl":
+            return self.navegador.abrir_url(self.sustituir(orden))
+        datos = {k: (self.sustituir(v) if isinstance(v, str) else v) for k, v in orden.items()} if isinstance(orden, dict) else {}
+        if padre == "click_web":
+            self.navegador.clic(datos["data"])
+        elif padre == "sendkey_web":
+            self.navegador.escribir(datos["data"], datos["text"])
+        elif padre == "waitforobject":
+            self.navegador.buscar(datos["object"])
+        elif padre == "textObject":
+            self.variables[c["getvar"]] = self.navegador.texto(self.sustituir(orden))
 
     def ejecutar(self):
         self.secuencia(self.comandos)
@@ -59,6 +80,8 @@ class Interprete:
                 self.secuencia(c.get("else"))
         elif padre == "log_message":
             pass
+        elif padre in COMANDOS_WEB:
+            self.web(c)
         elif padre == "execScriptPython":
             exec(c["command"], {"GetVar": self.variables.__getitem__, "SetVar": self.variables.__setitem__})  # noqa: S102
         else:

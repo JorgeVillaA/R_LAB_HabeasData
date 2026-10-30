@@ -8,6 +8,7 @@ mezclan con el padrón sintético completo, vaciar_policia), `servicio` (modo de
 El banco valida flujo y orquestación contra clones; NO valida la veracidad de los portales reales.
 """
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -33,11 +34,14 @@ CLAVES_LISTA = ("validadas", "excepciones_negocio_3", "gestion_manual", "revisio
                 "excepciones_sistema_identidad")
 
 
-def correr_escenario(escenario):
+def correr_escenario(escenario, robot=False):
     especificacion = escenario["doble"]
     filas = radicados_de(especificacion["radicados"])
     filas = [dict(f, **especificacion.get("campos", {}).get(str(f["IDRADICADO"]), {})) for f in filas]
-    zeus = DobleZeus(CREDENCIALES, filas).iniciar()
+    import os
+    credenciales = ((os.environ["ZEUS_DOBLE_CLIENT_ID"], os.environ["ZEUS_DOBLE_CLIENT_SECRET"]) if robot == "studio"
+                    else CREDENCIALES)
+    zeus = DobleZeus(credenciales, filas).iniciar()
     web = DoblePortales().iniciar()
     servicio = DobleCaptchas().iniciar()
     raiz = preparar_raiz(zeus.puerto, escenario.get("proceso", {}))
@@ -65,6 +69,8 @@ def correr_escenario(escenario):
             UrlProcuraduria=f"{web.url}/procuraduria/consulta-de-antecedentes.aspx",
             UrlCaptchas=f"http://127.0.0.1:{servicio.puerto}/resolver")
         ruta.write_text(json.dumps(datos), encoding="utf-8")
+        if robot:  # el robot de Studio, ejecutado por el intérprete (navegador emulado), contra los mismos dobles
+            return vista_del_robot(raiz, zeus, studio=robot == "studio")
         cfg = cargar(raiz)
         registro = Registro(cfg, RELOJ)
         cliente = ClienteZeus(cfg, registro, ENTORNO, dormir=lambda s: None)
@@ -114,3 +120,70 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
     if "LOG_DE_AUDITORIA" not in nombres or "LOG_DE_ERRORES" not in nombres:
         fallos.append("faltan los dos archivos de log del día")
     return fallos
+
+
+def vista_de_resumen(resumen, comentarios):
+    return {"estado": resumen["estado"], **{k: sorted(resumen[k]) for k in CLAVES_LISTA}, "codigos": resumen["codigos"],
+            "comentarios": comentarios}
+
+
+def vista_del_robot(raiz, zeus, studio=False):
+    import ast
+    import os
+    from unittest import mock
+    import interprete_robot
+    shutil.copytree(REPO / "Scripts", raiz / "Scripts", ignore=shutil.ignore_patterns("__pycache__"))
+    robot = json.loads((REPO / "Robots" / "LabHabeasData.robot.json").read_text(encoding="utf-8"))
+    if studio:  # Studio en Chrome: el MCP recorta cada variable a 120 caracteres; las listas de 10 radicados caben
+        import equivalencia_robot as eq
+        for variable in robot["vars"]:
+            if variable["name"] == "glbStrRutaRaiz":
+                variable["data"] = raiz.as_posix()
+        proyecto = os.environ["RPA_AIO_PROYECTO"]
+        eq.mcp("write_robot", {"project": proyecto, "perfil": "trycore", "robot": robot})
+        r = eq.mcp("run_in_studio", {"project": proyecto, "robot": robot["name"], "confirmar": True, "max_pasos": 100000})
+        if r.get("error"):
+            raise RuntimeError(f"el robot falló: {r['error']}")
+        v = {x["nombre"]: x["valor"] for x in r["variables"]}
+        lista = lambda n: [str(i) for i in ast.literal_eval(v[n])]  # noqa: E731
+        resumen = {"estado": re.search(r"'estado': '(\w+)'", v["glbDicEstado"]).group(1), "codigos": ast.literal_eval(v["glbDicCodigos"]),
+                   "validadas": lista("glbArrValidadas"), "excepciones_negocio_3": lista("glbArrExcepcionesNegocioTres"),
+                   "gestion_manual": lista("glbArrGestionManual"), "revision_humana": lista("glbArrRevisionHumana"),
+                   "sin_nombre": lista("glbArrSinNombre"), "excepciones_sistema_identidad": lista("glbArrExcepcionesSistemaIdentidad")}
+        return vista_de_resumen(resumen, sorted(c["IDRADICADO"] for c in zeus.estado.comentarios)), r["errores_capturados"]
+    interprete = interprete_robot.Interprete(robot, raiz.as_posix())
+    with mock.patch.dict(os.environ, ENTORNO):
+        v = interprete_robot.correr(interprete)
+    resumen = {"estado": v["glbDicEstado"]["estado"], "codigos": dict(v["glbDicCodigos"]),
+               "validadas": v["glbArrValidadas"], "excepciones_negocio_3": v["glbArrExcepcionesNegocioTres"],
+               "gestion_manual": v["glbArrGestionManual"], "revision_humana": v["glbArrRevisionHumana"],
+               "sin_nombre": v["glbArrSinNombre"], "excepciones_sistema_identidad": v["glbArrExcepcionesSistemaIdentidad"]}
+    return vista_de_resumen(resumen, sorted(c["IDRADICADO"] for c in zeus.estado.comentarios)), interprete.capturadas
+
+
+def principal_studio(ids=None):
+    """Equivalencia en Studio y Chrome: el robot real contra los clones, comparado con el orquestador de referencia."""
+    escenarios = json.loads((REPO / "banco" / "escenarios" / "EP-002.json").read_text(encoding="utf-8"))
+    resultados, todos = [], True
+    for esc in escenarios:
+        if ids and esc["id"].split("-")[1] not in ids:
+            continue
+        resumen, comentarios, *_ = correr_escenario(esc)
+        esperado = vista_de_resumen(resumen, comentarios)
+        obtenido, capturados = correr_escenario(esc, robot="studio")
+        igual = obtenido == esperado
+        todos &= igual
+        resultados.append({"id": esc["id"], "equivalente": igual, "errores_capturados": capturados,
+                           "diferencias": {k: (esperado[k], obtenido[k]) for k in esperado if esperado[k] != obtenido[k]}})
+        print("IGUAL " if igual else "DISTINTO", esc["id"], f"capturados={capturados}", resultados[-1]["diferencias"] or "")
+    import subprocess
+    sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip()
+    (REPO / "banco" / "resultados" / "EP-002_equivalencia_robot.json").write_text(
+        json.dumps({"head_at_run": sha, "anchored_at": {"sha": sha, "robot": "Robots/LabHabeasData.robot.json"},
+                    "navegador": "Chrome (run_in_studio)", "escenarios": resultados}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print("robot de Studio en Chrome equivalente al orquestador en los escenarios corridos:", todos)
+    return 0 if todos else 1
+
+
+if __name__ == "__main__":
+    sys.exit(principal_studio(sys.argv[1:] or None))
