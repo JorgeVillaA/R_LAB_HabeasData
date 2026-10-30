@@ -278,7 +278,11 @@ def crear_servidor(estado, puerto=0):
                 "<label>Número de documento</label><input type=\"text\" id=\"cedulaInput\" name=\"cedulaInput\">"
                 f"{captcha}<input type=\"submit\" id=\"j_idt17\" name=\"j_idt17\" value=\"Consultar\"></form>{extra}"))
 
-    servidor = ThreadingHTTPServer(("127.0.0.1", puerto), Manejador)
+    class Servidor(ThreadingHTTPServer):
+        def handle_error(self, request, client_address):  # Chrome corta conexiones ociosas: no es un fallo del clon
+            pass
+
+    servidor = Servidor(("127.0.0.1", puerto), Manejador)
     servidor.daemon_threads = True
     return servidor
 

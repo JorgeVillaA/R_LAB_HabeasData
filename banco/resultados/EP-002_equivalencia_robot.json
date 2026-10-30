@@ -1,7 +1,7 @@
 {
-  "head_at_run": "24f4135",
+  "head_at_run": "dd240a9",
   "anchored_at": {
-    "sha": "24f4135",
+    "sha": "dd240a9",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "navegador": "Chrome (run_in_studio)",
@@ -26,42 +26,9 @@
     },
     {
       "id": "EP002-04-policia-reto-de-imagenes-revision-humana",
-      "equivalente": false,
-      "errores_capturados": 1,
-      "diferencias": {
-        "validadas": [
-          [
-            "900013"
-          ],
-          [
-            "900013",
-            "900014"
-          ]
-        ],
-        "revision_humana": [
-          [
-            "900001",
-            "900003",
-            "900004",
-            "900005",
-            "900006",
-            "900007",
-            "900008",
-            "900014",
-            "900016"
-          ],
-          [
-            "900001",
-            "900003",
-            "900004",
-            "900005",
-            "900006",
-            "900007",
-            "900008",
-            "900016"
-          ]
-        ]
-      }
+      "equivalente": true,
+      "errores_capturados": 0,
+      "diferencias": {}
     },
     {
       "id": "EP002-05-policia-caida-persistente-deriva-a-procuraduria",
