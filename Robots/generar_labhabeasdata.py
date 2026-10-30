@@ -110,6 +110,8 @@ HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
              "pasos.consultar_seleccion(GetVar('locDicConsulta'))"),
         si("La consulta respondió", '{glbDicSeleccion}["ok"] == True', [
             sv("Guarda los radicados seleccionados", "glbArrIdsRadicados", '{glbDicSeleccion}["ids"]'),
+            paso("Deja constancia en el log de auditoría de los radicados identificados", "locDicEvento",
+                 "pasos.evento(str(len(pasos.objeto(GetVar('glbArrIdsRadicados')))) + ' radicados de exclusión identificados')"),
             si("Se descartan los radicados sin identificación (parámetro)", SEL + '["DescartarIdentificacionAusente"] == True', [
                 sv("Arma el filtro de los descartados: identificación igual a «NO APORTA»", "locStrFiltroDescartados",
                    FILTRO_EQ),

@@ -166,7 +166,8 @@ def filas_csv(raiz, patron, columna_fecha):
 
 def rastro(raiz):
     """Lo que el proceso deja escrito: reporte de gestión y log de errores (criterios de aceptación de las HU)."""
-    return {"reporte": filas_csv(raiz, "*INFORMEGESTION*.csv", 0), "errores": filas_csv(raiz, "*LOG_DE_ERRORES*.csv", 1)}
+    return {"reporte": filas_csv(raiz, "*INFORMEGESTION*.csv", 0), "errores": filas_csv(raiz, "*LOG_DE_ERRORES*.csv", 1),
+            "auditoria": filas_csv(raiz, "*LOG_DE_AUDITORIA*.csv", 1)}
 
 
 def escenario(esc, ejecutor=None):
@@ -181,7 +182,7 @@ def escenario(esc, ejecutor=None):
         if spec.get("apagado"):
             doble.detener()
         py = ep001.procesar(cargar(raiz))
-        vista_py = vista(py, motivo=ejecutor is not ejecutar_robot, comentarios=[c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
+        vista_py = vista(py, motivo=ejecutor is not ejecutar_robot, comentarios=[(c["IDRADICADO"], c["Detalle"]) for c in doble.estado.comentarios] if not spec.get("apagado") else [])
         if not spec.get("apagado"):
             doble.estado.configurar({"reiniciar": True})
         raiz_robot = preparar_raiz(puerto, esc.get("proceso", {}))  # carpeta propia: sus filas no se mezclan con las del orquestador
@@ -189,7 +190,7 @@ def escenario(esc, ejecutor=None):
         resumen_robot, pasos, capturados = ejecutor(raiz_robot)
         rastro_robot = rastro(raiz_robot)
         shutil.rmtree(raiz_robot, ignore_errors=True)
-        vista_robot = vista(resumen_robot, motivo=ejecutor is not ejecutar_robot, comentarios=[c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
+        vista_robot = vista(resumen_robot, motivo=ejecutor is not ejecutar_robot, comentarios=[(c["IDRADICADO"], c["Detalle"]) for c in doble.estado.comentarios] if not spec.get("apagado") else [])
         return dict(vista_py, **rastro_py), dict(vista_robot, **rastro_robot), pasos, capturados
     finally:
         if not spec.get("apagado"):

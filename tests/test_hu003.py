@@ -16,7 +16,8 @@ class TestReglasPuras(unittest.TestCase):
 
     def test_clasificacion_de_telefono_por_digitos(self):  # tabla de la HU
         casos = {"3101234567": "celular", "4441234": "fijo", "2101234567": "sin_clasificar",
-                 "310123456": "sin_clasificar", "31012345678": "sin_clasificar", "3101234AB7": "sin_clasificar"}
+                 "310123456": "sin_clasificar", "31012345678": "sin_clasificar", "3101234AB7": "sin_clasificar",
+                 "44412A4": "sin_clasificar", "4A41234": "sin_clasificar"}
         for valor, clase in casos.items():
             self.assertEqual(ep001.clasificar_telefono(valor, self.cfg), clase, valor)
 

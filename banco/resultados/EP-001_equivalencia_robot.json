@@ -1,28 +1,28 @@
 {
-  "head_at_run": "ec35592",
+  "head_at_run": "033d346",
   "anchored_at": {
-    "sha": "ec35592",
+    "sha": "033d346",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "escenarios": [
     {
       "id": "EP001-01-happy-completo",
       "equivalente": true,
-      "pasos_robot": 266,
+      "pasos_robot": 267,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-02-bandeja-vacia",
       "equivalente": true,
-      "pasos_robot": 36,
+      "pasos_robot": 37,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-03-tipologia-ausente",
       "equivalente": true,
-      "pasos_robot": 36,
+      "pasos_robot": 37,
       "errores_capturados": 0,
       "diferencias": {}
     },
@@ -57,63 +57,63 @@
     {
       "id": "EP001-08-radicado-no-legible-400",
       "equivalente": true,
-      "pasos_robot": 264,
+      "pasos_robot": 265,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-09-radicado-no-encontrado-404",
       "equivalente": true,
-      "pasos_robot": 264,
+      "pasos_robot": 265,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-10-comentario-rechazado-400",
       "equivalente": true,
-      "pasos_robot": 266,
+      "pasos_robot": 267,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-11-comentario-sin-autorizacion-401",
       "equivalente": true,
-      "pasos_robot": 266,
+      "pasos_robot": 267,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-12-solo-casos-completos",
       "equivalente": true,
-      "pasos_robot": 78,
+      "pasos_robot": 79,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-13-todos-incompletos",
       "equivalente": true,
-      "pasos_robot": 87,
+      "pasos_robot": 88,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-14-sin-descartar-identificacion-ausente",
       "equivalente": true,
-      "pasos_robot": 279,
+      "pasos_robot": 280,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-15-lote-con-first-y-orderby",
       "equivalente": true,
-      "pasos_robot": 81,
+      "pasos_robot": 82,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-16-solo-descartados",
       "equivalente": true,
-      "pasos_robot": 35,
+      "pasos_robot": 36,
       "errores_capturados": 0,
       "diferencias": {}
     }
