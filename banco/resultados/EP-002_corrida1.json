@@ -128,11 +128,9 @@
     "ramas": [
       "HU-008 excepción de negocio 3 con comentario"
     ],
-    "paso": false,
-    "fallos": [
-      "comentarios: esperado ['900001'], real []"
-    ],
-    "huella": "a3a453e5e090a5c6e635cbc7517392b72f02b217be79125578dbd69d6c5bb7c2"
+    "paso": true,
+    "fallos": [],
+    "huella": "d9d0b5dc8a9a45f98a97f7432941f090cf83fe7584c99c21a5d0572c608a714a"
   },
   {
     "id": "EP002-14-nombre-incompleto-excepcion-3",
@@ -140,11 +138,9 @@
     "ramas": [
       "HU-008 sin primer apellido"
     ],
-    "paso": false,
-    "fallos": [
-      "comentarios: esperado ['900001'], real []"
-    ],
-    "huella": "a3a453e5e090a5c6e635cbc7517392b72f02b217be79125578dbd69d6c5bb7c2"
+    "paso": true,
+    "fallos": [],
+    "huella": "d9d0b5dc8a9a45f98a97f7432941f090cf83fe7584c99c21a5d0572c608a714a"
   },
   {
     "id": "EP002-15-comentario-3-rechazado",
@@ -152,13 +148,9 @@
     "ramas": [
       "HU-008 comentario no registrado: excepción de sistema"
     ],
-    "paso": false,
-    "fallos": [
-      "gestion_manual: esperado ['900001'], real []",
-      "excepciones_sistema_identidad: esperado ['900001'], real []",
-      "codigos: esperado {'900001': 'COMENTARIO_NO_REGISTRADO'}, real {}"
-    ],
-    "huella": "a3a453e5e090a5c6e635cbc7517392b72f02b217be79125578dbd69d6c5bb7c2"
+    "paso": true,
+    "fallos": [],
+    "huella": "bba6626e9d6dd574ed7d4bb9bebe292fca1d789e620b59ae1c5d1caae81add2c"
   },
   {
     "id": "EP002-16-nit-con-9-digitos-no-consulta",

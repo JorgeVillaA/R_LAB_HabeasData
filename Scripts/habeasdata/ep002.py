@@ -77,6 +77,29 @@ def con_veredicto(nombre_zeus, nombre_portal, umbral, via):
     return {"resultado": "validada" if veredicto["coincide"] else "excepcion_negocio_3", "via": via, "veredicto": veredicto}
 
 
+LISTA_POR_ETIQUETA = {"validada": "validadas", "excepcion_negocio_3": "excepciones_negocio_3", "revision_humana": "revision_humana",
+                      "sin_nombre": "sin_nombre", "gestion_manual": "gestion_manual",
+                      "excepcion_sistema": "excepciones_sistema_identidad"}
+
+
+def registrar(registro, id_radicado, padre, etiqueta, via, puntaje=None, motivo=None, codigo=None):
+    """Deja el resultado en el reporte y los logs (sin nombres ni identificaciones). Lo usan el orquestador y el robot."""
+    if etiqueta == "validada":
+        registro.reporte(id_radicado, padre, f"identidad validada ({via}, puntaje {puntaje})")
+    elif etiqueta == "excepcion_negocio_3":
+        registro.reporte(id_radicado, padre, "excepción de negocio 3", "3", f"{via}, puntaje {puntaje}: {motivo}")
+    elif etiqueta == "revision_humana":
+        registro.reporte(id_radicado, padre, "revisión humana (fallback humano)", None, motivo)
+    elif etiqueta == "sin_nombre":
+        registro.reporte(id_radicado, padre, "respuesta sin nombre; continúa", None, motivo)
+    elif etiqueta == "gestion_manual":
+        registro.reporte(id_radicado, padre, "gestión manual", None, motivo)
+    else:
+        registro.error(f"Radicado {id_radicado}: {codigo}: {motivo}", MODULO)
+        registro.reporte(id_radicado, padre, "excepción de sistema; gestión manual", None, codigo)
+    registro.auditoria(f"Fin de la identidad del radicado {id_radicado}: {etiqueta}", MODULO)
+
+
 def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None):
     from .captcha import ServicioCaptchas
     resumen = procesar_ep001(cfg, cliente, registro, escritura)
@@ -102,28 +125,12 @@ def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None):
                 escritura.comentar(caso["radicado_hijo"], comentario_excepcion_3(resultado["veredicto"], via))
             except ErrorZeus as error:
                 etiqueta, resultado = "excepcion_sistema", {"codigo": "COMENTARIO_NO_REGISTRADO", "motivo": str(error), "via": via}
-        if etiqueta == "validada":
-            resumen["validadas"].append(id_radicado)
-            registro.reporte(id_radicado, padre, f"identidad validada ({via}, puntaje {resultado['veredicto']['puntaje']})")
-        elif etiqueta == "excepcion_negocio_3":
-            resumen["excepciones_negocio_3"].append(id_radicado)
-            registro.reporte(id_radicado, padre, "excepción de negocio 3", "3",
-                             f"{via}, puntaje {resultado['veredicto']['puntaje']}: {resultado['veredicto']['motivo']}")
-        elif etiqueta == "revision_humana":
-            resumen["revision_humana"].append(id_radicado)
-            registro.reporte(id_radicado, padre, "revisión humana (fallback humano)", None, resultado["motivo"])
-        elif etiqueta == "sin_nombre":
-            resumen["sin_nombre"].append(id_radicado)
-            registro.reporte(id_radicado, padre, "respuesta sin nombre; continúa", None, resultado["motivo"])
-        elif etiqueta == "gestion_manual":
-            resumen["gestion_manual"].append(id_radicado)
-            registro.reporte(id_radicado, padre, "gestión manual", None, resultado["motivo"])
-        else:  # excepción de sistema: el caso se deriva a gestión manual
-            resumen["excepciones_sistema_identidad"].append(id_radicado)
+        clave = LISTA_POR_ETIQUETA[etiqueta]
+        resumen[clave].append(id_radicado)
+        if etiqueta == "excepcion_sistema":  # el caso se deriva a gestión manual
             resumen["gestion_manual"].append(id_radicado)
             resumen["codigos"][id_radicado] = resultado["codigo"]
-            registro.error(f"Radicado {id_radicado}: {resultado['codigo']}: {resultado['motivo']}", MODULO)
-            registro.reporte(id_radicado, padre, "excepción de sistema; gestión manual", None, resultado["codigo"])
-        registro.auditoria(f"Fin de la identidad del radicado {id_radicado}: {etiqueta}", MODULO)
+        registrar(registro, id_radicado, padre, etiqueta, via, (resultado.get("veredicto") or {}).get("puntaje"),
+                  (resultado.get("veredicto") or {}).get("motivo") or resultado.get("motivo"), resultado.get("codigo"))
     registro.auditoria("Fin de la validación de identidad EP-002", MODULO)
     return resumen
