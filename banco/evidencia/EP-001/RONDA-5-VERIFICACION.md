@@ -31,3 +31,17 @@ Se buscaron específicamente estos fallos y **ninguno se sostuvo**: citas de tes
 - `dod`: **true** — los criterios de aceptación de HU-002/003/004 y los 7 puntos de integración quedan cubiertos, con la salvedad documentada de los artefactos de Studio.
 
 **Salvedad que llega a la revisión:** la equivalencia robot↔orquestador y `validate_robot` se apoyan en artefactos previos; para cerrarla con evidencia fresca hay que abrir Studio y repetir ambas. Queda como paso opcional antes del merge, no como bloqueo.
+
+---
+
+## Anexo (30/10, misma ronda): re-ejecución real de la equivalencia
+
+Se abrió Studio y se corrió `banco/equivalencia_robot.py EP-001` sobre HEAD. Resultado: **15 de 16 escenarios DISTINTO**, con el robot detenido en el paso de autenticación (`pasos.solicitar_token()` devuelve `ok=False`). No es un defecto de lógica del robot.
+
+**Aislamiento:** la misma corrida con `--interprete` (el JSON del robot ejecutado en proceso, con el entorno del banco) da **16/16 equivalente**. Es decir, la lógica del robot sí coincide con el orquestador Python en HEAD.
+
+**Causa raíz:** el proceso de Studio que está abierto (PID 15092, iniciado 08:43) **no tiene** `ZEUS_DOBLE_CLIENT_ID` ni `ZEUS_DOBLE_CLIENT_SECRET` en su entorno. El robot los lee del entorno del proceso (config `ZeusApi.Fixture.ClientIdEnv` / `ClientSecretEnv`), así que sin ellas el token falla y todos los escenarios terminan en detención. El escenario 07 (`api-no-disponible`) coincide porque ambos lados fallan igual.
+
+**Consecuencia para la evidencia:** la equivalencia en Studio no se reproduce hoy en esta sesión de Studio; la equivalencia lógica sí, al 100 %. Para tenerla en Studio hay que **relanzar Studio con esas dos variables** y repetir la corrida.
+
+**Estado de gates:** se mantienen `wiring_verified` y `dod` en verdadero, con esta salvedad explícita: la equivalencia está probada por intérprete en HEAD; la vía Studio queda condicionada al entorno de arranque.
