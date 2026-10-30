@@ -10,7 +10,7 @@ La primera versión de `LabHabeasData` tenía 2 comandos raíz (`trycatch` + `lo
 - **Estructura** (como `MainMonitoreoMarcas`): `trycatch` «Control de ejecución» → grupo `HU002HU003HU004 - Inicializar el Asistente` → `trycatch`
   «Proceso principal» → grupos `HU002 - Filtrar radicados de Exclusión de Datos`, `HU003 - Leer datos paramétricos` y `HU004 - Validar campos
   obligatorios` (los dos últimos dentro del `for` por radicado) → grupo `HU002HU003HU004 - Cierre y registro de ejecución`.
-- **95 comandos visibles**: 47 asignaciones, 19 decisiones (`evaluateIf`), 1 bucle, 5 grupos, 2 `trycatch`, 20 pasos de componente y 1 log; cada bloque lleva
+- **83 comandos visibles** (95 antes de la consolidación de abajo): 35 asignaciones (47 antes), 19 decisiones (`evaluateIf`), 1 bucle, 5 grupos, 2 `trycatch`, 20 pasos de componente y 1 log; cada bloque lleva
   su descripción (§6.1). Árbol completo en `flujo_LabHabeasData.md`.
 - **Qué quedó en Python** (`habeasdata.pasos`, una llamada por bloque): E/S con secretos (token con el `client_secret` del Administrador de credenciales y
   consultas con Bearer), parseo y clasificación puros, y escritura de logs y reporte. Ningún bloque contiene el flujo.
@@ -21,6 +21,27 @@ La primera versión de `LabHabeasData` tenía 2 comandos raíz (`trycatch` + `lo
 - **Banco y pruebas sin cambios**: las 16 huellas de la matriz son idénticas a las previas al refactor, en 2 corridas.
 - **Pruebas de legibilidad** (`tests/test_robot_legible.py`): 9 de sus 12 comprobaciones rechazan el robot anterior.
 - **Chrome**: los bloques web siguen en Chrome (`openbrowser` con `extra:{default:"chrome"}` y `openUrl` aparte, en `VerificacionVisualDobles`); `LabHabeasData` no navega.
+
+## Consolidación de bloques con la legibilidad por delante (decisión de Villa, 2026-10-30)
+
+| | Antes | Después |
+|---|---|---|
+| Comandos totales | 95 | **83** |
+| `setVar` | 47 | **35** |
+| `evaluateIf` / `for` / `group` / `trycatch` / `execScriptPython` / `log_message` | 19 / 1 / 5 / 2 / 20 / 1 | 19 / 1 / 5 / 2 / 20 / 1 (sin cambio: ninguna decisión pasó a Python) |
+| Pasos de Studio en el escenario feliz | 300 | 266 |
+| Decisiones anidadas bajo el `for` (máx.) | 4 | **2** |
+
+Nota: la instrucción citaba 72 bloques y 30 `setVar` como punto de partida; el robot en disco tenía 95 y 47 (conteo reproducible con `python Robots/arbol_flujo.py`). El antes/después de arriba parte de lo medido.
+
+- **`glbDicEstado`** (estado de la ejecución) reúne `estado`, `motivo_sin_casos`, `total_radicados` y `motivo_detencion` (antes 4 variables sueltas y 8 asignaciones de inicio/detención).
+  «Detener» pasó de 2 asignaciones a 1 en cada una de sus 5 ramas; cada asignación que queda sigue siendo un cambio de estado con descripción propia.
+- **`locDicConsulta`** reúne filtro base, filtro de selección, `$select`, `$first` y `$orderby` de HU-002 (antes 5 variables y 6 asignaciones).
+- **`locBlnLeido` eliminado**: «el radicado quedó leído» se lee de `locDicLectura["ok"]` (antes 2 asignaciones).
+- **Las cinco listas de resultados siguen separadas** (`glbArr*`): el MCP recorta cada variable a 120 caracteres y la equivalencia con el orquestador compara las listas completas; meterlas en un diccionario las truncaría. Es un límite de la herramienta de verificación, no de legibilidad.
+- **Profundidad bajo el `for`**: HU-004 tenía hasta 4 decisiones anidadas (leído → completo → comentario registrado). Se aplanó: «el radicado quedó leído» acompaña a cada condición y «caso completo» / «caso incompleto» son dos decisiones hermanas; queda un máximo de 2 niveles de control (el `group` solo organiza). El motor ejecuta hoy solo secuencias, `for`, `evaluateIf`, `trycatch`, `break` y `group` (licencia de desarrollo), así que «tarea nombrada» no era ejecutable y no hizo falta.
+- **Verificado**: pruebas (`test_profundidad_bajo_el_for…`, `test_los_contenedores_intermedios…`, `test_tope_de_bloques…`), `validate_robot` perfil trycore 0 errores / 0 avisos, y `python banco/equivalencia_robot.py EP-001`: **16 de 16 escenarios equivalentes** entre el robot de Studio y el orquestador.
+- Defecto del arnés de equivalencia corregido: la raíz temporal de cada corrida no llevaba `Scripts/` (dependía de un módulo ya importado en el Studio); ahora se copia.
 
 ## Alcance de lo verificado
 
@@ -45,9 +66,9 @@ La primera versión de `LabHabeasData` tenía 2 comandos raíz (`trycatch` + `lo
 |---|---|
 | `python -m unittest discover -s tests -t .` | 126 pruebas, OK (incluye una credencial temporal real en el Administrador de credenciales) |
 | `python banco/correr_matriz.py EP-001 --corridas 2` | 16 escenarios; todos pasan en las 2 corridas; huellas idénticas (determinismo); modo FIXTURE declarado |
-| `validate_robot` `perfil:"trycore"` — robot `LabHabeasData` (95 comandos) | `ok: true`, 0 errores, 0 avisos |
+| `validate_robot` `perfil:"trycore"` — robot `LabHabeasData` (83 comandos) | `ok: true`, 0 errores, 0 avisos |
 | `validate_robot` `perfil:"trycore"` — robot `VerificacionVisualDobles` | `ok: true`, 0 errores, 0 avisos |
-| `run_in_studio` robot `LabHabeasData` (300 pasos) | `EP-001 modo=fixture estado=ok avanzan=10 excepciones_negocio_1=4 excepciones_sistema=0`; 0 errores capturados (el 5.º caso, con identificación «NO APORTA», lo descarta el filtro compuesto; C-22) |
+| `run_in_studio` robot `LabHabeasData` (266 pasos) | `EP-001 modo=fixture estado=ok avanzan=10 excepciones_negocio_1=4 excepciones_sistema=0`; 0 errores capturados (el 5.º caso, con identificación «NO APORTA», lo descarta el filtro compuesto; C-22) |
 | `run_in_studio` robot `VerificacionVisualDobles` | 7 pasos ok; `Chrome: titulo=Doble local de la API de Zeus total=16` |
 | `python banco/equivalencia_robot.py EP-001` | 16 escenarios: robot de Studio equivalente al orquestador Python en todos |
 | Captura con el MCP `rpa-aio` | `zeus_doble_chrome_mcp.png`: Chrome (aviso «software automatizado… está controlando Chrome» = Studio) con el doble renderizado |

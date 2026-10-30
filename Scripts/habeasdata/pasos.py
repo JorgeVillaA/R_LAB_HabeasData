@@ -99,6 +99,12 @@ def consultar_odata(filtro="", select="", first=None, orderby=""):
     return _ok(filas=filas, ids=ids)
 
 
+def consultar_seleccion(consulta):
+    """Consulta de HU-002 con el diccionario que armó el robot (seleccion, select, lote, orden)."""
+    c = objeto(consulta)
+    return consultar_odata(c["seleccion"], c["select"], c["lote"], c["orden"])
+
+
 def registrar_descartados(ids):
     ep001.registrar_descartados(_sesion.registro, [str(i) for i in objeto(ids)])
     return _ok()

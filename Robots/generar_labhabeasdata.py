@@ -15,6 +15,15 @@ P = '{glbDicParametros}'
 NEG = P + '["negocio"]'
 SEL = P + '["seleccion"]'
 
+def expr(plantilla):
+    """Expresión de Studio a partir de una plantilla con NEG y SEL (los diccionarios de parámetros)."""
+    return plantilla.replace("NEG", NEG).replace("SEL", SEL)
+
+
+FILTRO_BASE = expr("""{'base': NEG["CampoTipologia"] + " eq '" + NEG["TipologiaExclusion"] + "'", 'seleccion': NEG["CampoTipologia"] + " eq '" + NEG["TipologiaExclusion"] + "'", 'select': 'IDRADICADO,' + NEG["CampoTipologia"], 'lote': SEL["LoteMaximo"], 'orden': SEL["Orden"]}""")
+AGREGA_NE = expr("""dict({locDicConsulta}, seleccion={locDicConsulta}['base'] + " and " + SEL["CampoIdentificacion"] + " ne '" + SEL["LiteralIdentificacionAusente"] + "'")""")
+FILTRO_EQ = expr("""{locDicConsulta}['base'] + " and " + SEL["CampoIdentificacion"] + " eq '" + SEL["LiteralIdentificacionAusente"] + "'\"""")
+
 
 def py(descripcion, *lineas):
     return {"father": "execScriptPython", "description": descripcion, "command": "\n".join(lineas)}
@@ -43,8 +52,8 @@ def para(descripcion, iterable, variable, hijos):
 
 def detener(variable_resultado):
     """Un paso falló de forma crítica: la corrida se detiene con el motivo del paso."""
-    return [sv("Marca la ejecución como detenida", "glbStrEstado", "'detenido'"),
-            sv("Guarda el motivo de la detención", "glbStrMotivoDetencion", variable_resultado + '["mensaje"]')]
+    return [sv("Marca la ejecución como detenida y guarda el motivo del paso que falló", "glbDicEstado",
+               "dict({glbDicEstado}, estado='detenido', motivo_detencion=" + variable_resultado + '["mensaje"])')]
 
 
 def anexar(variable, valor_expr):
@@ -52,14 +61,13 @@ def anexar(variable, valor_expr):
 
 
 INICIALIZAR = grupo("HU002HU003HU004 - Inicializar el Asistente", [
-    sv("Estado de la ejecución", "glbStrEstado", "'ok'"),
+    sv("Estado de la ejecución: estado, motivo si la selección queda vacía (HU-002), total de radicados y motivo de detención",
+       "glbDicEstado", "{'estado': 'ok', 'motivo_sin_casos': None, 'total_radicados': 0, 'motivo_detencion': ''}"),
     sv("Radicados seleccionados por HU-002", "glbArrIdsRadicados", "[]"),
     sv("Radicados descartados por identificación ausente (HU-002)", "glbArrIdsDescartados", "[]"),
     sv("Radicados que avanzan a la validación de deuda (HU-004)", "glbArrAvanzan", "[]"),
     sv("Radicados en excepción de negocio 1 (HU-004)", "glbArrExcepcionesNegocioUno", "[]"),
     sv("Radicados en excepción de sistema (HU-003, HU-004)", "glbArrExcepcionesSistema", "[]"),
-    sv("Motivo cuando la selección queda vacía (HU-002)", "glbStrMotivoSinCasos", "None"),
-    sv("Motivo cuando la ejecución se detiene", "glbStrMotivoDetencion", "''"),
     py("Carga los tres JSON de configuración, crea la estructura de carpetas y los dos logs del día",
        "import sys",
        "raiz = GetVar('glbStrRutaRaiz')",
@@ -76,22 +84,17 @@ HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
     paso("Solicita el token OAuth (client_credentials, vigencia 300 s); el secreto sale del Administrador de credenciales",
          "glbDicAutenticacion", "pasos.solicitar_token()"),
     si("El token se obtuvo", '{glbDicAutenticacion}["ok"] == True', [
-        sv("Arma el filtro OData de la tipología de exclusión", "locStrFiltroBase",
-           NEG + '["CampoTipologia"] + " eq \'" + ' + NEG + '["TipologiaExclusion"] + "\'"'),
-        sv("El filtro de selección parte del filtro de la tipología", "locStrFiltroSeleccion", '"{locStrFiltroBase}"'),
+        sv("Arma la consulta de HU-002: filtro OData de la tipología ($filter, base de la selección), campos ($select), lote ($first) y orden ($orderby)",
+           "locDicConsulta", FILTRO_BASE),
         si("Se descartan los radicados sin identificación (parámetro)", SEL + '["DescartarIdentificacionAusente"] == True', [
-            sv("Agrega al filtro: identificación distinta de «NO APORTA»", "locStrFiltroSeleccion",
-               '"{locStrFiltroBase}" + " and " + ' + SEL + '["CampoIdentificacion"] + " ne \'" + ' + SEL + '["LiteralIdentificacionAusente"] + "\'"')]),
-        sv("Campos a proyectar con $select", "locStrSelect", '"IDRADICADO," + ' + NEG + '["CampoTipologia"]'),
-        sv("Tamaño del lote ($first)", "locIntLote", SEL + '["LoteMaximo"]'),
-        sv("Orden de la consulta ($orderby)", "locStrOrden", SEL + '["Orden"]'),
+            sv("Agrega al filtro: identificación distinta de «NO APORTA»", "locDicConsulta", AGREGA_NE)]),
         paso("Consulta los radicados de exclusión (GET OData con $filter, $select, $first y $orderby)", "glbDicSeleccion",
-             "pasos.consultar_odata(GetVar('locStrFiltroSeleccion'), GetVar('locStrSelect'), GetVar('locIntLote'), GetVar('locStrOrden'))"),
+             "pasos.consultar_seleccion(GetVar('locDicConsulta'))"),
         si("La consulta respondió", '{glbDicSeleccion}["ok"] == True', [
             sv("Guarda los radicados seleccionados", "glbArrIdsRadicados", '{glbDicSeleccion}["ids"]'),
             si("Se descartan los radicados sin identificación (parámetro)", SEL + '["DescartarIdentificacionAusente"] == True', [
                 sv("Arma el filtro de los descartados: identificación igual a «NO APORTA»", "locStrFiltroDescartados",
-                   '"{locStrFiltroBase}" + " and " + ' + SEL + '["CampoIdentificacion"] + " eq \'" + ' + SEL + '["LiteralIdentificacionAusente"] + "\'"'),
+                   "{locDicConsulta}['base'] + \" and \" + " + SEL + '["CampoIdentificacion"] + " eq \'" + ' + SEL + '["LiteralIdentificacionAusente"] + "\'"'),
                 paso("Consulta los radicados descartados para no perderlos en silencio", "glbDicDescartados",
                      "pasos.consultar_odata(GetVar('locStrFiltroDescartados'), 'IDRADICADO')"),
                 si("La consulta de descartados respondió", '{glbDicDescartados}["ok"] == True', [
@@ -100,18 +103,18 @@ HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
                          "pasos.registrar_descartados(GetVar('glbArrIdsDescartados'))")],
                    detener("{glbDicDescartados}")),
             ]),
-            si("La selección quedó vacía y no hubo fallos", "'{glbStrEstado}' == 'ok' and len({glbArrIdsRadicados}) == 0", [
+            si("La selección quedó vacía y no hubo fallos", "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) == 0", [
                 paso("Consulta el total de radicados (consulta general, sin $filter)", "glbDicGeneral",
                      "pasos.consultar_odata('', 'IDRADICADO')"),
                 si("La consulta general respondió", '{glbDicGeneral}["ok"] == True', [
-                    sv("Total de radicados de la consulta general", "glbIntTotalRadicados", 'len({glbDicGeneral}["ids"])'),
+                    sv("Total de radicados de la consulta general", "glbDicEstado", 'dict({glbDicEstado}, total_radicados=len({glbDicGeneral}["ids"]))'),
                     si("Todos los de la tipología fueron descartados", "len({glbArrIdsDescartados}) > 0",
-                       [sv("Motivo: solo descartados", "glbStrMotivoSinCasos", "'solo_descartados'")],
-                       [si("Hay radicados, pero ninguno de la tipología", "{glbIntTotalRadicados} > 0",
-                           [sv("Motivo: tipología ausente", "glbStrMotivoSinCasos", "'tipologia_ausente'")],
-                           [sv("Motivo: bandeja vacía", "glbStrMotivoSinCasos", "'bandeja_vacia'")])]),
+                       [sv("Motivo: solo descartados", "glbDicEstado", "dict({glbDicEstado}, motivo_sin_casos='solo_descartados')")],
+                       [si("Hay radicados, pero ninguno de la tipología", "{glbDicEstado}[\"total_radicados\"] > 0",
+                           [sv("Motivo: tipología ausente", "glbDicEstado", "dict({glbDicEstado}, motivo_sin_casos='tipologia_ausente')")],
+                           [sv("Motivo: bandeja vacía", "glbDicEstado", "dict({glbDicEstado}, motivo_sin_casos='bandeja_vacia')")])]),
                     paso("Registra «0 casos» y la cadencia del reintento (CADENCIA_REINTENTO_BANDEJA_VACIA)", "glbDicSinCasos",
-                         "pasos.registrar_sin_casos(GetVar('glbStrMotivoSinCasos'), GetVar('glbIntTotalRadicados'))")],
+                         "pasos.registrar_sin_casos(pasos.objeto(GetVar('glbDicEstado'))['motivo_sin_casos'], pasos.objeto(GetVar('glbDicEstado'))['total_radicados'])")],
                    detener("{glbDicGeneral}")),
             ]),
         ], detener("{glbDicSeleccion}")),
@@ -125,7 +128,6 @@ HU003 = grupo("HU003 - Leer datos paramétricos", [
              "pasos.preparar_campos(GetVar('locDicLectura'))"),
         paso("Clasifica cada teléfono por dígitos: celular, fijo o sin clasificar", "locDicCaso",
              "pasos.clasificar_telefonos(GetVar('locDicPreparado'))"),
-        sv("El radicado quedó leído", "locBlnLeido", "True"),
     ], [
         py("Registra la excepción de sistema del radicado (log de errores y reporte)",
            "from habeasdata import pasos",
@@ -135,43 +137,47 @@ HU003 = grupo("HU003 - Leer datos paramétricos", [
 ])
 
 
+LEIDO = '{locDicLectura}["ok"] == True'
+
+
 def motivo_si(descripcion, condicion, etiqueta):
-    return si(descripcion, condicion, [sv("Agrega el motivo", "locArrMotivos", anexar("locArrMotivos", f"'{etiqueta}'"))])
+    return si(descripcion, LEIDO + " and " + condicion,
+              [sv("Agrega el motivo", "locArrMotivos", anexar("locArrMotivos", f"'{etiqueta}'"))])
 
 
+# Profundidad bajo el `for`: como máximo 2 decisiones anidadas (el grupo solo organiza). Por eso «el radicado quedó leído»
+# acompaña a cada condición en vez de envolver todo el bloque.
 HU004 = grupo("HU004 - Validar campos obligatorios", [
-    si("El radicado quedó leído", "{locBlnLeido} == True", [
-        sv("Lista de motivos de incompletitud", "locArrMotivos", "[]"),
-        motivo_si("Falta el nombre del cliente", '{locDicCaso}["nombre"] is None', "NOMBRE DEL CLIENTE"),
-        motivo_si("Falta el tipo de identificación", '{locDicCaso}["tipo_identificacion"] is None', "TIPO DE IDENTIFICACION"),
-        motivo_si("Falta el número de identificación", '{locDicCaso}["numero_identificacion"] is None', "NUMERO DE IDENTIFICACION"),
-        motivo_si("No hay ningún canal de contacto (ni correo ni teléfono)",
-                  'not {locDicCaso}["canal_correo"] and not {locDicCaso}["canal_telefono"]', "SIN CANAL DE CONTACTO"),
-        si("El caso está completo", "len({locArrMotivos}) == 0", [
-            paso("Registra el avance a la validación de deuda en el reporte", "locDicResultado", "pasos.registrar_avance(GetVar('locDicCaso'))"),
-            sv("Anota el radicado en los que avanzan", "glbArrAvanzan", anexar("glbArrAvanzan", "'{locStrIdRadicado}'")),
+    sv("Lista de motivos de incompletitud (vacía al empezar cada radicado)", "locArrMotivos", "[]"),
+    motivo_si("Falta el nombre del cliente", '{locDicCaso}["nombre"] is None', "NOMBRE DEL CLIENTE"),
+    motivo_si("Falta el tipo de identificación", '{locDicCaso}["tipo_identificacion"] is None', "TIPO DE IDENTIFICACION"),
+    motivo_si("Falta el número de identificación", '{locDicCaso}["numero_identificacion"] is None', "NUMERO DE IDENTIFICACION"),
+    motivo_si("No hay ningún canal de contacto (ni correo ni teléfono)",
+              'not {locDicCaso}["canal_correo"] and not {locDicCaso}["canal_telefono"]', "SIN CANAL DE CONTACTO"),
+    si("El caso está completo", LEIDO + " and len({locArrMotivos}) == 0", [
+        paso("Registra el avance a la validación de deuda en el reporte", "locDicResultado", "pasos.registrar_avance(GetVar('locDicCaso'))"),
+        sv("Anota el radicado en los que avanzan", "glbArrAvanzan", anexar("glbArrAvanzan", "'{locStrIdRadicado}'")),
+    ]),
+    si("El caso está incompleto: excepción de negocio 1", LEIDO + " and len({locArrMotivos}) > 0", [
+        paso("Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle", "locDicComentario",
+             "pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos'))"),
+        si("El comentario quedó registrado", '{locDicComentario}["ok"] == True', [
+            paso("Registra la excepción de negocio 1 en el reporte", "locDicResultado",
+                 "pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos'))"),
+            sv("Anota el radicado en excepciones de negocio 1", "glbArrExcepcionesNegocioUno",
+               anexar("glbArrExcepcionesNegocioUno", "'{locStrIdRadicado}'")),
         ], [
-            paso("Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle", "locDicComentario",
-                 "pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos'))"),
-            si("El comentario quedó registrado", '{locDicComentario}["ok"] == True', [
-                paso("Registra la excepción de negocio 1 en el reporte", "locDicResultado",
-                     "pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos'))"),
-                sv("Anota el radicado en excepciones de negocio 1", "glbArrExcepcionesNegocioUno",
-                   anexar("glbArrExcepcionesNegocioUno", "'{locStrIdRadicado}'")),
-            ], [
-                py("Registra la excepción de sistema (no se pudo escribir el comentario)",
-                   "from habeasdata import pasos",
-                   "pasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"),
-                sv("Anota el radicado en excepciones de sistema", "glbArrExcepcionesSistema",
-                   anexar("glbArrExcepcionesSistema", "'{locStrIdRadicado}'")),
-            ]),
+            py("Registra la excepción de sistema (no se pudo escribir el comentario)",
+               "from habeasdata import pasos",
+               "pasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"),
+            sv("Anota el radicado en excepciones de sistema", "glbArrExcepcionesSistema",
+               anexar("glbArrExcepcionesSistema", "'{locStrIdRadicado}'")),
         ]),
     ]),
 ])
 
-ITERACION = si("Hay radicados que procesar", "'{glbStrEstado}' == 'ok' and len({glbArrIdsRadicados}) > 0", [
+ITERACION = si("Hay radicados que procesar", "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) > 0", [
     para("Iteración por radicado de exclusión", "{glbArrIdsRadicados}", "locStrIdRadicado", [
-        sv("El radicado aún no se ha leído", "locBlnLeido", "False"),
         paso("Deja constancia del inicio del radicado en el log de auditoría", "locDicEvento",
              "pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado'))"),
         HU003,
@@ -182,32 +188,32 @@ ITERACION = si("Hay radicados que procesar", "'{glbStrEstado}' == 'ok' and len({
 ])
 
 CIERRE = grupo("HU002HU003HU004 - Cierre y registro de ejecución", [
-    si("La ejecución se detuvo", "'{glbStrEstado}' == 'detenido'", [
+    si("La ejecución se detuvo", "{glbDicEstado}['estado'] == 'detenido'", [
         paso("Registra la detención en el log de errores y prepara el aviso «Detenido»", "glbDicDetencion",
-             "pasos.registrar_detencion(GetVar('glbStrMotivoDetencion'))"),
+             "pasos.registrar_detencion(pasos.objeto(GetVar('glbDicEstado'))['motivo_detencion'])"),
         sv("Asunto del aviso que se enviará al equipo técnico", "glbStrAsuntoAviso", '{glbDicDetencion}["notificacion"]["asunto"]')]),
     py("Cierra la ejecución y deja el resumen sin PII (en modo real los datos personales se enmascaran)",
        "import json",
        "from habeasdata import pasos",
        "o = pasos.objeto",
-       "detencion = o(GetVar('glbDicDetencion')) if GetVar('glbStrEstado') == 'detenido' else {}",
-       "resumen = {'estado': GetVar('glbStrEstado'), 'modo': o(GetVar('glbDicInicio'))['modo'],",
+       "detencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}",
+       "resumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],",
        "           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),",
        "           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),",
        "           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),",
-       "           'motivo_sin_casos': o(GetVar('glbStrMotivoSinCasos')), 'notificacion': detencion.get('notificacion')}",
+       "           'motivo_sin_casos': o(GetVar('glbDicEstado'))['motivo_sin_casos'], 'notificacion': detencion.get('notificacion')}",
        "SetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"),
     sv("Observación final de la corrida", "glbStrObservaciones",
-       "'EP-001 modo=' + {glbDicInicio}[\"modo\"] + ' estado=' + '{glbStrEstado}' + ' avanzan=' + str(len({glbArrAvanzan})) + "
+       "'EP-001 modo=' + {glbDicInicio}[\"modo\"] + ' estado=' + {glbDicEstado}['estado'] + ' avanzan=' + str(len({glbArrAvanzan})) + "
        "' excepciones_negocio_1=' + str(len({glbArrExcepcionesNegocioUno})) + ' excepciones_sistema=' + str(len({glbArrExcepcionesSistema}))"),
-    sv("El proceso terminó sin detenerse", "glbBlnEstadoProceso", "'{glbStrEstado}' == 'ok'"),
+    sv("El proceso terminó sin detenerse", "glbBlnEstadoProceso", "{glbDicEstado}['estado'] == 'ok'"),
 ])
 
 CONTROL = {"father": "trycatch", "description": "Control de ejecución", "children": [
     INICIALIZAR,
     {"father": "trycatch", "description": "Proceso principal", "children": [HU002, ITERACION], "else": [
         sv("Marca fallo de sistema en el proceso principal", "glbBlnEstadoSistema", "False"),
-        sv("Estado de la ejecución: detenido por excepción de sistema", "glbStrEstado", "'detenido'"),
+        sv("Estado de la ejecución: detenido por excepción de sistema", "glbDicEstado", "dict({glbDicEstado}, estado='detenido')"),
     ]},
     CIERRE,
 ], "else": [
@@ -217,14 +223,13 @@ CONTROL = {"father": "trycatch", "description": "Control de ejecución", "childr
 
 VARIABLES = [("glbBlnEstadoSistema", "True"), ("glbBlnEstadoProceso", "True"), ("glbStrObservaciones", ""),
              ("glbIntReintentos", "3"), ("glbIntReintentosLogin", "3"), ("glbStrRutaRaiz", ""), ("glbStrResumen", ""),
-             ("glbStrEstado", "ok"), ("glbStrMotivoSinCasos", ""), ("glbStrMotivoDetencion", ""),
+             ("glbDicEstado", ""),
              ("glbDicInicio", ""), ("glbDicParametros", ""), ("glbDicAutenticacion", ""), ("glbDicSeleccion", ""),
              ("glbDicDescartados", ""), ("glbDicRegistroDescartados", ""), ("glbDicGeneral", ""), ("glbDicSinCasos", ""),
-             ("glbDicDetencion", ""), ("glbStrAsuntoAviso", ""), ("glbIntTotalRadicados", "0"),
+             ("glbDicDetencion", ""), ("glbStrAsuntoAviso", ""), 
              ("glbArrIdsRadicados", ""), ("glbArrIdsDescartados", ""), ("glbArrAvanzan", ""),
              ("glbArrExcepcionesNegocioUno", ""), ("glbArrExcepcionesSistema", ""),
-             ("locStrIdRadicado", ""), ("locStrFiltroBase", ""), ("locStrFiltroSeleccion", ""), ("locStrFiltroDescartados", ""),
-             ("locStrSelect", ""), ("locIntLote", ""), ("locStrOrden", ""), ("locBlnLeido", "False"),
+             ("locStrIdRadicado", ""), ("locDicConsulta", ""), ("locStrFiltroDescartados", ""),
              ("locDicLectura", ""), ("locDicPreparado", ""), ("locDicCaso", ""), ("locDicComentario", ""),
              ("locDicResultado", ""), ("locDicEvento", ""), ("locArrMotivos", "")]
 

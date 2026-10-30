@@ -2,112 +2,112 @@
   {
     "id": "EP001-01-happy-completo",
     "equivalente": true,
-    "pasos_robot": 300,
+    "pasos_robot": 266,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-02-bandeja-vacia",
     "equivalente": true,
-    "pasos_robot": 42,
+    "pasos_robot": 36,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-03-tipologia-ausente",
     "equivalente": true,
-    "pasos_robot": 42,
+    "pasos_robot": 36,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-04-filtro-no-reconocido",
     "equivalente": true,
-    "pasos_robot": 31,
+    "pasos_robot": 24,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-05-token-vencido-persistente",
     "equivalente": true,
-    "pasos_robot": 31,
+    "pasos_robot": 24,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-06-sin-roles-403",
     "equivalente": true,
-    "pasos_robot": 31,
+    "pasos_robot": 24,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-07-api-no-disponible",
     "equivalente": true,
-    "pasos_robot": 22,
+    "pasos_robot": 19,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-08-radicado-no-legible-400",
     "equivalente": true,
-    "pasos_robot": 291,
+    "pasos_robot": 264,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-09-radicado-no-encontrado-404",
     "equivalente": true,
-    "pasos_robot": 291,
+    "pasos_robot": 264,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-10-comentario-rechazado-400",
     "equivalente": true,
-    "pasos_robot": 300,
+    "pasos_robot": 266,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-11-comentario-sin-autorizacion-401",
     "equivalente": true,
-    "pasos_robot": 300,
+    "pasos_robot": 266,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-12-solo-casos-completos",
     "equivalente": true,
-    "pasos_robot": 90,
+    "pasos_robot": 78,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-13-todos-incompletos",
     "equivalente": true,
-    "pasos_robot": 99,
+    "pasos_robot": 87,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-14-sin-descartar-identificacion-ausente",
     "equivalente": true,
-    "pasos_robot": 315,
+    "pasos_robot": 279,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-15-lote-con-first-y-orderby",
     "equivalente": true,
-    "pasos_robot": 93,
+    "pasos_robot": 81,
     "errores_capturados": 0,
     "diferencias": {}
   },
   {
     "id": "EP001-16-solo-descartados",
     "equivalente": true,
-    "pasos_robot": 41,
+    "pasos_robot": 35,
     "errores_capturados": 0,
     "diferencias": {}
   }

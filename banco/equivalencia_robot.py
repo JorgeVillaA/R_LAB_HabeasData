@@ -13,6 +13,7 @@ Uso:  python banco/equivalencia_robot.py EP-001
 import ast
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -67,6 +68,8 @@ def mcp(herramienta, argumentos, espera=300):
 def preparar_raiz(puerto, cambios_proceso):
     raiz = Path(tempfile.mkdtemp(prefix="equiv_hd_"))
     shutil.copytree(REPO / "Configuracion", raiz / "Configuracion")
+    # El robot hace sys.path.insert(raíz/Scripts): la raíz de la corrida lleva su copia de los componentes.
+    shutil.copytree(REPO / "Scripts", raiz / "Scripts", ignore=shutil.ignore_patterns("__pycache__"))
     ruta = raiz / "Configuracion" / "ConfiguracionProceso.json"
     datos = json.loads(ruta.read_text(encoding="utf-8"))
     for clave in ("UrlBase", "UrlToken", "UrlComentario"):
@@ -92,14 +95,18 @@ def ejecutar_robot(raiz):
     def lista(nombre):
         return [str(x) for x in ast.literal_eval(variables[nombre])]
 
-    motivo = variables["glbStrMotivoSinCasos"]
+    # glbDicEstado se recorta a 120 caracteres: «estado» y «motivo_sin_casos» van primero en el diccionario por eso.
+    texto = variables["glbDicEstado"]
+    estado = {clave: (None if valor == "None" else valor.strip("'")) for clave, valor in
+              re.findall(r"'(estado|motivo_sin_casos)': ('[^']*'|None)", texto)}
+    motivo = estado["motivo_sin_casos"]
     resumen = {
-        "estado": variables["glbStrEstado"],
+        "estado": estado["estado"],
         "avanzan": lista("glbArrAvanzan"),
         "excepciones_negocio_1": lista("glbArrExcepcionesNegocioUno"),
         "excepciones_sistema": lista("glbArrExcepcionesSistema"),
         "descartados_identificacion_ausente": lista("glbArrIdsDescartados"),
-        "motivo_sin_casos": None if motivo in ("None", "") else motivo,
+        "motivo_sin_casos": motivo or None,
         "notificacion": {"asunto": variables["glbStrAsuntoAviso"]} if variables["glbStrAsuntoAviso"] else None,
     }
     return resumen, resultado["pasos"], resultado["errores_capturados"]

@@ -31,15 +31,7 @@
    "data": ""
   },
   {
-   "name": "glbStrEstado",
-   "data": "ok"
-  },
-  {
-   "name": "glbStrMotivoSinCasos",
-   "data": ""
-  },
-  {
-   "name": "glbStrMotivoDetencion",
+   "name": "glbDicEstado",
    "data": ""
   },
   {
@@ -83,10 +75,6 @@
    "data": ""
   },
   {
-   "name": "glbIntTotalRadicados",
-   "data": "0"
-  },
-  {
    "name": "glbArrIdsRadicados",
    "data": ""
   },
@@ -111,32 +99,12 @@
    "data": ""
   },
   {
-   "name": "locStrFiltroBase",
-   "data": ""
-  },
-  {
-   "name": "locStrFiltroSeleccion",
+   "name": "locDicConsulta",
    "data": ""
   },
   {
    "name": "locStrFiltroDescartados",
    "data": ""
-  },
-  {
-   "name": "locStrSelect",
-   "data": ""
-  },
-  {
-   "name": "locIntLote",
-   "data": ""
-  },
-  {
-   "name": "locStrOrden",
-   "data": ""
-  },
-  {
-   "name": "locBlnLeido",
-   "data": "False"
   },
   {
    "name": "locDicLectura",
@@ -178,9 +146,9 @@
      "children": [
       {
        "father": "setVar",
-       "var": "glbStrEstado",
-       "command": "'ok'",
-       "description": "Estado de la ejecución"
+       "var": "glbDicEstado",
+       "command": "{'estado': 'ok', 'motivo_sin_casos': None, 'total_radicados': 0, 'motivo_detencion': ''}",
+       "description": "Estado de la ejecución: estado, motivo si la selección queda vacía (HU-002), total de radicados y motivo de detención"
       },
       {
        "father": "setVar",
@@ -211,18 +179,6 @@
        "var": "glbArrExcepcionesSistema",
        "command": "[]",
        "description": "Radicados en excepción de sistema (HU-003, HU-004)"
-      },
-      {
-       "father": "setVar",
-       "var": "glbStrMotivoSinCasos",
-       "command": "None",
-       "description": "Motivo cuando la selección queda vacía (HU-002)"
-      },
-      {
-       "father": "setVar",
-       "var": "glbStrMotivoDetencion",
-       "command": "''",
-       "description": "Motivo cuando la ejecución se detiene"
       },
       {
        "father": "execScriptPython",
@@ -256,15 +212,9 @@
          "children": [
           {
            "father": "setVar",
-           "var": "locStrFiltroBase",
-           "command": "{glbDicParametros}[\"negocio\"][\"CampoTipologia\"] + \" eq '\" + {glbDicParametros}[\"negocio\"][\"TipologiaExclusion\"] + \"'\"",
-           "description": "Arma el filtro OData de la tipología de exclusión"
-          },
-          {
-           "father": "setVar",
-           "var": "locStrFiltroSeleccion",
-           "command": "\"{locStrFiltroBase}\"",
-           "description": "El filtro de selección parte del filtro de la tipología"
+           "var": "locDicConsulta",
+           "command": "{'base': {glbDicParametros}[\"negocio\"][\"CampoTipologia\"] + \" eq '\" + {glbDicParametros}[\"negocio\"][\"TipologiaExclusion\"] + \"'\", 'seleccion': {glbDicParametros}[\"negocio\"][\"CampoTipologia\"] + \" eq '\" + {glbDicParametros}[\"negocio\"][\"TipologiaExclusion\"] + \"'\", 'select': 'IDRADICADO,' + {glbDicParametros}[\"negocio\"][\"CampoTipologia\"], 'lote': {glbDicParametros}[\"seleccion\"][\"LoteMaximo\"], 'orden': {glbDicParametros}[\"seleccion\"][\"Orden\"]}",
+           "description": "Arma la consulta de HU-002: filtro OData de la tipología ($filter, base de la selección), campos ($select), lote ($first) y orden ($orderby)"
           },
           {
            "father": "evaluateIf",
@@ -273,35 +223,17 @@
            "children": [
             {
              "father": "setVar",
-             "var": "locStrFiltroSeleccion",
-             "command": "\"{locStrFiltroBase}\" + \" and \" + {glbDicParametros}[\"seleccion\"][\"CampoIdentificacion\"] + \" ne '\" + {glbDicParametros}[\"seleccion\"][\"LiteralIdentificacionAusente\"] + \"'\"",
+             "var": "locDicConsulta",
+             "command": "dict({locDicConsulta}, seleccion={locDicConsulta}['base'] + \" and \" + {glbDicParametros}[\"seleccion\"][\"CampoIdentificacion\"] + \" ne '\" + {glbDicParametros}[\"seleccion\"][\"LiteralIdentificacionAusente\"] + \"'\")",
              "description": "Agrega al filtro: identificación distinta de «NO APORTA»"
             }
            ],
            "else": []
           },
           {
-           "father": "setVar",
-           "var": "locStrSelect",
-           "command": "\"IDRADICADO,\" + {glbDicParametros}[\"negocio\"][\"CampoTipologia\"]",
-           "description": "Campos a proyectar con $select"
-          },
-          {
-           "father": "setVar",
-           "var": "locIntLote",
-           "command": "{glbDicParametros}[\"seleccion\"][\"LoteMaximo\"]",
-           "description": "Tamaño del lote ($first)"
-          },
-          {
-           "father": "setVar",
-           "var": "locStrOrden",
-           "command": "{glbDicParametros}[\"seleccion\"][\"Orden\"]",
-           "description": "Orden de la consulta ($orderby)"
-          },
-          {
            "father": "execScriptPython",
            "description": "Consulta los radicados de exclusión (GET OData con $filter, $select, $first y $orderby)",
-           "command": "from habeasdata import pasos\nSetVar('glbDicSeleccion', pasos.consultar_odata(GetVar('locStrFiltroSeleccion'), GetVar('locStrSelect'), GetVar('locIntLote'), GetVar('locStrOrden')))"
+           "command": "from habeasdata import pasos\nSetVar('glbDicSeleccion', pasos.consultar_seleccion(GetVar('locDicConsulta')))"
           },
           {
            "father": "evaluateIf",
@@ -322,7 +254,7 @@
               {
                "father": "setVar",
                "var": "locStrFiltroDescartados",
-               "command": "\"{locStrFiltroBase}\" + \" and \" + {glbDicParametros}[\"seleccion\"][\"CampoIdentificacion\"] + \" eq '\" + {glbDicParametros}[\"seleccion\"][\"LiteralIdentificacionAusente\"] + \"'\"",
+               "command": "{locDicConsulta}['base'] + \" and \" + {glbDicParametros}[\"seleccion\"][\"CampoIdentificacion\"] + \" eq '\" + {glbDicParametros}[\"seleccion\"][\"LiteralIdentificacionAusente\"] + \"'\"",
                "description": "Arma el filtro de los descartados: identificación igual a «NO APORTA»"
               },
               {
@@ -350,15 +282,9 @@
                "else": [
                 {
                  "father": "setVar",
-                 "var": "glbStrEstado",
-                 "command": "'detenido'",
-                 "description": "Marca la ejecución como detenida"
-                },
-                {
-                 "father": "setVar",
-                 "var": "glbStrMotivoDetencion",
-                 "command": "{glbDicDescartados}[\"mensaje\"]",
-                 "description": "Guarda el motivo de la detención"
+                 "var": "glbDicEstado",
+                 "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion={glbDicDescartados}[\"mensaje\"])",
+                 "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
                 }
                ]
               }
@@ -368,7 +294,7 @@
             {
              "father": "evaluateIf",
              "description": "La selección quedó vacía y no hubo fallos",
-             "command": "'{glbStrEstado}' == 'ok' and len({glbArrIdsRadicados}) == 0",
+             "command": "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) == 0",
              "children": [
               {
                "father": "execScriptPython",
@@ -382,8 +308,8 @@
                "children": [
                 {
                  "father": "setVar",
-                 "var": "glbIntTotalRadicados",
-                 "command": "len({glbDicGeneral}[\"ids\"])",
+                 "var": "glbDicEstado",
+                 "command": "dict({glbDicEstado}, total_radicados=len({glbDicGeneral}[\"ids\"]))",
                  "description": "Total de radicados de la consulta general"
                 },
                 {
@@ -393,8 +319,8 @@
                  "children": [
                   {
                    "father": "setVar",
-                   "var": "glbStrMotivoSinCasos",
-                   "command": "'solo_descartados'",
+                   "var": "glbDicEstado",
+                   "command": "dict({glbDicEstado}, motivo_sin_casos='solo_descartados')",
                    "description": "Motivo: solo descartados"
                   }
                  ],
@@ -402,20 +328,20 @@
                   {
                    "father": "evaluateIf",
                    "description": "Hay radicados, pero ninguno de la tipología",
-                   "command": "{glbIntTotalRadicados} > 0",
+                   "command": "{glbDicEstado}[\"total_radicados\"] > 0",
                    "children": [
                     {
                      "father": "setVar",
-                     "var": "glbStrMotivoSinCasos",
-                     "command": "'tipologia_ausente'",
+                     "var": "glbDicEstado",
+                     "command": "dict({glbDicEstado}, motivo_sin_casos='tipologia_ausente')",
                      "description": "Motivo: tipología ausente"
                     }
                    ],
                    "else": [
                     {
                      "father": "setVar",
-                     "var": "glbStrMotivoSinCasos",
-                     "command": "'bandeja_vacia'",
+                     "var": "glbDicEstado",
+                     "command": "dict({glbDicEstado}, motivo_sin_casos='bandeja_vacia')",
                      "description": "Motivo: bandeja vacía"
                     }
                    ]
@@ -425,21 +351,15 @@
                 {
                  "father": "execScriptPython",
                  "description": "Registra «0 casos» y la cadencia del reintento (CADENCIA_REINTENTO_BANDEJA_VACIA)",
-                 "command": "from habeasdata import pasos\nSetVar('glbDicSinCasos', pasos.registrar_sin_casos(GetVar('glbStrMotivoSinCasos'), GetVar('glbIntTotalRadicados')))"
+                 "command": "from habeasdata import pasos\nSetVar('glbDicSinCasos', pasos.registrar_sin_casos(pasos.objeto(GetVar('glbDicEstado'))['motivo_sin_casos'], pasos.objeto(GetVar('glbDicEstado'))['total_radicados']))"
                 }
                ],
                "else": [
                 {
                  "father": "setVar",
-                 "var": "glbStrEstado",
-                 "command": "'detenido'",
-                 "description": "Marca la ejecución como detenida"
-                },
-                {
-                 "father": "setVar",
-                 "var": "glbStrMotivoDetencion",
-                 "command": "{glbDicGeneral}[\"mensaje\"]",
-                 "description": "Guarda el motivo de la detención"
+                 "var": "glbDicEstado",
+                 "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion={glbDicGeneral}[\"mensaje\"])",
+                 "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
                 }
                ]
               }
@@ -450,15 +370,9 @@
            "else": [
             {
              "father": "setVar",
-             "var": "glbStrEstado",
-             "command": "'detenido'",
-             "description": "Marca la ejecución como detenida"
-            },
-            {
-             "father": "setVar",
-             "var": "glbStrMotivoDetencion",
-             "command": "{glbDicSeleccion}[\"mensaje\"]",
-             "description": "Guarda el motivo de la detención"
+             "var": "glbDicEstado",
+             "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion={glbDicSeleccion}[\"mensaje\"])",
+             "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
             }
            ]
           }
@@ -466,15 +380,9 @@
          "else": [
           {
            "father": "setVar",
-           "var": "glbStrEstado",
-           "command": "'detenido'",
-           "description": "Marca la ejecución como detenida"
-          },
-          {
-           "father": "setVar",
-           "var": "glbStrMotivoDetencion",
-           "command": "{glbDicAutenticacion}[\"mensaje\"]",
-           "description": "Guarda el motivo de la detención"
+           "var": "glbDicEstado",
+           "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion={glbDicAutenticacion}[\"mensaje\"])",
+           "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
           }
          ]
         }
@@ -483,7 +391,7 @@
       {
        "father": "evaluateIf",
        "description": "Hay radicados que procesar",
-       "command": "'{glbStrEstado}' == 'ok' and len({glbArrIdsRadicados}) > 0",
+       "command": "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) > 0",
        "children": [
         {
          "father": "for",
@@ -491,12 +399,6 @@
          "command": "{\"iterable\": \"{glbArrIdsRadicados}\", \"count\": 0}",
          "var": "locStrIdRadicado",
          "children": [
-          {
-           "father": "setVar",
-           "var": "locBlnLeido",
-           "command": "False",
-           "description": "El radicado aún no se ha leído"
-          },
           {
            "father": "execScriptPython",
            "description": "Deja constancia del inicio del radicado en el log de auditoría",
@@ -525,12 +427,6 @@
                "father": "execScriptPython",
                "description": "Clasifica cada teléfono por dígitos: celular, fijo o sin clasificar",
                "command": "from habeasdata import pasos\nSetVar('locDicCaso', pasos.clasificar_telefonos(GetVar('locDicPreparado')))"
-              },
-              {
-               "father": "setVar",
-               "var": "locBlnLeido",
-               "command": "True",
-               "description": "El radicado quedó leído"
               }
              ],
              "else": [
@@ -554,125 +450,124 @@
            "description": "HU004 - Validar campos obligatorios",
            "children": [
             {
+             "father": "setVar",
+             "var": "locArrMotivos",
+             "command": "[]",
+             "description": "Lista de motivos de incompletitud (vacía al empezar cada radicado)"
+            },
+            {
              "father": "evaluateIf",
-             "description": "El radicado quedó leído",
-             "command": "{locBlnLeido} == True",
+             "description": "Falta el nombre del cliente",
+             "command": "{locDicLectura}[\"ok\"] == True and {locDicCaso}[\"nombre\"] is None",
              "children": [
               {
                "father": "setVar",
                "var": "locArrMotivos",
-               "command": "[]",
-               "description": "Lista de motivos de incompletitud"
+               "command": "{locArrMotivos} + ['NOMBRE DEL CLIENTE']",
+               "description": "Agrega el motivo"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Falta el tipo de identificación",
+             "command": "{locDicLectura}[\"ok\"] == True and {locDicCaso}[\"tipo_identificacion\"] is None",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locArrMotivos",
+               "command": "{locArrMotivos} + ['TIPO DE IDENTIFICACION']",
+               "description": "Agrega el motivo"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Falta el número de identificación",
+             "command": "{locDicLectura}[\"ok\"] == True and {locDicCaso}[\"numero_identificacion\"] is None",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locArrMotivos",
+               "command": "{locArrMotivos} + ['NUMERO DE IDENTIFICACION']",
+               "description": "Agrega el motivo"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "No hay ningún canal de contacto (ni correo ni teléfono)",
+             "command": "{locDicLectura}[\"ok\"] == True and not {locDicCaso}[\"canal_correo\"] and not {locDicCaso}[\"canal_telefono\"]",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locArrMotivos",
+               "command": "{locArrMotivos} + ['SIN CANAL DE CONTACTO']",
+               "description": "Agrega el motivo"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El caso está completo",
+             "command": "{locDicLectura}[\"ok\"] == True and len({locArrMotivos}) == 0",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra el avance a la validación de deuda en el reporte",
+               "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrAvanzan",
+               "command": "{glbArrAvanzan} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en los que avanzan"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El caso está incompleto: excepción de negocio 1",
+             "command": "{locDicLectura}[\"ok\"] == True and len({locArrMotivos}) > 0",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle",
+               "command": "from habeasdata import pasos\nSetVar('locDicComentario', pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
               },
               {
                "father": "evaluateIf",
-               "description": "Falta el nombre del cliente",
-               "command": "{locDicCaso}[\"nombre\"] is None",
-               "children": [
-                {
-                 "father": "setVar",
-                 "var": "locArrMotivos",
-                 "command": "{locArrMotivos} + ['NOMBRE DEL CLIENTE']",
-                 "description": "Agrega el motivo"
-                }
-               ],
-               "else": []
-              },
-              {
-               "father": "evaluateIf",
-               "description": "Falta el tipo de identificación",
-               "command": "{locDicCaso}[\"tipo_identificacion\"] is None",
-               "children": [
-                {
-                 "father": "setVar",
-                 "var": "locArrMotivos",
-                 "command": "{locArrMotivos} + ['TIPO DE IDENTIFICACION']",
-                 "description": "Agrega el motivo"
-                }
-               ],
-               "else": []
-              },
-              {
-               "father": "evaluateIf",
-               "description": "Falta el número de identificación",
-               "command": "{locDicCaso}[\"numero_identificacion\"] is None",
-               "children": [
-                {
-                 "father": "setVar",
-                 "var": "locArrMotivos",
-                 "command": "{locArrMotivos} + ['NUMERO DE IDENTIFICACION']",
-                 "description": "Agrega el motivo"
-                }
-               ],
-               "else": []
-              },
-              {
-               "father": "evaluateIf",
-               "description": "No hay ningún canal de contacto (ni correo ni teléfono)",
-               "command": "not {locDicCaso}[\"canal_correo\"] and not {locDicCaso}[\"canal_telefono\"]",
-               "children": [
-                {
-                 "father": "setVar",
-                 "var": "locArrMotivos",
-                 "command": "{locArrMotivos} + ['SIN CANAL DE CONTACTO']",
-                 "description": "Agrega el motivo"
-                }
-               ],
-               "else": []
-              },
-              {
-               "father": "evaluateIf",
-               "description": "El caso está completo",
-               "command": "len({locArrMotivos}) == 0",
+               "description": "El comentario quedó registrado",
+               "command": "{locDicComentario}[\"ok\"] == True",
                "children": [
                 {
                  "father": "execScriptPython",
-                 "description": "Registra el avance a la validación de deuda en el reporte",
-                 "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
+                 "description": "Registra la excepción de negocio 1 en el reporte",
+                 "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
                 },
                 {
                  "father": "setVar",
-                 "var": "glbArrAvanzan",
-                 "command": "{glbArrAvanzan} + ['{locStrIdRadicado}']",
-                 "description": "Anota el radicado en los que avanzan"
+                 "var": "glbArrExcepcionesNegocioUno",
+                 "command": "{glbArrExcepcionesNegocioUno} + ['{locStrIdRadicado}']",
+                 "description": "Anota el radicado en excepciones de negocio 1"
                 }
                ],
                "else": [
                 {
                  "father": "execScriptPython",
-                 "description": "Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle",
-                 "command": "from habeasdata import pasos\nSetVar('locDicComentario', pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
+                 "description": "Registra la excepción de sistema (no se pudo escribir el comentario)",
+                 "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"
                 },
                 {
-                 "father": "evaluateIf",
-                 "description": "El comentario quedó registrado",
-                 "command": "{locDicComentario}[\"ok\"] == True",
-                 "children": [
-                  {
-                   "father": "execScriptPython",
-                   "description": "Registra la excepción de negocio 1 en el reporte",
-                   "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
-                  },
-                  {
-                   "father": "setVar",
-                   "var": "glbArrExcepcionesNegocioUno",
-                   "command": "{glbArrExcepcionesNegocioUno} + ['{locStrIdRadicado}']",
-                   "description": "Anota el radicado en excepciones de negocio 1"
-                  }
-                 ],
-                 "else": [
-                  {
-                   "father": "execScriptPython",
-                   "description": "Registra la excepción de sistema (no se pudo escribir el comentario)",
-                   "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"
-                  },
-                  {
-                   "father": "setVar",
-                   "var": "glbArrExcepcionesSistema",
-                   "command": "{glbArrExcepcionesSistema} + ['{locStrIdRadicado}']",
-                   "description": "Anota el radicado en excepciones de sistema"
-                  }
-                 ]
+                 "father": "setVar",
+                 "var": "glbArrExcepcionesSistema",
+                 "command": "{glbArrExcepcionesSistema} + ['{locStrIdRadicado}']",
+                 "description": "Anota el radicado en excepciones de sistema"
                 }
                ]
               }
@@ -701,8 +596,8 @@
       },
       {
        "father": "setVar",
-       "var": "glbStrEstado",
-       "command": "'detenido'",
+       "var": "glbDicEstado",
+       "command": "dict({glbDicEstado}, estado='detenido')",
        "description": "Estado de la ejecución: detenido por excepción de sistema"
       }
      ]
@@ -714,12 +609,12 @@
       {
        "father": "evaluateIf",
        "description": "La ejecución se detuvo",
-       "command": "'{glbStrEstado}' == 'detenido'",
+       "command": "{glbDicEstado}['estado'] == 'detenido'",
        "children": [
         {
          "father": "execScriptPython",
          "description": "Registra la detención en el log de errores y prepara el aviso «Detenido»",
-         "command": "from habeasdata import pasos\nSetVar('glbDicDetencion', pasos.registrar_detencion(GetVar('glbStrMotivoDetencion')))"
+         "command": "from habeasdata import pasos\nSetVar('glbDicDetencion', pasos.registrar_detencion(pasos.objeto(GetVar('glbDicEstado'))['motivo_detencion']))"
         },
         {
          "father": "setVar",
@@ -733,18 +628,18 @@
       {
        "father": "execScriptPython",
        "description": "Cierra la ejecución y deja el resumen sin PII (en modo real los datos personales se enmascaran)",
-       "command": "import json\nfrom habeasdata import pasos\no = pasos.objeto\ndetencion = o(GetVar('glbDicDetencion')) if GetVar('glbStrEstado') == 'detenido' else {}\nresumen = {'estado': GetVar('glbStrEstado'), 'modo': o(GetVar('glbDicInicio'))['modo'],\n           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),\n           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),\n           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),\n           'motivo_sin_casos': o(GetVar('glbStrMotivoSinCasos')), 'notificacion': detencion.get('notificacion')}\nSetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"
+       "command": "import json\nfrom habeasdata import pasos\no = pasos.objeto\ndetencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}\nresumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],\n           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),\n           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),\n           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),\n           'motivo_sin_casos': o(GetVar('glbDicEstado'))['motivo_sin_casos'], 'notificacion': detencion.get('notificacion')}\nSetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"
       },
       {
        "father": "setVar",
        "var": "glbStrObservaciones",
-       "command": "'EP-001 modo=' + {glbDicInicio}[\"modo\"] + ' estado=' + '{glbStrEstado}' + ' avanzan=' + str(len({glbArrAvanzan})) + ' excepciones_negocio_1=' + str(len({glbArrExcepcionesNegocioUno})) + ' excepciones_sistema=' + str(len({glbArrExcepcionesSistema}))",
+       "command": "'EP-001 modo=' + {glbDicInicio}[\"modo\"] + ' estado=' + {glbDicEstado}['estado'] + ' avanzan=' + str(len({glbArrAvanzan})) + ' excepciones_negocio_1=' + str(len({glbArrExcepcionesNegocioUno})) + ' excepciones_sistema=' + str(len({glbArrExcepcionesSistema}))",
        "description": "Observación final de la corrida"
       },
       {
        "father": "setVar",
        "var": "glbBlnEstadoProceso",
-       "command": "'{glbStrEstado}' == 'ok'",
+       "command": "{glbDicEstado}['estado'] == 'ok'",
        "description": "El proceso terminó sin detenerse"
       }
      ]
