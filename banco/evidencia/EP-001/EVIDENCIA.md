@@ -43,6 +43,21 @@ Nota: la instrucción citaba 72 bloques y 30 `setVar` como punto de partida; el 
 - **Verificado**: pruebas (`test_profundidad_bajo_el_for…`, `test_los_contenedores_intermedios…`, `test_tope_de_bloques…`), `validate_robot` perfil trycore 0 errores / 0 avisos, y `python banco/equivalencia_robot.py EP-001`: **16 de 16 escenarios equivalentes** entre el robot de Studio y el orquestador.
 - Defecto del arnés de equivalencia corregido: la raíz temporal de cada corrida no llevaba `Scripts/` (dependía de un módulo ya importado en el Studio); ahora se copia.
 
+## Verificación adversarial independiente (ronda 1 → corrección)
+
+Veredicto de la ronda 1: **REFUTADO** (el verificador invirtió dos decisiones dentro del robot de Studio y ni la suite ni el banco lo notaron).
+
+| # | Hallazgo | Corrección |
+|---|---|---|
+| 1 ALTA | Decisiones del robot sin test ejecutable | `banco/interprete_robot.py` ejecuta el JSON del robot sin Studio; `tests/test_robot_interpretado.py` exige igualdad con el orquestador en los 16 escenarios. Validado por reversión: invertir «tipología ausente» → 1 fallo; invertir «falta el nombre» → 9 fallos |
+| 2 ALTA | Evidencia de equivalencia no reproducible ni anclada | el artefacto `EP-001_equivalencia_robot.json` lleva `head_at_run`; la corrida en Studio se repitió tras los arreglos (16/16) |
+| 3 MEDIA | Consulta general: el robot pasaba por `ids_de` y el orquestador no | `ep001.py` usa `ids_de`; `test_consulta_general_con_fila_sin_idradicado_detiene_igual_que_el_robot` (falla sin el arreglo) |
+| 4 BAJA | `FILTRO_EQ` sin uso | ahora lo usa el filtro de descartados |
+| 5 BAJA | Detención por excepción del proceso principal sin motivo | el robot fija `motivo_detencion='Excepción de sistema en el proceso principal'` |
+| 6 | `NO APORTA` vs `NO APLICA` en los logs | sin cambio: el anexo V1.0 (decisión fija) manda `NO APLICA`; `NO APORTA` es el literal de dato ausente de Zeus |
+
+Tras la corrección: 147 pruebas OK; matriz 16 × 2 verde con huellas idénticas; equivalencia en Studio 16/16; `validate_robot` trycore 0/0.
+
 ## Alcance de lo verificado
 
 - **Modo FIXTURE.** Todo lo de abajo corrió contra el doble offline de la API de Zeus, que solo sirve de fixture del banco

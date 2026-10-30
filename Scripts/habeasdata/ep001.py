@@ -157,7 +157,7 @@ def filtrar_exclusion(cliente, cfg, registro):
         if filas:
             return {"ids": filas, "descartados": descartados,
                     "motivo_sin_casos": None, "reintento": None}
-        total = len(cliente.consultar(select=("IDRADICADO",)))
+        total = len(ids_de(cliente.consultar(select=("IDRADICADO",)), cfg))
     except ErrorZeus as error:
         raise DetenerEjecucion(mensaje_detencion(error)) from error
     motivo = "solo_descartados" if descartados else ("tipologia_ausente" if total else "bandeja_vacia")

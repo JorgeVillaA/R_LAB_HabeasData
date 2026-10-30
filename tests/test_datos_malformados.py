@@ -113,3 +113,18 @@ class TestCuerpoSinValue(PruebaConDoble):
         with mock.patch.object(ClienteZeus, "_autorizada", return_value={}):
             resultado = pasos.consultar_odata("PQRCORRESPONDEA eq 'x'", "IDRADICADO")
         self.assertEqual((resultado["ok"], resultado["detenido"]), (False, True))
+
+
+class TestConsultaGeneralMalformada(PruebaConDoble):
+    def test_consulta_general_con_fila_sin_idradicado_detiene_igual_que_el_robot(self):
+        """Hallazgo del verificador: la consulta general pasa por `ids_de` en el orquestador y en el paso del robot."""
+        self.configurar_doble(radicados=[])
+        general = [{"PQRCORRESPONDEA": "OTRA"}]
+        original = self.cliente.consultar
+
+        def consultar(**kw):
+            return general if kw.get("filtro") is None else original(**kw)
+
+        with mock.patch.object(self.cliente, "consultar", side_effect=consultar):
+            resumen = ep001.procesar(self.cfg, self.cliente, self.registro)
+        self.assertEqual(resumen["estado"], "detenido")

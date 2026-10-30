@@ -112,6 +112,27 @@ def ejecutar_robot(raiz):
     return resumen, resultado["pasos"], resultado["errores_capturados"]
 
 
+def resumen_de_variables(variables):
+    """Resumen comparable a partir de las variables completas del robot (intérprete local, sin recorte a 120 caracteres)."""
+    estado = variables["glbDicEstado"]
+    return {
+        "estado": estado["estado"],
+        "avanzan": [str(x) for x in variables["glbArrAvanzan"]],
+        "excepciones_negocio_1": [str(x) for x in variables["glbArrExcepcionesNegocioUno"]],
+        "excepciones_sistema": [str(x) for x in variables["glbArrExcepcionesSistema"]],
+        "descartados_identificacion_ausente": [str(x) for x in variables["glbArrIdsDescartados"]],
+        "motivo_sin_casos": estado["motivo_sin_casos"] or None,
+        "notificacion": {"asunto": variables["glbStrAsuntoAviso"]} if variables["glbStrAsuntoAviso"] else None,
+    }
+
+
+def ejecutar_robot_interpretado(raiz):
+    import interprete_robot
+    robot = json.loads((REPO / "Robots" / "LabHabeasData.robot.json").read_text(encoding="utf-8"))
+    variables = interprete_robot.ejecutar_robot(robot, raiz.as_posix())
+    return resumen_de_variables(variables), 0, 0
+
+
 def vista(resumen, comentarios):
     return {
         "estado": resumen["estado"],
@@ -125,7 +146,8 @@ def vista(resumen, comentarios):
     }
 
 
-def escenario(esc):
+def escenario(esc, ejecutor=None):
+    ejecutor = ejecutor or ejecutar_robot
     spec = esc["doble"]
     doble = DobleZeus((os.environ["ZEUS_DOBLE_CLIENT_ID"], os.environ["ZEUS_DOBLE_CLIENT_SECRET"]),
                       radicados_de(spec["radicados"])).iniciar()
@@ -139,7 +161,7 @@ def escenario(esc):
         vista_py = vista(py, [c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
         if not spec.get("apagado"):
             doble.estado.configurar({"reiniciar": True})
-        resumen_robot, pasos, capturados = ejecutar_robot(raiz)
+        resumen_robot, pasos, capturados = ejecutor(raiz)
         vista_robot = vista(resumen_robot, [c["IDRADICADO"] for c in doble.estado.comentarios] if not spec.get("apagado") else [])
         return vista_py, vista_robot, pasos, capturados
     finally:
@@ -153,7 +175,7 @@ def principal():
     escenarios = json.loads((REPO / "banco" / "escenarios" / f"{epica}.json").read_text(encoding="utf-8"))
     resultados = []
     for esc in escenarios:
-        vista_py, vista_robot, pasos, capturados = escenario(esc)
+        vista_py, vista_robot, pasos, capturados = escenario(esc, ejecutar_robot_interpretado if "--interprete" in sys.argv else None)
         iguales = vista_py == vista_robot and capturados == 0
         diferencias = {k: (vista_py[k], vista_robot[k]) for k in vista_py if vista_py[k] != vista_robot[k]}
         resultados.append({"id": esc["id"], "equivalente": iguales, "pasos_robot": pasos, "errores_capturados": capturados,

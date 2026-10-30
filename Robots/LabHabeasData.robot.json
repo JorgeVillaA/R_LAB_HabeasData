@@ -597,7 +597,7 @@
       {
        "father": "setVar",
        "var": "glbDicEstado",
-       "command": "dict({glbDicEstado}, estado='detenido')",
+       "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion='Excepción de sistema en el proceso principal')",
        "description": "Estado de la ejecución: detenido por excepción de sistema"
       }
      ]

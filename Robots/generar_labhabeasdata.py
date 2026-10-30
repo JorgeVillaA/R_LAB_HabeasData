@@ -94,7 +94,7 @@ HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
             sv("Guarda los radicados seleccionados", "glbArrIdsRadicados", '{glbDicSeleccion}["ids"]'),
             si("Se descartan los radicados sin identificación (parámetro)", SEL + '["DescartarIdentificacionAusente"] == True', [
                 sv("Arma el filtro de los descartados: identificación igual a «NO APORTA»", "locStrFiltroDescartados",
-                   "{locDicConsulta}['base'] + \" and \" + " + SEL + '["CampoIdentificacion"] + " eq \'" + ' + SEL + '["LiteralIdentificacionAusente"] + "\'"'),
+                   FILTRO_EQ),
                 paso("Consulta los radicados descartados para no perderlos en silencio", "glbDicDescartados",
                      "pasos.consultar_odata(GetVar('locStrFiltroDescartados'), 'IDRADICADO')"),
                 si("La consulta de descartados respondió", '{glbDicDescartados}["ok"] == True', [
@@ -213,7 +213,7 @@ CONTROL = {"father": "trycatch", "description": "Control de ejecución", "childr
     INICIALIZAR,
     {"father": "trycatch", "description": "Proceso principal", "children": [HU002, ITERACION], "else": [
         sv("Marca fallo de sistema en el proceso principal", "glbBlnEstadoSistema", "False"),
-        sv("Estado de la ejecución: detenido por excepción de sistema", "glbDicEstado", "dict({glbDicEstado}, estado='detenido')"),
+        sv("Estado de la ejecución: detenido por excepción de sistema", "glbDicEstado", "dict({glbDicEstado}, estado='detenido', motivo_detencion='Excepción de sistema en el proceso principal')"),
     ]},
     CIERRE,
 ], "else": [
