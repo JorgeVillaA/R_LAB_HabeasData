@@ -122,8 +122,8 @@ class ClienteZeus:
                 raise ErrorBloqueo(
                     f"BLOQUEO: falta el client_secret de Keycloak en el Administrador de credenciales de Windows (credencial {target}); se pide por canal seguro, nunca en el repo")
             return cliente, secreto
-        cliente = self.entorno.get(self.ajustes["ClientIdEnv"])
-        secreto = self.entorno.get(self.ajustes["ClientSecretEnv"])
+        cliente = self.entorno.get(self.ajustes["ClientIdEnv"]) or self.ajustes.get("ClientId")
+        secreto = self.entorno.get(self.ajustes["ClientSecretEnv"]) or self.ajustes.get("ClientSecret")
         if not cliente or not secreto:
             raise ErrorNoAutenticado("Credenciales del doble no definidas en el entorno", 401)
         return cliente, secreto

@@ -76,6 +76,10 @@ def preparar_raiz(puerto, cambios_proceso):
         datos["ZeusApi"]["Fixture"][clave] = datos["ZeusApi"]["Fixture"][clave].replace("8765", str(puerto))
     datos["ZeusApi"]["BackoffSegundos"] = [0]
     datos["Identidad"] = {"Habilitada": False}  # la equivalencia de EP-001 no consulta portales; EP-002 tiene la suya
+    # Credenciales del doble explícitas en la configuración temporal: el robot de Studio las lee
+    # de aquí y no depende de que su proceso tenga las variables de entorno.
+    datos["ZeusApi"]["Fixture"]["ClientId"] = os.environ["ZEUS_DOBLE_CLIENT_ID"]
+    datos["ZeusApi"]["Fixture"]["ClientSecret"] = os.environ["ZEUS_DOBLE_CLIENT_SECRET"]
     mezclar(datos, cambios_proceso)
     ruta.write_text(json.dumps(datos), encoding="utf-8")
     return raiz
@@ -172,6 +176,12 @@ def rastro(raiz):
 
 def escenario(esc, ejecutor=None):
     ejecutor = ejecutor or ejecutar_robot
+    # Credenciales sintéticas del doble: deben coincidir con las del proceso de Studio
+    # (Configuracion/ConfiguracionProceso.json → ZeusApi.Fixture.ClientIdEnv/ClientSecretEnv).
+    # Se fijan por defecto aquí para que una corrida no falle por el entorno; Studio las recibe
+    # al lanzarse con R_LAB_HabeasData.bat, que exporta el mismo par.
+    os.environ.setdefault("ZEUS_DOBLE_CLIENT_ID", "cliente-banco")
+    os.environ.setdefault("ZEUS_DOBLE_CLIENT_SECRET", "secreto-banco-no-real")
     spec = esc["doble"]
     doble = DobleZeus((os.environ["ZEUS_DOBLE_CLIENT_ID"], os.environ["ZEUS_DOBLE_CLIENT_SECRET"]),
                       radicados_de(spec["radicados"])).iniciar()
