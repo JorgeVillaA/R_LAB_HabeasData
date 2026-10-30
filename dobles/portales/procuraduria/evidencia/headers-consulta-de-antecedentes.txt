@@ -1,0 +1,12 @@
+HTTP/1.1 302 Found
+Content-Type: text/html; charset=utf-8
+Location: /WEBCERT/Error.aspx?aspxerrorpath=/webcert/consulta-de-antecedentes.aspx
+Server: Microsoft-IIS/10.0
+X-Powered-By: ASP.NET
+Date: Fri, 30 Oct 2026 16:08:49 GMT
+Content-Length: 189
+Set-Cookie: cookiesession1=678A3E0FB8FCCAE2516D89CD634E9AA2;Expires=Sat, 30 Oct 2027 16:08:49 GMT;Path=/;HttpOnly
+Content-Security-Policy: default-src ‘self
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+

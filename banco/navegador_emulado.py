@@ -117,7 +117,11 @@ class Navegador:
 
     def clic(self, xpath):
         e = self.buscar(xpath)
-        if e["tag"] == "option":
+        if e["id"] == "recaptchaCheckbox":  # el servidor le pone un onclick inline que marca la casilla oculta
+            for otro in self.dom.elementos:
+                if otro["id"] == "recaptchaCheck":
+                    otro["checked"] = True
+        elif e["tag"] == "option":
             e["select"]["value"] = e["value"]
         elif e["type"] in ("radio", "checkbox"):
             if e["type"] == "radio":

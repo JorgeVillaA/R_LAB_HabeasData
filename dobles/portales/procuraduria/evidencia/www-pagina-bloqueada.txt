@@ -1,0 +1,10 @@
+block
+Página Web No Disponible!
+Fri Oct 30 2026 10:55:18 GMT-0500 (hora estándar de Colombia)
+
+La página que consulta no se encuentra disponible. Por favor intente en otra ocasión.
+
+URL: www.procuraduria.gov.co/Pages/consulta-de-antecedentes.aspx
+
+ID Referencia: 20000051
+ID Mensaje: 037781152704

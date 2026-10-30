@@ -170,8 +170,8 @@ class ClientePortales:
                 if error.codigo == SERVICIO_NO_DISPONIBLE:
                     raise
                 # el servicio no resuelve esta familia: se pide otra pregunta con el botón de refresco (cuenta como intento)
-                _, pagina = sesion.pedir(url, {"__VIEWSTATE": pagina.valores.get("__VIEWSTATE", ""), "ibRefrescar.x": "1",
-                                               "ibRefrescar.y": "1"})
+                _, pagina = sesion.pedir(url, {"__VIEWSTATE": pagina.valores.get("__VIEWSTATE", ""), "ImageButton1.x": "1",
+                                               "ImageButton1.y": "1"})
                 continue
             _, pagina = sesion.pedir(url, {
                 "__VIEWSTATE": pagina.valores.get("__VIEWSTATE", ""), "txtNombre": nombre, "ddlTipoID": tipo_codigo,

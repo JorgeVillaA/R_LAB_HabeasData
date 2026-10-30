@@ -241,8 +241,10 @@ def leer_pagina_procuraduria(texto):
     import re
     texto = str(texto or "")
     minus = texto.lower()
-    nombre = re.search(r"Nombre:\s*(.+)", texto) if "datos del ciudadano" in minus else None
-    estado = re.search(r"Estado:\s*(.+)", texto) if nombre else None
+    # el formulario del portal fiel también tiene una etiqueta «Nombre:»: solo cuenta lo que sigue al encabezado del bloque
+    bloque = texto[minus.rindex("datos del ciudadano"):] if "datos del ciudadano" in minus else ""
+    nombre = re.search(r"Nombre:[ \t]*(\S.*)", bloque)
+    estado = re.search(r"Estado:[ \t]*(\S.*)", bloque) if nombre else None
     return _ok(nombre=nombre.group(1).strip() if nombre else None, estado=estado.group(1).strip() if estado else None,
                incorrecta="respuesta a la pregunta es incorrecta" in minus,
                sin_nombre="no se encontr" in minus and "informaci" in minus)

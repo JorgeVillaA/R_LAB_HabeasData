@@ -7,6 +7,7 @@ resto con `repr`) antes de evaluar la expresión; `execScriptPython` corre con `
 equivalencia en Studio (`equivalencia_robot.py`): la complementa.
 """
 import json
+import os
 import re
 import sys
 
@@ -82,7 +83,8 @@ class Interprete:
         elif padre == "trycatch":
             try:
                 self.secuencia(c.get("children"), ruta)
-            except Exception:  # noqa: BLE001 (como el trycatch de Studio)
+            except Exception as _e:  # noqa: BLE001 (como el trycatch de Studio)
+                if os.environ.get("DEPURAR_ROBOT"): print("TRYCATCH", ruta, repr(_e))
                 self.capturadas += 1
                 self.secuencia(c.get("else"), ruta + ".e")
         elif padre == "log_message":

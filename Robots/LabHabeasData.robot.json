@@ -892,7 +892,7 @@
                  "father": "waitforobject",
                  "description": "Espera la página de términos",
                  "command": {
-                  "object": "//input[@id='aceptaOption']",
+                  "object": "//input[@id='aceptaOption:0']",
                   "option": "xpath",
                   "wait_time": "15",
                   "wait_for": "visible",
@@ -904,7 +904,7 @@
                  "father": "click_web",
                  "description": "Marca «Acepto» los términos de uso",
                  "command": {
-                  "data": "//input[@id='aceptaOption']",
+                  "data": "//input[@id='aceptaOption:0']",
                   "data_type": "xpath",
                   "before": "0",
                   "wait_time": "10",
@@ -916,7 +916,7 @@
                  "father": "click_web",
                  "description": "Pulsa «Continuar»",
                  "command": {
-                  "data": "//input[@id='continuarBtn']",
+                  "data": "//button[@id='continuarBtn']",
                   "data_type": "xpath",
                   "before": "0",
                   "wait_time": "10",
@@ -998,7 +998,7 @@
                "father": "click_web",
                "description": "Marca la casilla del clon «No soy un robot»",
                "command": {
-                "data": "//input[@id='recaptcha-anchor']",
+                "data": "//*[@id='recaptchaCheckbox']",
                 "data_type": "xpath",
                 "before": "0",
                 "wait_time": "10",
@@ -1033,7 +1033,7 @@
                  "father": "click_web",
                  "description": "Pulsa «Consultar»",
                  "command": {
-                  "data": "//input[@id='j_idt17']",
+                  "data": "//button[@id='j_idt17']",
                   "data_type": "xpath",
                   "before": "0",
                   "wait_time": "10",
@@ -1377,7 +1377,7 @@
                  "father": "click_web",
                  "description": "Pulsa el botón de refresco de la pregunta",
                  "command": {
-                  "data": "//input[@id='ibRefrescar']",
+                  "data": "//input[@id='ImageButton1']",
                   "data_type": "xpath",
                   "before": "0",
                   "wait_time": "10",

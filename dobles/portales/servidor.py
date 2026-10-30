@@ -18,16 +18,112 @@ Policía       /policia/WebJudicial/index.xhtml  (JSF, javax.faces.ViewState)
 """
 import base64
 import html
+import os
+import re
 import secrets
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 PNG_1X1 = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
 TIPOS_PROCURADURIA = [("1", "Cédula de ciudadanía"), ("2", "Nit"), ("3", "Pasaporte"), ("4", "Tarjeta de identidad"),
                       ("5", "Cédula extranjería")]
 FAMILIAS = ("aritmetica", "capital", "documento", "nombre")
 PIE = "<p>Clon técnico del lab R_LAB_HabeasData: datos sintéticos, sin identidad oficial.</p>"
+
+# ---------- front fiel (clones extraídos del front real de los portales, 2026-10-30) ----------
+RAIZ_CLON = os.path.dirname(os.path.abspath(__file__))
+TIPOS_ARCHIVO = {".css": "text/css; charset=utf-8", ".js": "application/javascript; charset=utf-8",
+                 ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
+                 ".ico": "image/x-icon", ".woff": "font/woff", ".woff2": "font/woff2", ".ttf": "font/ttf",
+                 ".svg": "image/svg+xml", ".map": "application/json", ".html": "text/html; charset=utf-8"}
+
+
+def clon_html(portal, archivo):
+    """HTML del clon fiel (front extraído del portal real)."""
+    with open(os.path.join(RAIZ_CLON, portal, archivo), encoding="utf-8") as fh:
+        return fh.read()
+
+
+def con_texto(base, id_, texto):
+    """Rellena el contenido textual del elemento con ese id (se escapa el texto)."""
+    return con_html(base, id_, html.escape(texto or ""))
+
+
+def con_html(base, id_, trozo):
+    """Rellena el contenido del elemento con ese id, sin escapar (para HTML ya armado).
+    Busca el cierre que balancea la etiqueta (el contenido tiene divs anidados)."""
+    m = re.search(r'<(\w+)[^>]*\bid="%s"[^>]*>' % re.escape(id_), base)
+    if not m:
+        return base
+    etiqueta = m.group(1)
+    inicio = m.end()
+    patron_apertura = re.compile(r'<%s\b' % etiqueta, re.I)
+    patron_cierre = re.compile(r'</%s\s*>' % etiqueta, re.I)
+    nivel, pos = 1, inicio
+    while True:
+        cierre = patron_cierre.search(base, pos)
+        if not cierre:
+            return base
+        apertura = patron_apertura.search(base, pos)
+        if apertura and apertura.start() < cierre.start():
+            nivel += 1
+            pos = apertura.end()
+            continue
+        nivel -= 1
+        if nivel == 0:
+            return base[:inicio] + trozo + base[cierre.start():]
+        pos = cierre.end()
+
+
+def con_visible(base, id_, visible=True):
+    """Quita (o pone) display:none del elemento con ese id."""
+    def ajusta(m):
+        etiqueta = m.group(0)
+        if visible:
+            etiqueta = re.sub(r"display\s*:\s*none\s*;?", "", etiqueta)
+        elif "display:none" not in etiqueta.replace(" ", ""):
+            etiqueta = etiqueta[:-1] + ' style="display:none;">'
+        return etiqueta
+    return re.sub(r'<\w+[^>]*\bid="%s"[^>]*>' % re.escape(id_), ajusta, base, count=1)
+
+
+def con_valor(base, campo, valor):
+    """Rellena el value de un input por su id (para repintar el formulario)."""
+    patron = re.compile(r'(<input[^>]*\bid="%s"[^>]*\bvalue=")([^"]*)(")' % re.escape(campo))
+    if not patron.search(base):
+        return base
+    return patron.sub(lambda m: m.group(1) + html.escape(valor or "") + m.group(3), base, count=1)
+
+
+def con_oculto(base, campo, valor):
+    """Rellena el value de un input hidden por su name (ViewState, etc.)."""
+    patron = re.compile(r'(<input[^>]*\bname="%s"[^>]*\bvalue=")([^"]*)(")' % re.escape(campo))
+    if not patron.search(base):
+        return base
+    return patron.sub(lambda m: m.group(1) + html.escape(valor or "") + m.group(3), base, count=1)
+
+
+def habilitada(base, id_):
+    """Quita disabled del elemento con ese id (el JS del clon lo habilitaba; aquí la lógica la manda el servidor)."""
+    return re.sub(r'(<\w+[^>]*id="%s"[^>]*?)\s+(?:disabled="disabled"|aria-disabled="true")' % re.escape(id_),
+                  lambda m: m.group(1), base, count=2)
+
+
+def sin_manejador_de_clic(base, id_):
+    """Quita el onclick del elemento con ese id (el original cancela el envío con `return false`)."""
+    return re.sub(r'(<\w+[^>]*id="%s"[^>]*?)\s+onclick="[^"]*"' % re.escape(id_), lambda m: m.group(1), base, count=1)
+
+
+MARCA_RECAPTCHA = ("document.getElementById('recaptchaCheck').checked=true;"
+                   "document.getElementById('g-recaptcha-response').value='clon-local-no-verificado';"
+                   "this.setAttribute('aria-checked','true');")
+
+
+def sin_scripts(base):
+    """Quita todos los <script>: la lógica del clon la manda el servidor (y se evita el JS externo)."""
+    return re.sub(r"<script\b[^>]*>.*?</script>", "", base, flags=re.S)
+
 
 
 def pagina(titulo, cuerpo):
@@ -104,6 +200,8 @@ def crear_servidor(estado, puerto=0):
 
         # ---------- utilidades ----------
         def responder(self, codigo, cuerpo, tipo="text/html; charset=utf-8", cookie=None):
+            if isinstance(cuerpo, str):
+                cuerpo = cuerpo.encode("utf-8")
             self.send_response(codigo)
             self.send_header("Content-Type", tipo)
             self.send_header("Content-Length", str(len(cuerpo)))
@@ -128,7 +226,11 @@ def crear_servidor(estado, puerto=0):
             return {k: v[0] for k, v in parse_qs(crudo, keep_blank_values=True).items()}
 
         def do_GET(self):
-            ruta = urlsplit(self.path).path.lower()
+            original = unquote(urlsplit(self.path).path)
+            ruta = original.lower()
+            estatico = self.estatico(original, ruta)
+            if estatico is not None:
+                return estatico
             with estado.bloqueo:
                 if ruta.endswith("/media/image/refresh.png"):
                     return self.responder(200, PNG_1X1, "image/png")
@@ -137,6 +239,27 @@ def crear_servidor(estado, puerto=0):
                 if ruta.startswith("/policia"):
                     return self.policia_get(ruta)
             self.responder(404, pagina("No encontrado", ""))
+
+        def estatico(self, original, ruta):
+            """Sirve los assets reales de los clones (css/js/img/fonts) con su ruta del portal."""
+            for prefijo, portal in (("/policia/webjudicial/", "policia"), ("/policia/", "policia"),
+                                    ("/procuraduria/", "procuraduria")):
+                if ruta.startswith(prefijo):
+                    relativo = original[len(prefijo):]
+                    break
+            else:
+                return None
+            if not relativo or relativo.endswith("/"):
+                return None
+            carpeta = os.path.join(RAIZ_CLON, portal)
+            destino = os.path.normpath(os.path.join(carpeta, relativo))
+            if not destino.startswith(os.path.normpath(carpeta) + os.sep):
+                return None
+            extension = os.path.splitext(destino)[1].lower()
+            if extension not in TIPOS_ARCHIVO or not os.path.isfile(destino):
+                return None
+            with open(destino, "rb") as fh:
+                return self.responder(200, fh.read(), TIPOS_ARCHIVO[extension])
 
         def do_POST(self):
             ruta = urlsplit(self.path).path.lower()
@@ -161,13 +284,12 @@ def crear_servidor(estado, puerto=0):
                     "<textarea name=\"txtIncidente\"></textarea><input type=\"submit\" name=\"btnEnviarIncidente\" value=\"Enviar\"></form>")))
             sid, sesion, nueva = self.sesion()
             sesion.clear()
-            self.responder(200, pagina("Consulta de antecedentes", (
-                "<form method=\"post\" action=\"consulta-de-antecedentes.aspx\">"
-                f"<input type=\"hidden\" name=\"__VIEWSTATE\" value=\"{secrets.token_hex(6)}\">"
-                "<p>Términos de uso: ¿acepta?</p>"
-                "<input type=\"radio\" id=\"rbAcepto\" name=\"rblAcepto\" value=\"1\"><label for=\"rbAcepto\">Acepto</label>"
-                "<input type=\"radio\" id=\"rbNoAcepto\" name=\"rblAcepto\" value=\"0\"><label for=\"rbNoAcepto\">No acepto</label>"
-                "<input type=\"submit\" id=\"continuarBtn\" name=\"continuarBtn\" value=\"Continuar\"></form>")), cookie=nueva or sid)
+            base = sin_scripts(clon_html("procuraduria", "index.html"))
+            base = con_oculto(base, "__VIEWSTATE", secrets.token_hex(6))
+            base = con_visible(base, "pnlTerminos", True)
+            base = con_visible(base, "pnlConsulta", False)
+            base = habilitada(base, "continuarBtn")
+            self.responder(200, base, cookie=nueva or sid)
 
         def procuraduria_post(self, datos):
             modo = estado.procuraduria_modo
@@ -183,7 +305,7 @@ def crear_servidor(estado, puerto=0):
                 return self.responder(200, self.formulario_procuraduria(sesion, {}), cookie=nueva)
             if not sesion.get("acepto"):
                 return self.responder(200, pagina("Consulta de antecedentes", "<p id=\"lblMensaje\">Sesión sin términos aceptados.</p>"), cookie=nueva)
-            if "ibRefrescar.x" in datos or "ibRefrescar" in datos:
+            if "ImageButton1.x" in datos or "ImageButton1" in datos:
                 sesion["pregunta"] = estado.siguiente_pregunta()
                 estado.consultas["preguntas"].append(sesion["pregunta"]["texto"])
                 return self.responder(200, self.formulario_procuraduria(sesion, datos), cookie=nueva)
@@ -207,22 +329,17 @@ def crear_servidor(estado, puerto=0):
             self.responder(200, self.formulario_procuraduria(sesion, datos, bloque), cookie=nueva)
 
         def formulario_procuraduria(self, sesion, valores, extra=""):
-            opciones = "".join(f"<option value=\"{c}\"{' selected' if valores.get('ddlTipoID') == c else ''}>{html.escape(t)}</option>"
-                               for c, t in TIPOS_PROCURADURIA)
-            v = lambda campo: html.escape(valores.get(campo, ""))  # noqa: E731
-            return pagina("Consulta de antecedentes", (
-                "<form method=\"post\" action=\"consulta-de-antecedentes.aspx\">"
-                f"<input type=\"hidden\" name=\"__VIEWSTATE\" value=\"{secrets.token_hex(6)}\">"
-                f"<label>Nombre</label><input type=\"text\" id=\"txtNombre\" name=\"txtNombre\" value=\"{v('txtNombre')}\">"
-                f"<label>Tipo de documento</label><select id=\"ddlTipoID\" name=\"ddlTipoID\">{opciones}</select>"
-                f"<label>Número</label><input type=\"text\" id=\"txtNumID\" name=\"txtNumID\" value=\"{v('txtNumID')}\">"
-                f"<label>Correo</label><input type=\"text\" id=\"txtCorreoEle\" name=\"txtCorreoEle\" value=\"{v('txtCorreoEle')}\">"
-                "<label>Observaciones</label><textarea id=\"txtObservaciones\" name=\"txtObservaciones\"></textarea>"
-                "<input type=\"image\" id=\"ibRefrescar\" name=\"ibRefrescar\" src=\"/Media/Image/refresh.png\" alt=\"Refrescar pregunta\">"
-                f"<p>Pregunta: <span id=\"lblPregunta\">{html.escape(sesion['pregunta']['texto'])}</span></p>"
-                "<input type=\"text\" id=\"txtRespuestaPregunta\" name=\"txtRespuestaPregunta\" value=\"\">"
-                "<input type=\"submit\" id=\"btnExportar\" name=\"btnExportar\" value=\"Consultar\">"
-                f"</form><div id=\"resultado\">{extra}</div>"))
+            base = sin_scripts(clon_html("procuraduria", "index.html"))
+            base = con_oculto(base, "__VIEWSTATE", secrets.token_hex(6))
+            base = con_visible(base, "pnlTerminos", False)
+            base = con_visible(base, "pnlConsulta", True)
+            base = con_texto(base, "lblPregunta", sesion["pregunta"]["texto"])
+            for campo in ("txtNombre", "txtNumID", "txtCorreoEle", "txtObservaciones"):
+                base = con_valor(base, campo, valores.get(campo, ""))
+            base = sin_manejador_de_clic(base, "ImageButton1")
+            if extra:
+                base = con_html(base, "divResultado", extra)
+            return base
 
         # ---------- Policía ----------
         def policia_get(self, ruta):
@@ -230,13 +347,10 @@ def crear_servidor(estado, puerto=0):
                 return self.responder(503, pagina("Servicio no disponible", "<p>Intente más tarde.</p>"))
             sid, sesion, nueva = self.sesion()
             sesion.clear()
-            self.responder(200, pagina("Consulta de antecedentes judiciales", (
-                "<form id=\"formAcepta\" method=\"post\" action=\"/policia/WebJudicial/index.xhtml\">"
-                f"<input type=\"hidden\" name=\"javax.faces.ViewState\" value=\"{secrets.token_hex(8)}\">"
-                "<p>Términos de uso: ¿acepta?</p>"
-                "<input type=\"radio\" id=\"aceptaOption\" name=\"aceptaOption\" value=\"true\"><label for=\"aceptaOption\">Acepto</label>"
-                "<input type=\"radio\" name=\"aceptaOption\" value=\"false\"><label>No acepto</label>"
-                "<input type=\"submit\" id=\"continuarBtn\" name=\"continuarBtn\" value=\"Continuar\"></form>")), cookie=nueva or sid)
+            base = sin_scripts(clon_html("policia", "index.html"))
+            base = con_oculto(base, "javax.faces.ViewState", secrets.token_hex(8))
+            base = habilitada(base, "continuarBtn")
+            self.responder(200, base, cookie=nueva or sid)
 
         def policia_post(self, ruta, datos):
             if estado.policia_modo == "caido":
@@ -256,27 +370,29 @@ def crear_servidor(estado, puerto=0):
             if "recaptchaCheck" not in datos:
                 return self.responder(200, self.formulario_policia("<div id=\"msgCaptcha\">Debe verificar que no es un robot.</div>"), cookie=nueva)
             if estado.policia_modo == "reto":
-                return self.responder(200, pagina("Verificación adicional", (
+                return self.responder(200, self.formulario_policia(
                     "<div id=\"retoImagenes\"><p>Seleccione todas las imágenes con semáforos.</p>"
-                    "<p>Este reto lo resuelve una persona.</p></div>")), cookie=nueva)
+                    "<p>Este reto lo resuelve una persona.</p></div>"), cookie=nueva)
             nombre = estado.policia_padron.get(numero)
             if nombre is None:
                 return self.responder(200, self.formulario_policia("<div id=\"msgResultado\">No se encontraron registros para el documento.</div>"), cookie=nueva)
-            self.responder(200, pagina("Resultado de la consulta", (
+            self.responder(200, self.formulario_policia(
                 "<table id=\"resultado\"><tr><td>Apellidos y Nombres:</td>"
-                f"<td id=\"nombreResultado\">{html.escape(nombre)}</td></tr></table>")), cookie=nueva)
+                f"<td id=\"nombreResultado\">{html.escape(nombre)}</td></tr></table>"), cookie=nueva)
 
         def formulario_policia(self, extra=""):
-            captcha = ("<div id=\"msgCaptcha\">Este sitio supera la cuota gratuita de reCAPTCHA. "
-                       "Para uso comercial, habilite la facturación.</div>" if estado.policia_modo == "cuota" else
-                       "<div class=\"g-recaptcha\" id=\"recaptcha\"><label>"
-                       "<input type=\"checkbox\" id=\"recaptcha-anchor\" name=\"recaptchaCheck\" value=\"1\"> No soy un robot</label></div>")
-            return pagina("Consulta de antecedentes judiciales", (
-                "<form id=\"formConsulta\" method=\"post\" action=\"/policia/WebJudicial/antecedentes.xhtml\">"
-                f"<input type=\"hidden\" name=\"javax.faces.ViewState\" value=\"{secrets.token_hex(8)}\">"
-                "<label>Tipo de documento</label><select id=\"cedulaTipo\" name=\"cedulaTipo\"><option value=\"cc\" selected>Cédula de Ciudadanía</option></select>"
-                "<label>Número de documento</label><input type=\"text\" id=\"cedulaInput\" name=\"cedulaInput\">"
-                f"{captcha}<input type=\"submit\" id=\"j_idt17\" name=\"j_idt17\" value=\"Consultar\"></form>{extra}"))
+            base = sin_scripts(clon_html("policia", "antecedentes.html"))
+            base = con_oculto(base, "javax.faces.ViewState", secrets.token_hex(8))
+            base = sin_manejador_de_clic(base, "j_idt17")
+            base = re.sub(r'(<span[^>]*id="recaptchaCheckbox")', lambda m: m.group(1) + ' onclick="%s"' % MARCA_RECAPTCHA, base, count=1)
+            if estado.policia_modo == "cuota":
+                base = con_html(base, "captchaAntecedentes",
+                                "<div id=\"msgCaptcha\">Este sitio supera la cuota gratuita de reCAPTCHA. "
+                                "Para uso comercial, habilite la facturación.</div>")
+            if extra:
+                base = con_html(base, "resultadoAntecedentes", extra)
+                base = con_visible(base, "resultadoAntecedentes", True)
+            return base
 
     class Servidor(ThreadingHTTPServer):
         def handle_error(self, request, client_address):  # Chrome corta conexiones ociosas: no es un fallo del clon
