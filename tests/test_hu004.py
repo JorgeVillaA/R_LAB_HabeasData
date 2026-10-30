@@ -88,3 +88,16 @@ class TestHU004(PruebaConDoble):
         self.assertIn("900011", resumen["excepciones_negocio_1"])
         con_comentario = {c["IDRADICADO"]: c["Detalle"] for c in self.doble.estado.comentarios}
         self.assertIn("NUMERO DE IDENTIFICACION", con_comentario["900011"])
+
+
+class TestComentarioVaAlRadicadoHijo(PruebaConDoble):
+    def test_radicado_hijo_incompleto_con_padre_comenta_el_hijo_no_el_padre(self):
+        """AC-11 en la escritura: con padre (800001), el comentario de la excepción 1 se escribe en el radicado procesado."""
+        from tests.soporte import RADICADOS
+        hijo = next(r for r in RADICADOS if str(r["IDRADICADO"]) == "900008")
+        self.configurar_doble(radicados=[dict(hijo, NOMBREDELCLIENTE="")])
+        resumen = ep001.procesar(self.cfg, self.cliente, self.registro)
+        self.assertEqual(resumen["excepciones_negocio_1"], ["900008"])
+        self.assertEqual([c["IDRADICADO"] for c in self.doble.estado.comentarios], ["900008"])
+        self.assertEqual(resumen["casos"]["900008"]["radicado_padre"], "800001")
+        self.assertIn("NOMBRE DEL CLIENTE", self.doble.estado.comentarios[0]["Detalle"])

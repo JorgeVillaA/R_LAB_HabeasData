@@ -10,7 +10,7 @@ La primera versión de `LabHabeasData` tenía 2 comandos raíz (`trycatch` + `lo
 - **Estructura** (como `MainMonitoreoMarcas`): `trycatch` «Control de ejecución» → grupo `HU002HU003HU004 - Inicializar el Asistente` → `trycatch`
   «Proceso principal» → grupos `HU002 - Filtrar radicados de Exclusión de Datos`, `HU003 - Leer datos paramétricos` y `HU004 - Validar campos
   obligatorios` (los dos últimos dentro del `for` por radicado) → grupo `HU002HU003HU004 - Cierre y registro de ejecución`.
-- **83 comandos visibles** (95 antes de la consolidación de abajo): 35 asignaciones (47 antes), 19 decisiones (`evaluateIf`), 1 bucle, 5 grupos, 2 `trycatch`, 20 pasos de componente y 1 log; cada bloque lleva
+- **84 comandos visibles** (95 antes de la consolidación de abajo): 35 asignaciones (47 antes), 19 decisiones (`evaluateIf`), 1 bucle, 5 grupos, 2 `trycatch`, 20 pasos de componente y 1 log; cada bloque lleva
   su descripción (§6.1). Árbol completo en `flujo_LabHabeasData.md`.
 - **Qué quedó en Python** (`habeasdata.pasos`, una llamada por bloque): E/S con secretos (token con el `client_secret` del Administrador de credenciales y
   consultas con Bearer), parseo y clasificación puros, y escritura de logs y reporte. Ningún bloque contiene el flujo.
@@ -65,6 +65,10 @@ Veredicto de la ronda 2: **REFUTADO** (el intérprete tragaba fallos de la rama 
 ### Ronda 3 → corrección
 
 Veredicto de la ronda 3: **REFUTADO** (lo que el robot deja en el reporte y en el log de errores no tenía prueba: 15 de 19 mutantes sobrevivían, entre ellos «no registra el avance», «no registra 0 casos», «no registra la excepción de sistema»). Corregido: la equivalencia corre orquestador y robot en **carpetas separadas** y compara las filas del **reporte de gestión** y del **log de errores** (sin la columna de fecha), tanto en el intérprete como en Studio (16/16 con Chrome sin cambios en el robot). Mutaciones comprobadas (mueren): `registrar_avance` sin escribir, `registrar_excepcion_sistema` sin log, excepción de negocio 1 con código 2, robot sin `registrar_sin_casos`. Pruebas nuevas (`tests/test_zeus_reintentos.py`): reintento ante 503 con «Reintento 1/3…3/3», un 4xx no se reintenta, redacción de `token=`/Bearer/`client_secret=`/`password=` en el log, y `$select`/`$first`/`$orderby` en el paso del robot. Hallazgos bajos sin cambio: `anchored_at.sha` es el HEAD de la corrida; Z2/Z3 (200 sin `access_token`, `quote` de la URL del radicado) sin test propio.
+
+### Ronda 4 → corrección
+
+Veredicto de la ronda 4: **REFUTADO** (1 ALTA, 4 MEDIA, 5 BAJA; las 9 mutaciones de la ronda 3 mueren). Corregido: (ALTA) la equivalencia compara el **texto** del comentario que llega a Zeus (`IDRADICADO` + `Detalle`), no solo el radicado; (MEDIA) compara también el **log de auditoría** del robot, lo que destapó una divergencia real (el orquestador registraba «N radicados de exclusión identificados» y el robot no): ahora el robot lo registra con un bloque visible; el test del cierre comprueba «Fin de ejecución» en el CSV; la tabla de teléfono suma `44412A4` y `4A41234`; un test comprueba que el comentario de un radicado hijo incompleto con padre se escribe en el hijo. Mutaciones comprobadas (mueren): comentario sin motivo, robot sin «Inicio del radicado», comentario al padre. Estado final: 155 pruebas OK, matriz ×2 verde, Studio 16/16 con Chrome, `validate_robot` 0/0 (84 comandos). BAJA abiertas: `ids_de` con `IDRADICADO` booleano (sin test), separador y dígitos fijados en código (sin test de parametrización), `strip()` defensivo, conteo «126 pruebas» en evidencia histórica, ancla del artefacto de Studio al HEAD.
 
 ## Alcance de lo verificado
 

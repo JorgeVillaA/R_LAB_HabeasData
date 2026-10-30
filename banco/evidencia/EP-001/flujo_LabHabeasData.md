@@ -1,6 +1,6 @@
 # Flujo del robot LabHabeasData (EP-001: HU-002, HU-003, HU-004)
 
-Comandos por tipo: evaluateIf=19, execScriptPython=20, for=1, group=5, log_message=1, setVar=35, trycatch=2. Total: 83.
+Comandos por tipo: evaluateIf=19, execScriptPython=21, for=1, group=5, log_message=1, setVar=35, trycatch=2. Total: 84.
 
 - **Control de errores**: Control de ejecución
   - **Grupo**: HU002HU003HU004 - Inicializar el Asistente
@@ -22,6 +22,7 @@ Comandos por tipo: evaluateIf=19, execScriptPython=20, for=1, group=5, log_messa
         - **Paso (componente)**: Consulta los radicados de exclusión (GET OData con $filter, $select, $first y $orderby)
         - **Si**: La consulta respondió
           - **Asignar**: Guarda los radicados seleccionados
+          - **Paso (componente)**: Deja constancia en el log de auditoría de los radicados identificados
           - **Si**: Se descartan los radicados sin identificación (parámetro)
             - **Asignar**: Arma el filtro de los descartados: identificación igual a «NO APORTA»
             - **Paso (componente)**: Consulta los radicados descartados para no perderlos en silencio

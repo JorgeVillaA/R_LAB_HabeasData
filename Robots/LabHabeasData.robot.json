@@ -247,6 +247,11 @@
              "description": "Guarda los radicados seleccionados"
             },
             {
+             "father": "execScriptPython",
+             "description": "Deja constancia en el log de auditoría de los radicados identificados",
+             "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento(str(len(pasos.objeto(GetVar('glbArrIdsRadicados')))) + ' radicados de exclusión identificados'))"
+            },
+            {
              "father": "evaluateIf",
              "description": "Se descartan los radicados sin identificación (parámetro)",
              "command": "{glbDicParametros}[\"seleccion\"][\"DescartarIdentificacionAusente\"] == True",

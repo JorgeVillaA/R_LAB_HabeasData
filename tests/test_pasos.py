@@ -87,6 +87,8 @@ class TestPasos(PruebaPasos):
     def test_cierre_devuelve_resumen_y_deja_fin_en_el_log(self):
         resumen = {"estado": "ok", "avanzan": ["1"], "casos": {}}
         self.assertTrue(pasos.cerrar(str(resumen))["ok"])
+        auditoria = "".join(p.read_text(encoding="utf-8") for p in (self.raiz / "Logs").rglob("*LOG_DE_AUDITORIA*.csv"))
+        self.assertIn("Fin de ejecución EP-001", auditoria)
 
     def test_objeto_interpreta_el_texto_de_una_variable_del_robot(self):
         self.assertEqual(pasos.objeto("{'a': None, 'b': [1, 2]}"), {"a": None, "b": [1, 2]})
