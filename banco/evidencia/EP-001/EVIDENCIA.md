@@ -58,6 +58,10 @@ Veredicto de la ronda 1: **REFUTADO** (el verificador invirtió dos decisiones d
 
 Tras la corrección: 147 pruebas OK; matriz 16 × 2 verde con huellas idénticas; equivalencia en Studio 16/16; `validate_robot` trycore 0/0.
 
+### Ronda 2 → corrección
+
+Veredicto de la ronda 2: **REFUTADO** (el intérprete tragaba fallos de la rama de detención; el motivo de detención no se comparaba; `head_at_run` no existía en el artefacto; `ids_de` y el log de detención del camino del robot sin test). Corregido: el intérprete cuenta las excepciones capturadas y el test exige 0; la vista compara el motivo de detención; `pasos.consultar_odata` y `pasos.registrar_detencion` tienen test propio; hay un test de que el JSON del robot coincide con su generador; el artefacto de Studio lleva `head_at_run` y `anchored_at.sha` (`ec35592`, 16/16). Mutaciones comprobadas (mueren todas): vaciar el motivo en las dos ramas, `motivo_detencion` fijo, quitar `ids_de` del paso, quitar el motivo del log. Hallazgo 6 de la ronda 2 (divergencia por inspección si falla la consulta general tras los descartados): abierto, bajo, sin escenario.
+
 ## Alcance de lo verificado
 
 - **Modo FIXTURE.** Todo lo de abajo corrió contra el doble offline de la API de Zeus, que solo sirve de fixture del banco
