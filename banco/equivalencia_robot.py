@@ -25,7 +25,7 @@ for carpeta in (REPO, REPO / "Scripts", REPO / "dobles" / "zeus_api", REPO / "ba
     if str(carpeta) not in sys.path:
         sys.path.insert(0, str(carpeta))
 
-from correr_matriz import mezclar, radicados_de  # noqa: E402
+from correr_matriz import cambios_del_doble, mezclar, radicados_de  # noqa: E402
 from habeasdata import ep001  # noqa: E402
 from habeasdata.config import cargar  # noqa: E402
 from dobles.zeus_api.servidor import DobleZeus  # noqa: E402
@@ -188,7 +188,7 @@ def escenario(esc, ejecutor=None):
     puerto = doble.puerto
     raiz = preparar_raiz(puerto, esc.get("proceso", {}))
     try:
-        doble.estado.configurar({k: v for k, v in spec.items() if k in ESCRIBIR})
+        doble.estado.configurar(cambios_del_doble(spec))
         if spec.get("apagado"):
             doble.detener()
         py = ep001.procesar(cargar(raiz))

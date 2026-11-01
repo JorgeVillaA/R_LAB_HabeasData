@@ -253,6 +253,7 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.
     try:
         lista = filtrar_exclusion(cliente, cfg, registro)
         registrar_seleccion(registro, lista)
+        resumen["motivo_sin_casos"], resumen["descartados_identificacion_ausente"] = lista["motivo_sin_casos"], lista["descartados"]
         if not lista["ids"]:
             lista, resumen["reintentos"] = _reintentar(cliente, cfg, registro, dormir, lista)
     except DetenerEjecucion as error:

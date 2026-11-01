@@ -163,5 +163,25 @@
     "paso": true,
     "fallos": [],
     "huella": "8477fda28192de1a1a00533e3b3da8d4d39390acd81ac1e407c8edbbbefeebec"
+  },
+  {
+    "id": "EP001-17-casos-aparecen-en-el-reintento",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 bandeja vacía, el reintento agendado encuentra casos y el bot los procesa (AC-04, AC-05)"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "c0adc5dda288886f4a39f156ce070c7706a9a4f483af90a540cc854b2f2373cf"
+  },
+  {
+    "id": "EP001-18-falla-durante-el-reintento",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 bandeja vacía, la API deja de responder durante el reintento: se detiene y alerta"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "708eb81ec642a9d4aebd5bedb5db6631d57563632d391adc35852fbb84d6ab45"
   }
 ]
