@@ -10,6 +10,7 @@ Los umbrales, textos y separadores salen de la configuración, no de la lógica.
 """
 import json
 import sys
+import time
 
 from .config import cargar
 from .redaccion import resumen_seguro
@@ -128,6 +129,35 @@ def registrar_descartados(registro, ids):
         registro.reporte(id_descartado, None, "descartado: identificación ausente", None, "sin gestión del bot")
 
 
+def reintentar_bandeja(cliente, cfg, registro, dormir=time.sleep):
+    """HU-002 (AC-04, AC-05): con la bandeja sin casos el bot AGENDA el reintento: espera `MinutosEntreReintentos` y vuelve a
+    consultar, hasta `MaximoReintentosDiarios` veces (ambos de CADENCIA_REINTENTO_BANDEJA_VACIA) o hasta que aparezcan casos.
+    Cada intento deja su rastro (0 casos, descartados, identificados). Devuelve (última selección, reintentos hechos).
+    Una falla crítica durante un reintento detiene la corrida (DetenerEjecucion), igual que en el intento inicial."""
+    cadencia = cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]
+    maximo, minutos = int(cadencia["MaximoReintentosDiarios"]), cadencia["MinutosEntreReintentos"]
+    lista, hechos = None, 0
+    while hechos < maximo:
+        hechos += 1
+        registro.auditoria(f"Reintento {hechos} de {maximo} de la bandeja tras esperar {minutos} min", MODULO)
+        dormir(minutos * 60)
+        lista = filtrar_exclusion(cliente, cfg, registro)
+        registrar_seleccion(registro, lista)
+        if lista["ids"]:
+            break
+    return lista, hechos
+
+
+def _reintentar(cliente, cfg, registro, dormir, inicial):
+    ultima, hechos = reintentar_bandeja(cliente, cfg, registro, dormir)
+    return (ultima or inicial), hechos
+
+
+def registrar_seleccion(registro, lista):
+    registrar_descartados(registro, lista["descartados"])
+    registro.auditoria(f"{len(lista['ids'])} radicados de exclusión identificados", MODULO)
+
+
 def ids_de(filas, cfg):
     """Frontera: cada fila debe traer un IDRADICADO presente; si no, la respuesta no cumple el contrato."""
     ids = []
@@ -190,6 +220,8 @@ def leer_crudo(cliente, id_radicado, cfg):
     problema = validar_registro(crudo, cfg)
     if problema:
         raise ExcepcionSistemaCaso(f"no se pudo leer el radicado {id_radicado}: {problema}")
+    if str(crudo["IDRADICADO"]).strip() != str(id_radicado).strip():  # la API devolvió OTRO radicado: no se procesan datos ajenos
+        raise ExcepcionSistemaCaso(f"no se pudo leer el radicado {id_radicado}: la respuesta trae otro IDRADICADO")
     return crudo
 
 
@@ -207,7 +239,7 @@ def registrar_excepcion_negocio_1(escritura, caso, motivos):
 
 
 # ---------- orquestación ----------
-def procesar(cfg=None, cliente=None, registro=None, escritura=None):
+def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.sleep):
     cfg = cfg or cargar()
     registro = registro or Registro(cfg)
     cliente = cliente or ClienteZeus(cfg, registro)
@@ -216,10 +248,13 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None):
     registro.auditoria("Inicio de ejecución EP-001", MODULO)
     resumen = {"estado": "ok", "modo": cliente.modo, "avanzan": [], "excepciones_negocio_1": [],
                "excepciones_sistema": [], "descartados_identificacion_ausente": [], "casos": {},
-               "motivo_sin_casos": None, "reintento": None, "notificacion": None}
+               "motivo_sin_casos": None, "reintento": None, "reintentos": 0, "notificacion": None}
     registro.auditoria("Ingreso a la API de Zeus", APLICATIVO)
     try:
         lista = filtrar_exclusion(cliente, cfg, registro)
+        registrar_seleccion(registro, lista)
+        if not lista["ids"]:
+            lista, resumen["reintentos"] = _reintentar(cliente, cfg, registro, dormir, lista)
     except DetenerEjecucion as error:
         registro.error(f"Ejecución detenida: {error}", MODULO)
         notif = cfg.maquina["Notificaciones"]
@@ -229,8 +264,6 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None):
         return resumen
     resumen["motivo_sin_casos"], resumen["reintento"] = lista["motivo_sin_casos"], lista["reintento"]
     resumen["descartados_identificacion_ausente"] = lista["descartados"]
-    registrar_descartados(registro, lista["descartados"])
-    registro.auditoria(f"{len(lista['ids'])} radicados de exclusión identificados", MODULO)
     for id_radicado in lista["ids"]:
         registro.auditoria(f"Inicio del radicado {id_radicado}", MODULO)
         try:

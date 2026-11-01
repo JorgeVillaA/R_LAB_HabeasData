@@ -8,6 +8,7 @@ ofrece, como un módulo de Rocketbot, lo que no debe ir en variables ni en el lo
 Todas devuelven un diccionario `{"ok": bool, "mensaje": str, ...}`; el robot decide con `evaluateIf`.
 """
 import ast
+import time
 
 from . import ep001
 from .config import cargar
@@ -27,6 +28,7 @@ class _Sesion:
 
 
 _sesion = None
+dormir = time.sleep  # espera del reintento de la bandeja; los tests y el banco la sustituyen
 
 
 def objeto(valor):
@@ -108,6 +110,19 @@ def consultar_seleccion(consulta):
 def registrar_descartados(ids):
     ep001.registrar_descartados(_sesion.registro, [str(i) for i in objeto(ids)])
     return _ok()
+
+
+def reintentar_bandeja():
+    """HU-002: agenda el reintento de la bandeja sin casos (espera + reconsulta, según CADENCIA_REINTENTO_BANDEJA_VACIA).
+    Es solo la espera y la reconsulta con los mismos pasos de la selección; la decisión de reintentar la toma el robot."""
+    try:
+        lista, hechos = ep001.reintentar_bandeja(_sesion.cliente, _sesion.cfg, _sesion.registro, lambda s: dormir(s))
+    except ep001.DetenerEjecucion as error:
+        return _fallo(error)
+    if lista is None:
+        return _ok(cambia=False, reintentos=0)
+    return _ok(cambia=True, reintentos=hechos, ids=lista["ids"], descartados=lista["descartados"],
+               motivo=lista["motivo_sin_casos"], reintento=lista["reintento"])
 
 
 def registrar_sin_casos(motivo, total):

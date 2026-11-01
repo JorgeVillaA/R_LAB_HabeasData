@@ -17,7 +17,7 @@ El robot SHALL seleccionar de la API de Zeus los radicados cuya tipología es «
 
 #### Scenario: Tipología ausente o bandeja vacía
 - **WHEN** el filtro no devuelve radicados
-- **THEN** el robot distingue por consulta general entre tipología ausente, bandeja vacía y solo descartados, registra «0 casos» y la cadencia de reintento parametrizada
+- **THEN** el robot distingue por consulta general entre tipología ausente, bandeja vacía y solo descartados, registra «0 casos» y AGENDA el reintento: espera MinutosEntreReintentos y reconsulta hasta MaximoReintentosDiarios o hasta que aparezcan casos (CADENCIA_REINTENTO_BANDEJA_VACIA)
 
 ### Requirement: Lectura de datos paramétricos (HU-003)
 El robot SHALL leer cada radicado por `IDRADICADO` y extraer nombre, tipo y número de identificación, fecha de recepción, correos y teléfonos, tratando «No aporta» y vacíos como ausentes, separando por «/» cada valor, clasificando cada teléfono por dígitos y conservando el radicado padre cuando exista.

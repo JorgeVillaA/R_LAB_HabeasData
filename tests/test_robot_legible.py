@@ -102,8 +102,8 @@ class TestEstructuraLegible(unittest.TestCase):
             self.assertNotIn(suelto, nombres)
 
     def test_tope_de_bloques_tras_consolidar(self):  # antes: 95 comandos, 47 setVar
-        self.assertLessEqual(len(TODOS), 84)
-        self.assertLessEqual([c["father"] for c in TODOS].count("setVar"), 36)
+        self.assertLessEqual(len(TODOS), 92)  # +9 del reintento agendado de HU-002 (opción A)
+        self.assertLessEqual([c["father"] for c in TODOS].count("setVar"), 39)
 
     def test_los_motivos_de_incompletitud_coinciden_con_las_reglas_de_python(self):
         en_robot = []

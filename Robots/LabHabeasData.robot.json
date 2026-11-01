@@ -71,6 +71,10 @@
    "data": ""
   },
   {
+   "name": "glbDicReintento",
+   "data": ""
+  },
+  {
    "name": "glbStrAsuntoAviso",
    "data": ""
   },
@@ -390,6 +394,59 @@
            "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
           }
          ]
+        },
+        {
+         "father": "evaluateIf",
+         "description": "Sigue sin casos: agenda el reintento (espera la cadencia y vuelve a consultar)",
+         "command": "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) == 0 and {glbDicEstado}['motivo_sin_casos'] is not None",
+         "children": [
+          {
+           "father": "execScriptPython",
+           "description": "Espera MinutosEntreReintentos y reconsulta, hasta MaximoReintentosDiarios o hasta que aparezcan casos (CADENCIA_REINTENTO_BANDEJA_VACIA)",
+           "command": "from habeasdata import pasos\nSetVar('glbDicReintento', pasos.reintentar_bandeja())"
+          },
+          {
+           "father": "evaluateIf",
+           "description": "Hubo reintentos y la consulta respondió",
+           "command": "{glbDicReintento}[\"ok\"] == True and {glbDicReintento}[\"cambia\"] == True",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "glbArrIdsRadicados",
+             "command": "{glbDicReintento}[\"ids\"]",
+             "description": "Guarda los radicados seleccionados en el reintento"
+            },
+            {
+             "father": "setVar",
+             "var": "glbArrIdsDescartados",
+             "command": "{glbDicReintento}[\"descartados\"]",
+             "description": "Guarda los descartados del último intento"
+            },
+            {
+             "father": "setVar",
+             "var": "glbDicEstado",
+             "command": "dict({glbDicEstado}, motivo_sin_casos={glbDicReintento}['motivo'])",
+             "description": "Motivo con el que terminó el último intento"
+            }
+           ],
+           "else": []
+          },
+          {
+           "father": "evaluateIf",
+           "description": "El reintento se detuvo por una falla crítica",
+           "command": "{glbDicReintento}[\"ok\"] == False",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "glbDicEstado",
+             "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion={glbDicReintento}[\"mensaje\"])",
+             "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
+            }
+           ],
+           "else": []
+          }
+         ],
+         "else": []
         }
        ]
       },

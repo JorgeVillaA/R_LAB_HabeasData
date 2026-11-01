@@ -121,6 +121,17 @@ HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
             ]),
         ], detener("{glbDicSeleccion}")),
     ], detener("{glbDicAutenticacion}")),
+    si("Sigue sin casos: agenda el reintento (espera la cadencia y vuelve a consultar)",
+       "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) == 0 and {glbDicEstado}['motivo_sin_casos'] is not None", [
+        paso("Espera MinutosEntreReintentos y reconsulta, hasta MaximoReintentosDiarios o hasta que aparezcan casos "
+             "(CADENCIA_REINTENTO_BANDEJA_VACIA)", "glbDicReintento", "pasos.reintentar_bandeja()"),
+        si("Hubo reintentos y la consulta respondió", '{glbDicReintento}["ok"] == True and {glbDicReintento}["cambia"] == True', [
+            sv("Guarda los radicados seleccionados en el reintento", "glbArrIdsRadicados", '{glbDicReintento}["ids"]'),
+            sv("Guarda los descartados del último intento", "glbArrIdsDescartados", '{glbDicReintento}["descartados"]'),
+            sv("Motivo con el que terminó el último intento", "glbDicEstado",
+               "dict({glbDicEstado}, motivo_sin_casos={glbDicReintento}['motivo'])")]),
+        si("El reintento se detuvo por una falla crítica", '{glbDicReintento}["ok"] == False', detener("{glbDicReintento}")),
+    ]),
 ])
 
 HU003 = grupo("HU003 - Leer datos paramétricos", [
@@ -228,7 +239,7 @@ VARIABLES = [("glbBlnEstadoSistema", "True"), ("glbBlnEstadoProceso", "True"), (
              ("glbDicEstado", ""),
              ("glbDicInicio", ""), ("glbDicParametros", ""), ("glbDicAutenticacion", ""), ("glbDicSeleccion", ""),
              ("glbDicDescartados", ""), ("glbDicRegistroDescartados", ""), ("glbDicGeneral", ""), ("glbDicSinCasos", ""),
-             ("glbDicDetencion", ""), ("glbStrAsuntoAviso", ""), 
+             ("glbDicDetencion", ""), ("glbDicReintento", ""), ("glbStrAsuntoAviso", ""), 
              ("glbArrIdsRadicados", ""), ("glbArrIdsDescartados", ""), ("glbArrAvanzan", ""),
              ("glbArrExcepcionesNegocioUno", ""), ("glbArrExcepcionesSistema", ""),
              ("locStrIdRadicado", ""), ("locDicConsulta", ""), ("locStrFiltroDescartados", ""),

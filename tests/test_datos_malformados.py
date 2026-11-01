@@ -28,6 +28,12 @@ class TestRegistroMalformado(PruebaConDoble):
                 with self.assertRaises(ep001.ExcepcionSistemaCaso, msg=repr(valor)):
                     ep001.extraer(self.cliente, self.cfg, "900001")
 
+    def test_un_registro_de_otro_radicado_no_se_procesa(self):  # hallazgo del verificador: datos de otro ciudadano
+        ajeno = dict(RADICADOS[1])
+        with mock.patch.object(self.cliente, "radicado", return_value=ajeno):
+            with self.assertRaises(ep001.ExcepcionSistemaCaso):
+                ep001.extraer(self.cliente, self.cfg, str(RADICADOS[0]["IDRADICADO"]))
+
     def test_respuesta_que_no_es_un_registro_es_excepcion_de_sistema(self):
         for malo in (None, [], "texto", 5):
             with mock.patch.object(self.cliente, "radicado", return_value=malo):
