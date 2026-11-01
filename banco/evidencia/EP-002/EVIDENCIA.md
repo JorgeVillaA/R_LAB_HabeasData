@@ -59,6 +59,7 @@ Hallazgos de la corrida:
 
 Pendiente: diagnosticar la causa abierta con el navegador a la vista (capturas del MCP de Chrome) antes de marcar la tarea 3.4 en `tasks.md`.
 
-## Re-ejecución en Studio con Chrome (2026-11-01, sobre fb804fb)
-- python banco/equivalencia_robot.py EP-002: 20 escenarios, robot de Studio equivalente al orquestador en los 20 (IGUAL).
-- validate_robot perfil trycore: 0 errores, 0 avisos. Suite: ver commit siguiente.
+## Corrección de evidencia (2026-11-01)
+- La nota anterior «20/20 en Studio» salía de `banco/equivalencia_robot.py EP-002`, que ejecuta con la identidad deshabilitada y solo compara la parte de EP-001: NO probaba la identidad. La prueba real es `python banco/banco_ep002.py` (robot en Studio + Chrome contra los clones).
+- Resultado real antes de los arreglos: 4/20 (el robot terminaba «detenido» en Chrome). Causas halladas con la traza de Studio y corregidas en `dobles/portales/servidor.py`: `onsubmit` de la Procuraduría llamaba a una función no servida; recursos inexistentes reiniciaban la sesión del portal; `ui-state-disabled` anulaba el clic de «Continuar»; el panel de texto de la Policía tapaba el radio; el bloque de resultado de la Procuraduría existía vacío y el robot leía la página anterior.
+- Tras los arreglos: corrida 1 = 19/20 (EP002-20 distinto una vez, no reproducible), corrida 2 = 20/20 IGUAL. La corrida final de cierre se repite sobre el HEAD definitivo.

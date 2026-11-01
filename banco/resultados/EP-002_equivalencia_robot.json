@@ -1,147 +1,128 @@
 {
-  "head_at_run": "fb804fb",
+  "head_at_run": "d844d42",
   "anchored_at": {
-    "sha": "fb804fb",
+    "sha": "d844d42",
     "robot": "Robots/LabHabeasData.robot.json"
   },
+  "navegador": "Chrome (run_in_studio)",
   "escenarios": [
     {
       "id": "EP002-01-happy-todos",
       "equivalente": true,
-      "pasos_robot": 526,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-02-policia-sin-resultado-deriva-a-procuraduria",
       "equivalente": true,
-      "pasos_robot": 526,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-03-policia-cuota-agotada-revision-humana",
       "equivalente": true,
-      "pasos_robot": 526,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-04-policia-reto-de-imagenes-revision-humana",
       "equivalente": true,
-      "pasos_robot": 526,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-05-policia-caida-persistente-deriva-a-procuraduria",
       "equivalente": true,
-      "pasos_robot": 526,
-      "errores_capturados": 0,
+      "errores_capturados": 9,
       "diferencias": {}
     },
     {
       "id": "EP002-06-procuraduria-caida",
       "equivalente": true,
-      "pasos_robot": 142,
-      "errores_capturados": 0,
+      "errores_capturados": 2,
       "diferencias": {}
     },
     {
       "id": "EP002-07-procuraduria-waf-bloquea",
       "equivalente": true,
-      "pasos_robot": 142,
-      "errores_capturados": 0,
+      "errores_capturados": 1,
       "diferencias": {}
     },
     {
       "id": "EP002-08-procuraduria-webcert-incidentes",
       "equivalente": true,
-      "pasos_robot": 142,
-      "errores_capturados": 0,
+      "errores_capturados": 1,
       "diferencias": {}
     },
     {
       "id": "EP002-09-captcha-rechazado-por-el-portal",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-10-servicio-de-captchas-no-disponible",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-11-familia-no-soportada-capital",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-12-rotacion-de-familias",
       "equivalente": true,
-      "pasos_robot": 238,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-13-nombre-no-coincide-excepcion-3",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-14-nombre-incompleto-excepcion-3",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-15-comentario-3-rechazado",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-16-nit-con-9-digitos-no-consulta",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-17-no-cedula-sin-nombre-continua",
       "equivalente": true,
-      "pasos_robot": 142,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-18-tipo-de-documento-sin-consulta",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-20-cedula-sin-resultado-en-ninguna-fuente",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP002-19-ciudadano-con-antecedentes-igual-valida",
       "equivalente": true,
-      "pasos_robot": 94,
       "errores_capturados": 0,
       "diferencias": {}
     }

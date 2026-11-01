@@ -105,9 +105,12 @@ def con_oculto(base, campo, valor):
 
 
 def habilitada(base, id_):
-    """Quita disabled del elemento con ese id (el JS del clon lo habilitaba; aquí la lógica la manda el servidor)."""
-    return re.sub(r'(<\w+[^>]*\bid="%s"[^>]*?)\s+(?:disabled="disabled"|aria-disabled="true")' % re.escape(id_),
-                  lambda m: m.group(1), base, count=2)
+    """Habilita el elemento con ese id (el JS del clon lo habilitaba; aquí la lógica la manda el servidor): quita `disabled`,
+    `aria-disabled` y la clase `ui-state-disabled` (que trae `pointer-events:none` y haría que Chrome rechace el clic)."""
+    def ajusta(m):
+        etiqueta = re.sub(r'\s+(?:disabled="disabled"|aria-disabled="true")', "", m.group(0))
+        return re.sub(r'\s+ui-state-disabled', "", etiqueta)
+    return re.sub(r'<\w+[^>]*\bid="%s"[^>]*>' % re.escape(id_), ajusta, base, count=1)
 
 
 def sin_manejador_de_clic(base, id_):
@@ -115,9 +118,20 @@ def sin_manejador_de_clic(base, id_):
     return re.sub(r'(<\w+[^>]*\bid="%s"[^>]*?)\s+onclick="[^"]*"' % re.escape(id_), lambda m: m.group(1), base, count=1)
 
 
+def sin_manejador_de_envio(base, id_):
+    """Quita el onsubmit del formulario con ese id: llama a `WebForm_OnSubmit()` del JS original, que aquí no se sirve; en Chrome
+    la función inexistente cancelaría el envío."""
+    return re.sub(r'(<form[^>]*\bid="%s"[^>]*?)\s+onsubmit="[^"]*"' % re.escape(id_), lambda m: m.group(1), base, count=1)
+
+
 MARCA_RECAPTCHA = ("document.getElementById('recaptchaCheck').checked=true;"
                    "document.getElementById('g-recaptcha-response').value='clon-local-no-verificado';"
                    "this.setAttribute('aria-checked','true');")
+
+
+# Sin el JS de maquetación del portal, el panel de texto (#j_idt8, 248 px) se solapa con el radio de aceptación y Chrome rechaza el clic
+# («element click intercepted»): se sube el bloque de aceptación sobre el panel. Solo cambia el orden de apilado, no el aspecto.
+CAPA_DE_TERMINOS = "<style>#j_idt11{position:relative;z-index:5}</style>"
 
 
 def sin_scripts(base):
@@ -231,6 +245,12 @@ def crear_servidor(estado, puerto=0):
             estatico = self.estatico(original, ruta)
             if estatico is not None:
                 return estatico
+            if ruta.endswith("/media/image/refresh.png"):
+                return self.responder(200, PNG_1X1, "image/png")
+            if os.path.splitext(ruta)[1] not in ("", ".aspx", ".xhtml", ".html", ".htm"):
+                # Un recurso que el clon no trae (fuente, imagen, mapa...) es un 404: nunca debe reiniciar la sesión del portal
+                # (Chrome los pide mientras el robot trabaja y borraba los términos ya aceptados).
+                return self.responder(404, pagina("No encontrado", ""))
             with estado.bloqueo:
                 if ruta.endswith("/media/image/refresh.png"):
                     return self.responder(200, PNG_1X1, "image/png")
@@ -289,6 +309,7 @@ def crear_servidor(estado, puerto=0):
             base = con_visible(base, "pnlTerminos", True)
             base = con_visible(base, "pnlConsulta", False)
             base = habilitada(base, "continuarBtn")
+            base = sin_manejador_de_envio(base, "form1")
             self.responder(200, base, cookie=nueva or sid)
 
         def procuraduria_post(self, datos):
@@ -337,8 +358,10 @@ def crear_servidor(estado, puerto=0):
             for campo in ("txtNombre", "txtNumID", "txtCorreoEle", "txtObservaciones"):
                 base = con_valor(base, campo, valores.get(campo, ""))
             base = sin_manejador_de_clic(base, "ImageButton1")
-            if extra:
-                base = con_html(base, "divResultado", extra)
+            base = sin_manejador_de_envio(base, "form1")
+            # Sin resultado todavía, el bloque va vacío: así «divDatosCiudadano o lblMensaje» solo existe en la respuesta y el robot
+            # (Chrome, asíncrono) no lee por error la página anterior mientras la nueva carga.
+            base = con_html(base, "divResultado", extra or "")
             return base
 
         # ---------- Policía ----------
@@ -350,6 +373,7 @@ def crear_servidor(estado, puerto=0):
             base = sin_scripts(clon_html("policia", "index.html"))
             base = con_oculto(base, "javax.faces.ViewState", secrets.token_hex(8))
             base = habilitada(base, "continuarBtn")
+            base = base.replace("</head>", CAPA_DE_TERMINOS + "</head>", 1)
             self.responder(200, base, cookie=nueva or sid)
 
         def policia_post(self, ruta, datos):

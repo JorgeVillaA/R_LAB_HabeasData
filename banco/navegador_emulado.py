@@ -36,7 +36,7 @@ class DOM(html.parser.HTMLParser):
         if etiqueta == "form":
             self._form = {"action": a.get("action", ""), "metodo": a.get("method", "get").lower()}
             self.formularios.append(self._form)
-        elemento = {"tag": etiqueta, "id": a.get("id"), "name": a.get("name"), "type": (a.get("type") or "text").lower(),
+        elemento = {"tag": etiqueta, "id": a.get("id"), "para": a.get("for"), "name": a.get("name"), "type": (a.get("type") or "text").lower(),
                     "value": a.get("value", ""), "checked": "checked" in a, "form": self._form, "texto": [], "opciones": []}
         if etiqueta == "option" and self._select is not None:
             elemento["select"] = self._select
@@ -45,7 +45,7 @@ class DOM(html.parser.HTMLParser):
                 self._select["value"] = a.get("value", "")
         if etiqueta == "select":
             self._select = elemento
-        if etiqueta in ("input", "select", "textarea", "option") or a.get("id") or etiqueta in ("body", "h1"):
+        if etiqueta in ("input", "select", "textarea", "option") or a.get("id") or a.get("for") or etiqueta in ("body", "h1"):
             self.elementos.append(elemento)
         self._abiertos.append(elemento)
         if etiqueta in ("input", "br"):
@@ -108,6 +108,12 @@ class Navegador:
                 if e["id"] in ids:
                     return e
             raise ElementoNoEncontrado(xpath)
+        m = re.fullmatch(r"//label\[@for='([^']+)'\]", xpath)  # la etiqueta de una casilla: clic = clic sobre su control
+        if m:
+            for e in self.dom.elementos:
+                if e["tag"] == "label" and e.get("para") == m.group(1):
+                    return e
+            raise ElementoNoEncontrado(xpath)
         m = re.fullmatch(r"//(\*|\w+)\[@id='([^']+)'\]", xpath)
         if m:
             for e in self.dom.elementos:
@@ -117,6 +123,8 @@ class Navegador:
 
     def clic(self, xpath):
         e = self.buscar(xpath)
+        if e["tag"] == "label":
+            e = self.buscar(f"//*[@id='{e['para']}']")
         if e["id"] == "recaptchaCheckbox":  # el servidor le pone un onclick inline que marca la casilla oculta
             for otro in self.dom.elementos:
                 if otro["id"] == "recaptchaCheck":
@@ -133,7 +141,11 @@ class Navegador:
             self._enviar(e)
 
     def escribir(self, xpath, texto):
-        self.buscar(xpath)["value"] = texto
+        e = self.buscar(xpath)
+        if e["type"] == "radio" and texto == " ":  # la barra espaciadora sobre un radio lo marca (como en Chrome)
+            self.clic(xpath)
+            return
+        e["value"] = texto
 
     def _enviar(self, boton):
         formulario = boton["form"]
