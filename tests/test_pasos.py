@@ -98,3 +98,46 @@ class TestPasos(PruebaPasos):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestReintentoDeLaBandeja(PruebaPasos):
+    """AC-04/05: el paso del robot espera la cadencia entre reintentos (no reconsulta sin pausa)."""
+
+    def test_el_paso_espera_la_cadencia_parametrizada_antes_de_cada_reconsulta(self):
+        with self.doble.estado.bloqueo:
+            self.doble.estado.configurar({"radicados": []})
+        pasos.solicitar_token()
+        esperas = []
+        with mock.patch.object(pasos, "dormir", esperas.append):
+            resultado = pasos.reintentar_bandeja()
+        cadencia = pasos._sesion.cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]
+        self.assertEqual(esperas, [cadencia["MinutosEntreReintentos"] * 60] * cadencia["MaximoReintentosDiarios"])
+        self.assertEqual((resultado["ok"], resultado["cambia"], resultado["ids"]), (True, True, []))
+
+    def test_el_paso_devuelve_los_radicados_que_aparecen_durante_la_espera(self):
+        with self.doble.estado.bloqueo:
+            self.doble.estado.configurar({"radicados": []})
+        pasos.solicitar_token()
+
+        def aparecen(segundos):
+            with self.doble.estado.bloqueo:
+                self.doble.estado.configurar({"radicados": list(RADICADOS)})
+        with mock.patch.object(pasos, "dormir", aparecen):
+            resultado = pasos.reintentar_bandeja()
+        self.assertTrue(resultado["ids"])
+
+    def test_si_el_maximo_es_cero_el_paso_no_cambia_nada(self):
+        pasos._sesion.cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]["MaximoReintentosDiarios"] = 0
+        self.assertEqual(pasos.reintentar_bandeja()["cambia"], False)
+
+    def test_una_falla_critica_durante_el_reintento_devuelve_fallo(self):
+        with self.doble.estado.bloqueo:
+            self.doble.estado.configurar({"radicados": []})
+        pasos.solicitar_token()
+
+        def deniega(segundos):
+            with self.doble.estado.bloqueo:
+                self.doble.estado.configurar({"denegar": True})
+        with mock.patch.object(pasos, "dormir", deniega):
+            resultado = pasos.reintentar_bandeja()
+        self.assertEqual(resultado["ok"], False)

@@ -1,119 +1,133 @@
 {
-  "head_at_run": "e9d83e2",
+  "head_at_run": "96d3f76",
   "anchored_at": {
-    "sha": "e9d83e2",
+    "sha": "96d3f76",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "escenarios": [
     {
       "id": "EP001-01-happy-completo",
       "equivalente": true,
-      "pasos_robot": 729,
+      "pasos_robot": 268,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-02-bandeja-vacia",
       "equivalente": true,
-      "pasos_robot": 51,
+      "pasos_robot": 44,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-03-tipologia-ausente",
       "equivalente": true,
-      "pasos_robot": 51,
+      "pasos_robot": 44,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-04-filtro-no-reconocido",
       "equivalente": true,
-      "pasos_robot": 38,
+      "pasos_robot": 25,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-05-token-vencido-persistente",
       "equivalente": true,
-      "pasos_robot": 38,
+      "pasos_robot": 25,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-06-sin-roles-403",
       "equivalente": true,
-      "pasos_robot": 38,
+      "pasos_robot": 25,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-07-api-no-disponible",
       "equivalente": true,
-      "pasos_robot": 33,
+      "pasos_robot": 20,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-08-radicado-no-legible-400",
       "equivalente": true,
-      "pasos_robot": 727,
+      "pasos_robot": 266,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-09-radicado-no-encontrado-404",
       "equivalente": true,
-      "pasos_robot": 727,
+      "pasos_robot": 266,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-10-comentario-rechazado-400",
       "equivalente": true,
-      "pasos_robot": 729,
+      "pasos_robot": 268,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-11-comentario-sin-autorizacion-401",
       "equivalente": true,
-      "pasos_robot": 729,
+      "pasos_robot": 268,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-12-solo-casos-completos",
       "equivalente": true,
-      "pasos_robot": 189,
+      "pasos_robot": 80,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-13-todos-incompletos",
       "equivalente": true,
-      "pasos_robot": 198,
+      "pasos_robot": 89,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-14-sin-descartar-identificacion-ausente",
       "equivalente": true,
-      "pasos_robot": 774,
+      "pasos_robot": 281,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-15-lote-con-first-y-orderby",
       "equivalente": true,
-      "pasos_robot": 192,
+      "pasos_robot": 83,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-16-solo-descartados",
       "equivalente": true,
-      "pasos_robot": 50,
+      "pasos_robot": 43,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-17-casos-aparecen-en-el-reintento",
+      "equivalente": true,
+      "pasos_robot": 281,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-18-falla-durante-el-reintento",
+      "equivalente": true,
+      "pasos_robot": 44,
       "errores_capturados": 0,
       "diferencias": {}
     }

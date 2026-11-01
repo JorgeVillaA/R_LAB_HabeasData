@@ -43,6 +43,19 @@ def radicados_de(especificacion):
     return [r for r in RADICADOS if str(r["IDRADICADO"]) in set(especificacion)]
 
 
+def cambios_del_doble(especificacion):
+    """Lo que el escenario le pide al doble: fallas inyectadas y, opcionalmente, un cambio que ocurre tras N consultas
+    (`cambio_tras_consultas`: casos que llegan o una API que deja de responder mientras el bot espera el reintento)."""
+    cambios = {k: v for k, v in especificacion.items() if k in ("token_ttl", "denegar", "fallas_radicado", "falla_comentario")}
+    programado = especificacion.get("cambio_tras_consultas")
+    if programado:
+        cambio = dict(programado["cambios"])
+        if "radicados" in cambio:
+            cambio["radicados"] = radicados_de(cambio["radicados"])
+        cambios["cambio_tras_consultas"] = {"tras": programado["tras"], "cambios": cambio}
+    return cambios
+
+
 def mezclar(destino, cambios):
     for clave, valor in cambios.items():
         if isinstance(valor, dict) and isinstance(destino.get(clave), dict):
@@ -69,7 +82,7 @@ def correr_escenario(escenario):
     doble = DobleZeus(CREDENCIALES, radicados_de(especificacion["radicados"])).iniciar()
     raiz = preparar_raiz(doble.puerto, escenario.get("proceso", {}))
     try:
-        doble.estado.configurar({k: v for k, v in especificacion.items() if k in ("token_ttl", "denegar", "fallas_radicado", "falla_comentario")})
+        doble.estado.configurar(cambios_del_doble(especificacion))
         if especificacion.get("apagado"):
             doble.detener()
         cfg = cargar(raiz)
