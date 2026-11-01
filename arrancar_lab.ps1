@@ -40,20 +40,23 @@ if ($Modo -eq "real") {
 
 if ($SoloVerificar) { Write-Host "`nSolo verificación: todo listo." -ForegroundColor Cyan; exit 0 }
 
-# 2. Tests unitarios (103 pruebas)
+# 2. Tests unitarios (toda la suite: EP-001, EP-002 y EP-003)
 Write-Host "`n-- Tests --"
 python -m unittest discover -s tests -t . 2>&1 | Select-Object -Last 5
 if ($LASTEXITCODE -ne 0) { Write-Host "  [FALLO] tests en rojo" -ForegroundColor Red; exit 1 }
 
 # 3. Banco determinista: dos corridas para probar determinismo
 Write-Host "`n-- Banco determinista (2 corridas) --"
-python banco/correr_matriz.py EP-001 --corridas 2
-if ($LASTEXITCODE -ne 0) { Write-Host "  [FALLO] matriz del banco" -ForegroundColor Red; exit 1 }
+foreach ($epica in "EP-001", "EP-002", "EP-003") {
+    python banco/correr_matriz.py $epica --corridas 2
+    if ($LASTEXITCODE -ne 0) { Write-Host "  [FALLO] matriz del banco $epica" -ForegroundColor Red; exit 1 }
+}
 
 # 4. Dónde queda la evidencia
 Write-Host "`n-- Resultado --" -ForegroundColor Cyan
-Write-Host "  Evidencia:   banco/evidencia/EP-001/EVIDENCIA.md"
-Write-Host "  Resultados:  banco/resultados/EP-001_corrida1.json y _corrida2.json"
+Write-Host "  Evidencia:   banco/evidencia/EP-00N/EVIDENCIA.md (N = 1, 2, 3)"
+Write-Host "  Resultados:  banco/resultados/EP-00N_corrida1.json y _corrida2.json"
+Write-Host "  Repositorio: studio/R_LAB_HabeasData/robot.db (robot de Studio) y Documentos/repositorio/lab.sqlite (se crea al correr)"
 Write-Host "  Logs:        Logs/Auditoria y Logs/Sistema (carpeta AAAA/MM del día)"
 Write-Host "  Reporte:     Reportes/AAAA/MM/"
 Write-Host "  Flujo:       abrir el proyecto R_LAB_HabeasData en Rocketbot Studio"

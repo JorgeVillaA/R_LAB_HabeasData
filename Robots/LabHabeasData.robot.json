@@ -1,6 +1,6 @@
 {
  "name": "LabHabeasData",
- "description": "Tarea principal EP-001 y EP-002: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos, HU-004 validar campos obligatorios, HU-006/HU-007/HU-026a identidad en Policía y Procuraduría (Chrome) y HU-008 comparar nombres, contra la API de Zeus (QA) y los portales (reales o clones). Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
+ "description": "Tarea principal EP-001, EP-002 y EP-003: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos, HU-004 validar campos obligatorios, HU-006/HU-007/HU-026a identidad en Policía y Procuraduría (Chrome) y HU-008 comparar nombres, HU-010 buscar duplicados y HU-011 registrar la exclusión en el repositorio local, contra la API de Zeus (QA) y los portales (reales o clones). Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
  "vars": [
   {
    "name": "glbBlnEstadoSistema",

@@ -95,3 +95,11 @@ class ServicioCaptchas:
             self._servidor.shutdown()
             self._servidor.server_close()
             self._servidor = None
+
+
+if __name__ == "__main__":  # servicio local de captchas en el puerto 8767 (el de ConfiguracionProceso.json)
+    import sys
+    import threading
+    servicio = ServicioCaptchas().iniciar(int(sys.argv[1]) if len(sys.argv) > 1 else 8767)
+    print(f"Servicio de captchas en http://127.0.0.1:{servicio.puerto}/resolver")
+    threading.Event().wait()
