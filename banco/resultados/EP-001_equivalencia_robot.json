@@ -1,7 +1,7 @@
 {
-  "head_at_run": "fffdce6",
+  "head_at_run": "96d3f76",
   "anchored_at": {
-    "sha": "fffdce6",
+    "sha": "96d3f76",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "escenarios": [
@@ -114,6 +114,20 @@
       "id": "EP001-16-solo-descartados",
       "equivalente": true,
       "pasos_robot": 43,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-17-casos-aparecen-en-el-reintento",
+      "equivalente": true,
+      "pasos_robot": 281,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP001-18-falla-durante-el-reintento",
+      "equivalente": true,
+      "pasos_robot": 44,
       "errores_capturados": 0,
       "diferencias": {}
     }
