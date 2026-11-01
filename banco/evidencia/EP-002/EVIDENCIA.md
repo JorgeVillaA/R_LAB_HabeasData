@@ -58,3 +58,7 @@ Hallazgos de la corrida:
 3. **Causa abierta**: con el clon corregido siguen fallando 16 escenarios en Studio y Chrome. En la traza, el envío de la consulta a la Procuraduría responde «Sesión sin términos aceptados» (la sesión del clon no conserva `acepto` en Chrome) y la lectura de `lblPregunta` falla después. Por HTTP directo (urllib) con las mismas peticiones que Chrome el clon responde bien, y las corridas sueltas en Chrome dieron resultados distintos entre sí. No se determinó si el fallo está en el clon, en el robot o en el estado de Chrome/Studio. Se probaron dos cambios al robot (espera tras el refresco y una espera de resultado distinguible): no cambiaron el resultado y rompían 11 pruebas del navegador emulado, así que se revirtieron.
 
 Pendiente: diagnosticar la causa abierta con el navegador a la vista (capturas del MCP de Chrome) antes de marcar la tarea 3.4 en `tasks.md`.
+
+## Re-ejecución en Studio con Chrome (2026-11-01, sobre fb804fb)
+- python banco/equivalencia_robot.py EP-002: 20 escenarios, robot de Studio equivalente al orquestador en los 20 (IGUAL).
+- validate_robot perfil trycore: 0 errores, 0 avisos. Suite: ver commit siguiente.

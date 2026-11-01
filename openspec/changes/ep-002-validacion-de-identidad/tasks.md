@@ -13,4 +13,4 @@
 - [x] 3.1 Pruebas por escenario Given/When/Then (HU-006, HU-007, HU-026a, HU-008)
 - [x] 3.2 Banco: 19 escenarios, dos corridas idénticas
 - [x] 3.3 Robot (intérprete con navegador emulado) equivalente al orquestador en los 19 escenarios
-- [ ] 3.4 Robot en Studio y Chrome equivalente al orquestador (ver evidencia)
+- [x] 3.4 Robot en Studio y Chrome equivalente al orquestador (ver evidencia)
