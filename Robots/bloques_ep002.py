@@ -38,7 +38,7 @@ def construir(h):
     def etapa(nombre):
         return f"{{locDicIdentidad}}['etapa'] == '{nombre}'"
 
-    AVANZA = "'{locStrIdRadicado}' in {glbArrAvanzan}"
+    AVANZA = "'{locStrIdRadicado}' in {glbArrSiguenIdentidad}"
     MODO = "{glbDicPortales}['modo']"
 
     def pasa_a(descripcion, **campos):

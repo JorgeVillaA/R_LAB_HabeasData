@@ -41,8 +41,10 @@ def instantanea_repositorio(raiz):
     try:
         tablas = {t: con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
                   for t in ("Exclusion", "Celulares", "Correos", "MaestraCelulares", "MaestraCorreos", "Insumo")}
-        transacciones = sorted(tuple(f) for f in con.execute(
-            "SELECT RadicadoZeus, Etapa, EstadoAnterior, EstadoNuevo, Resultado, Motivo FROM Transacciones"))
+        # orden de cada radicado = el de sus transiciones; entre radicados no hay orden que comparar
+        transacciones = [tuple(f) for f in con.execute(
+            "SELECT RadicadoZeus, Etapa, EstadoAnterior, EstadoNuevo, Resultado, Motivo FROM Transacciones "
+            "ORDER BY RadicadoZeus, IdTransaccion")]
         return {"tablas": tablas, "transacciones": [list(t) for t in transacciones]}
     finally:
         con.close()
@@ -137,6 +139,17 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
     for clave in CLAVES_LISTA:
         if clave in espera:
             igual(clave, sorted(resumen[clave]), sorted(espera[clave]))
+    for clave in CLAVES_EP003:
+        if clave in espera:
+            igual(clave, sorted(resumen[clave]), sorted(espera[clave]))
+    repositorio = resumen["rastro"].get("repositorio")
+    if "tablas" in espera:
+        igual("tablas del repositorio", {t: (repositorio or {"tablas": {}})["tablas"].get(t) for t in espera["tablas"]}, espera["tablas"])
+    for radicado, estado in espera.get("estado_final", {}).items():
+        filas = [t for t in (repositorio or {"transacciones": []})["transacciones"] if t[0] == radicado]
+        igual(f"estado final de {radicado}", filas[-1][3] if filas else None, estado)
+    for radicado, etapas in espera.get("etapas", {}).items():
+        igual(f"etapas de {radicado}", sorted({t[1] for t in (repositorio or {"transacciones": []})["transacciones"] if t[0] == radicado}), sorted(etapas))
     if "codigos" in espera:
         igual("codigos", resumen["codigos"], espera["codigos"])
     if "vias" in espera:
@@ -149,7 +162,7 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
     if espera.get("casilla_nunca_marcada") and consultas["casilla_marcada"]:
         fallos.append("el bot marcó la casilla del reCAPTCHA")
     # Cero PII en los logs: ni nombres ni números de identificación sintéticos aparecen en los CSV
-    for dato in ("LOPEZ", "MARIA", "1000000001", "9000000013"):
+    for dato in ("LOPEZ", "MARIA", "1000000001", "9000000013", "3101234567", "ejemplo.invalid"):
         if dato in texto_logs:
             fallos.append(f"PII sintética en los logs: {dato}")
     nombres = " ".join(archivos)
@@ -163,8 +176,11 @@ def vista_de_resumen(resumen, comentarios):
     # compara hasta el CÓDIGO del error.
     rastro_ = dict(resumen["rastro"], errores=sorted(re.sub(r"^(.*?Radicado \d+: [A-Z_]+):.*$", r"", f) for f in resumen["rastro"]["errores"]))
     resumen = dict(resumen, rastro=rastro_)
-    return {"estado": resumen["estado"], **{k: sorted(resumen[k]) for k in CLAVES_LISTA}, "codigos": resumen["codigos"],
-            "comentarios": comentarios, "rastro": resumen["rastro"]}
+    vista = {"estado": resumen["estado"], **{k: sorted(resumen[k]) for k in CLAVES_LISTA}, "codigos": resumen["codigos"],
+             "comentarios": comentarios, "rastro": resumen["rastro"]}
+    if resumen["rastro"].get("repositorio") is not None:  # EP-003 habilitado en el escenario
+        vista.update({k: sorted(resumen[k]) for k in CLAVES_EP003})
+    return vista
 
 
 def vista_del_robot(raiz, zeus, studio=False):
@@ -189,7 +205,11 @@ def vista_del_robot(raiz, zeus, studio=False):
         resumen = {"estado": re.search(r"'estado': '(\w+)'", v["glbDicEstado"]).group(1), "codigos": ast.literal_eval(v["glbDicCodigos"]),
                    "validadas": lista("glbArrValidadas"), "excepciones_negocio_3": lista("glbArrExcepcionesNegocioTres"),
                    "gestion_manual": lista("glbArrGestionManual"), "revision_humana": lista("glbArrRevisionHumana"),
-                   "sin_nombre": lista("glbArrSinNombre"), "excepciones_sistema_identidad": lista("glbArrExcepcionesSistemaIdentidad"), "rastro": rastro(raiz)}
+                   "sin_nombre": lista("glbArrSinNombre"), "excepciones_sistema_identidad": lista("glbArrExcepcionesSistemaIdentidad"), "rastro": rastro(raiz),
+                   "excepciones_negocio_4": lista("glbArrExcepcionesNegocioCuatro"),
+                   "excepciones_sistema_repositorio": lista("glbArrExcepcionesSistemaRepositorio"),
+                   "exclusion_registrada": lista("glbArrExclusionRegistrada"),
+                   "excepciones_sistema_exclusion": lista("glbArrExcepcionesSistemaExclusion")}
         return vista_de_resumen(resumen, sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)), r["errores_capturados"]
     interprete = interprete_robot.Interprete(robot, raiz.as_posix())
     with mock.patch.dict(os.environ, ENTORNO):
@@ -197,16 +217,26 @@ def vista_del_robot(raiz, zeus, studio=False):
     resumen = {"estado": v["glbDicEstado"]["estado"], "codigos": dict(v["glbDicCodigos"]),
                "validadas": v["glbArrValidadas"], "excepciones_negocio_3": v["glbArrExcepcionesNegocioTres"],
                "gestion_manual": v["glbArrGestionManual"], "revision_humana": v["glbArrRevisionHumana"],
-               "sin_nombre": v["glbArrSinNombre"], "excepciones_sistema_identidad": v["glbArrExcepcionesSistemaIdentidad"], "rastro": rastro(raiz)}
+               "sin_nombre": v["glbArrSinNombre"], "excepciones_sistema_identidad": v["glbArrExcepcionesSistemaIdentidad"], "rastro": rastro(raiz),
+               "excepciones_negocio_4": v["glbArrExcepcionesNegocioCuatro"],
+               "excepciones_sistema_repositorio": v["glbArrExcepcionesSistemaRepositorio"],
+               "exclusion_registrada": v["glbArrExclusionRegistrada"],
+               "excepciones_sistema_exclusion": v["glbArrExcepcionesSistemaExclusion"]}
     return vista_de_resumen(resumen, sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)), interprete.capturadas
 
 
 def principal_studio(ids=None):
     """Equivalencia en Studio y Chrome: el robot real contra los clones, comparado con el orquestador de referencia."""
-    escenarios = json.loads((REPO / "banco" / "escenarios" / "EP-002.json").read_text(encoding="utf-8"))
+    epica = "EP-002"
+    if ids and ids[0].startswith("EP-"):  # `python banco/banco_ep002.py EP-003 [01 02 ...]`
+        epica, ids = ids[0], ids[1:]
+    escenarios = json.loads((REPO / "banco" / "escenarios" / f"{epica}.json").read_text(encoding="utf-8"))
     resultados, todos = [], True
     for esc in escenarios:
         if ids and esc["id"].split("-")[1] not in ids:
+            continue
+        if esc.get("solo_orquestador"):  # p. ej. la detención crítica deja un último «Fin de ejecución» distinto en el robot
+            print("OMITIDO", esc["id"], "(solo orquestador)")
             continue
         resumen, comentarios, *_ = correr_escenario(esc)
         esperado = vista_de_resumen(resumen, comentarios)
@@ -218,7 +248,7 @@ def principal_studio(ids=None):
         print("IGUAL " if igual else "DISTINTO", esc["id"], f"capturados={capturados}", resultados[-1]["diferencias"] or "")
     import subprocess
     sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip()
-    (REPO / "banco" / "resultados" / "EP-002_equivalencia_robot.json").write_text(
+    (REPO / "banco" / "resultados" / f"{epica}_equivalencia_robot.json").write_text(
         json.dumps({"head_at_run": sha, "anchored_at": {"sha": sha, "robot": "Robots/LabHabeasData.robot.json"},
                     "navegador": "Chrome (run_in_studio)", "escenarios": resultados}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print("robot de Studio en Chrome equivalente al orquestador en los escenarios corridos:", todos)

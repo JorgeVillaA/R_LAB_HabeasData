@@ -1,0 +1,340 @@
+[
+  {
+    "id": "EP003-01-sin-duplicado-registra-exclusion",
+    "ramas": [
+      "HU-010 sin duplicado",
+      "HU-011 inserta Exclusion y una fila por valor",
+      "HU-011 cruza y elimina de la maestra"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {},
+    "repositorio": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [
+        "900001"
+      ],
+      "excepciones_negocio_4": [],
+      "exclusion_registrada": [
+        "900001"
+      ],
+      "excepciones_sistema_repositorio": [],
+      "excepciones_sistema_exclusion": [],
+      "tablas": {
+        "MaestraCelulares": 5,
+        "MaestraCorreos": 8,
+        "Exclusion": 1,
+        "Celulares": 3,
+        "Correos": 2
+      },
+      "estado_final": {
+        "900001": 3
+      },
+      "etapas": {
+        "900001": [
+          "seleccion",
+          "lectura",
+          "validacion_campos",
+          "duplicados",
+          "identidad",
+          "registro_exclusion"
+        ]
+      }
+    }
+  },
+  {
+    "id": "EP003-02-duplicado-total-excepcion-4",
+    "ramas": [
+      "HU-010 excepción de negocio 4: todos sus valores ya excluidos, no sigue a identidad"
+    ],
+    "doble": {
+      "radicados": [
+        "900004"
+      ]
+    },
+    "portales": {},
+    "repositorio": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [],
+      "excepciones_negocio_4": [
+        "900004"
+      ],
+      "exclusion_registrada": [],
+      "comentarios": [
+        "900004"
+      ],
+      "tablas": {
+        "MaestraCelulares": 6,
+        "MaestraCorreos": 9,
+        "Exclusion": 0,
+        "Celulares": 2,
+        "Correos": 1
+      },
+      "estado_final": {
+        "900004": 4
+      }
+    }
+  },
+  {
+    "id": "EP003-03-duplicado-parcial-los-demas-continuan",
+    "ramas": [
+      "HU-010 varios valores: solo el duplicado genera la excepción 4",
+      "HU-011 registra solo los valores que continúan"
+    ],
+    "doble": {
+      "radicados": [
+        "900007"
+      ]
+    },
+    "portales": {},
+    "repositorio": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [
+        "900007"
+      ],
+      "excepciones_negocio_4": [
+        "900007"
+      ],
+      "exclusion_registrada": [
+        "900007"
+      ],
+      "comentarios": [
+        "900007"
+      ],
+      "tablas": {
+        "MaestraCelulares": 5,
+        "MaestraCorreos": 8,
+        "Exclusion": 1,
+        "Celulares": 3,
+        "Correos": 2
+      },
+      "estado_final": {
+        "900007": 5
+      }
+    }
+  },
+  {
+    "id": "EP003-04-repositorio-no-responde-en-un-caso",
+    "ramas": [
+      "HU-010 repositorio no responde (el primer radicado procesado, 900003): reintenta x3, excepción de sistema y continúa con el siguiente"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003"
+      ]
+    },
+    "portales": {},
+    "repositorio": {
+      "Fallas": {
+        "buscar_maestra_correo": 3
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [
+        "900001"
+      ],
+      "excepciones_sistema_repositorio": [
+        "900003"
+      ],
+      "exclusion_registrada": [
+        "900001"
+      ],
+      "excepciones_sistema_exclusion": [],
+      "estado_final": {
+        "900003": 4,
+        "900001": 3
+      }
+    }
+  },
+  {
+    "id": "EP003-05-repositorio-inaccesible-para-todos-detiene",
+    "ramas": [
+      "HU-010 punto de control crítico: repositorio inaccesible de forma generalizada"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {},
+    "repositorio": {
+      "Fallas": {
+        "buscar_maestra_correo": null
+      }
+    },
+    "solo_orquestador": true,
+    "espera": {
+      "identidad": true,
+      "estado": "detenido",
+      "casilla_nunca_marcada": false,
+      "validadas": [],
+      "excepciones_sistema_repositorio": [
+        "900001"
+      ],
+      "exclusion_registrada": [],
+      "estado_final": {
+        "900001": 4
+      }
+    }
+  },
+  {
+    "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
+    "ramas": [
+      "HU-011 insertar falla de forma persistente: excepción de sistema, nada se elimina de la maestra del canal"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {},
+    "repositorio": {
+      "Fallas": {
+        "insertar_celular": null
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [
+        "900001"
+      ],
+      "excepciones_sistema_exclusion": [
+        "900001"
+      ],
+      "exclusion_registrada": [],
+      "tablas": {
+        "MaestraCelulares": 6,
+        "MaestraCorreos": 8,
+        "Exclusion": 1,
+        "Celulares": 2,
+        "Correos": 2
+      },
+      "estado_final": {
+        "900001": 4
+      }
+    }
+  },
+  {
+    "id": "EP003-07-eliminacion-falla-conserva-la-fila-insertada",
+    "ramas": [
+      "HU-011 eliminar de la maestra falla: la fila ya insertada se conserva y el bot continúa"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {},
+    "repositorio": {
+      "Fallas": {
+        "eliminar_maestra_correo": null
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [
+        "900001"
+      ],
+      "excepciones_sistema_exclusion": [
+        "900001"
+      ],
+      "exclusion_registrada": [],
+      "tablas": {
+        "MaestraCelulares": 6,
+        "MaestraCorreos": 9,
+        "Exclusion": 1,
+        "Celulares": 2,
+        "Correos": 2
+      },
+      "estado_final": {
+        "900001": 4
+      }
+    }
+  },
+  {
+    "id": "EP003-08-identidad-no-valida-no-registra",
+    "ramas": [
+      "HU-011 solo se registra con identidad coincidente: excepción de negocio 3 no toca el repositorio"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {
+      "padron_policia": {
+        "1000000001": "PEREZ GOMEZ JUAN"
+      }
+    },
+    "repositorio": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [],
+      "excepciones_negocio_3": [
+        "900001"
+      ],
+      "exclusion_registrada": [],
+      "tablas": {
+        "MaestraCelulares": 6,
+        "MaestraCorreos": 9,
+        "Exclusion": 0,
+        "Celulares": 2,
+        "Correos": 1
+      },
+      "estado_final": {
+        "900001": 4
+      }
+    }
+  },
+  {
+    "id": "EP003-09-nota-de-duplicado-rechazada",
+    "ramas": [
+      "HU-010 la nota de excepción 4 no se registra en Zeus: excepción de sistema del caso, no sigue a identidad"
+    ],
+    "doble": {
+      "radicados": [
+        "900004"
+      ],
+      "falla_comentario": 400
+    },
+    "portales": {},
+    "repositorio": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [],
+      "excepciones_negocio_4": [],
+      "excepciones_sistema_repositorio": [
+        "900004"
+      ],
+      "exclusion_registrada": [],
+      "comentarios": [],
+      "estado_final": {
+        "900004": 4
+      }
+    }
+  }
+]

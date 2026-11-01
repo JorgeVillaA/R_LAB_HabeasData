@@ -7,7 +7,7 @@ Nunca se escribe un nombre ni una identificación en los logs: solo radicado, v�
 """
 from . import nombres
 from .captcha import ErrorCaptcha
-from .ep001 import ExcepcionSistemaCaso, procesar as procesar_ep001
+from .ep001 import ExcepcionSistemaCaso, MODULO as ep001_modulo, procesar as procesar_ep001
 from .portales import ClientePortales, ErrorPortal, RevisionHumana, TIPOS_PROCURADURIA
 from .zeus import ErrorZeus
 
@@ -111,12 +111,6 @@ def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, re
     if repo is not None:  # EP-003 / HU-010: los duplicados se buscan ANTES de la identidad
         from . import ep003
         avanzan, valores = ep003.etapa_duplicados(resumen, registro, escritura, repo)
-        if resumen["repositorio_inaccesible"]:  # punto de control crítico: ningún caso pudo consultar el repositorio
-            notif = cfg.maquina["Notificaciones"]
-            registro.error("Ejecución detenida: repositorio inaccesible para todos los casos", ep003.MODULO)
-            resumen.update(estado="detenido", notificacion={"asunto": notif["AsuntoDetenido"], "destinatario": notif["CorreoDetenido"],
-                                                            "motivo": "repositorio inaccesible para todos los casos"})
-            return resumen
     portales = portales or ClientePortales(cfg)
     ajustes = portales.ajustes
     captchas = captchas or ServicioCaptchas(ajustes["UrlCaptchas"], portales.reintentos, portales.backoff, portales.timeout,
@@ -142,7 +136,15 @@ def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, re
             resumen["codigos"][id_radicado] = resultado["codigo"]
         registrar(registro, id_radicado, padre, etiqueta, via, (resultado.get("veredicto") or {}).get("puntaje"),
                   (resultado.get("veredicto") or {}).get("motivo") or resultado.get("motivo"), resultado.get("codigo"))
+        if repo is not None:
+            ep003.transaccion_identidad(repo, id_radicado, etiqueta)
     registro.auditoria("Fin de la validación de identidad EP-002", MODULO)
     if repo is not None:  # EP-003 / HU-011: registro de la exclusión de los casos con identidad validada
         ep003.etapa_registro(resumen, registro, repo, valores, stub or ep003.cargar_stub(), registro.reloj().strftime("%d/%m/%Y"))
+        if resumen["repositorio_inaccesible"]:  # punto de control crítico: ningún caso pudo consultar el repositorio
+            notif = cfg.maquina["Notificaciones"]
+            motivo = "repositorio inaccesible para todos los casos"
+            registro.error(f"Ejecución detenida: {motivo}", ep001_modulo)
+            resumen.update(estado="detenido", notificacion={"asunto": notif["AsuntoDetenido"], "destinatario": notif["CorreoDetenido"],
+                                                            "motivo": motivo})
     return resumen

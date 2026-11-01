@@ -1,0 +1,95 @@
+[
+  {
+    "id": "EP003-01-sin-duplicado-registra-exclusion",
+    "modo": "fixture",
+    "ramas": [
+      "HU-010 sin duplicado",
+      "HU-011 inserta Exclusion y una fila por valor",
+      "HU-011 cruza y elimina de la maestra"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "105aae828a919fc99db743acd0d9bc878ba73cb67dbef828dee03dbb2db7e3ee"
+  },
+  {
+    "id": "EP003-02-duplicado-total-excepcion-4",
+    "modo": "fixture",
+    "ramas": [
+      "HU-010 excepción de negocio 4: todos sus valores ya excluidos, no sigue a identidad"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "0f576375f156dc14f3c48870acd82583e8f45e44c3bf70ae10ad45e0584b15ce"
+  },
+  {
+    "id": "EP003-03-duplicado-parcial-los-demas-continuan",
+    "modo": "fixture",
+    "ramas": [
+      "HU-010 varios valores: solo el duplicado genera la excepción 4",
+      "HU-011 registra solo los valores que continúan"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "a284ae7edf5d922348412fcd7e6603ff329629c2c8a2169422f755ac84b9e9b5"
+  },
+  {
+    "id": "EP003-04-repositorio-no-responde-en-un-caso",
+    "modo": "fixture",
+    "ramas": [
+      "HU-010 repositorio no responde (el primer radicado procesado, 900003): reintenta x3, excepción de sistema y continúa con el siguiente"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "576f8bf04eab0cd04e1220e4d7e7ad39d29d0e89336178236882078e88bc8a67"
+  },
+  {
+    "id": "EP003-05-repositorio-inaccesible-para-todos-detiene",
+    "modo": "fixture",
+    "ramas": [
+      "HU-010 punto de control crítico: repositorio inaccesible de forma generalizada"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "692859794db53bec47c4a6c923df37a9422d6a080a3323bbd4c51d6244ba8c5f"
+  },
+  {
+    "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
+    "modo": "fixture",
+    "ramas": [
+      "HU-011 insertar falla de forma persistente: excepción de sistema, nada se elimina de la maestra del canal"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "bb5d7f607dc0211a60cb033115afa21f2d53d6bc4b328cedba99d7efb57aad73"
+  },
+  {
+    "id": "EP003-07-eliminacion-falla-conserva-la-fila-insertada",
+    "modo": "fixture",
+    "ramas": [
+      "HU-011 eliminar de la maestra falla: la fila ya insertada se conserva y el bot continúa"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "0dc92cc1c31e03f1d63de7761c24ea90b0c4d2a65f952f8cc043b89c6af80044"
+  },
+  {
+    "id": "EP003-08-identidad-no-valida-no-registra",
+    "modo": "fixture",
+    "ramas": [
+      "HU-011 solo se registra con identidad coincidente: excepción de negocio 3 no toca el repositorio"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "326871aa97f5fd4dc954bc0eb73088b9a660eccbfd33808bed762335b0a59705"
+  },
+  {
+    "id": "EP003-09-nota-de-duplicado-rechazada",
+    "modo": "fixture",
+    "ramas": [
+      "HU-010 la nota de excepción 4 no se registra en Zeus: excepción de sistema del caso, no sigue a identidad"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "3882a7f1c2b22bf35027a3a1ddbc58b85ad07d0bb1e88a7ce191633115490010"
+  }
+]

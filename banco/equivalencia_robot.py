@@ -76,6 +76,7 @@ def preparar_raiz(puerto, cambios_proceso):
         datos["ZeusApi"]["Fixture"][clave] = datos["ZeusApi"]["Fixture"][clave].replace("8765", str(puerto))
     datos["ZeusApi"]["BackoffSegundos"] = [0]
     datos["Identidad"] = {"Habilitada": False}  # la equivalencia de EP-001 no consulta portales; EP-002 tiene la suya
+    datos.setdefault("Repositorio", {})["Habilitado"] = False  # ni repositorio: EP-003 tiene su equivalencia
     # Credenciales del doble explícitas en la configuración temporal: el robot de Studio las lee
     # de aquí y no depende de que su proceso tenga las variables de entorno.
     datos["ZeusApi"]["Fixture"]["ClientId"] = os.environ["ZEUS_DOBLE_CLIENT_ID"]

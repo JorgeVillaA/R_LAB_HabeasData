@@ -207,16 +207,28 @@ def exclusion_del_caso(registro, repo, caso, valores, stub, fecha_exclusion):
     return resultado
 
 
+# Resultado de identidad (EP-002) -> estado en Transacciones: el caso sigue (2) o queda sin gestión automática (4)
+ESTADO_IDENTIDAD = {"validada": (2, "ok", "identidad validada"), "sin_nombre": (2, "ok", "respuesta sin nombre: el caso continúa"),
+                    "excepcion_negocio_3": (4, "ok", "excepción de negocio 3: identidad no coincide"),
+                    "revision_humana": (4, "ok", "revisión humana"), "gestion_manual": (4, "ok", "gestión manual"),
+                    "excepcion_sistema": (4, "fallo", "excepción de sistema en la identidad")}
+
+
+def transaccion_identidad(repo, id_radicado, etiqueta):
+    estado, resultado, motivo = ESTADO_IDENTIDAD.get(etiqueta, (4, "fallo", f"identidad: {etiqueta}"))
+    repo.registrar_transaccion(id_radicado, "identidad", estado, resultado, motivo)
+
+
 # ---------- orquestación de EP-003 dentro de la corrida ----------
 def etapa_duplicados(resumen, registro, escritura, repo):
     """HU-010 sobre los radicados que avanzaron (HU-004). Devuelve (radicados que siguen a identidad, valores a registrar)."""
-    resumen.update(excepciones_negocio_4=[], duplicados={}, excepciones_sistema_repositorio=[])
+    resumen.update(excepciones_negocio_4=[], duplicados={}, excepciones_sistema_repositorio=[], repositorio_caido=[])
     for id_radicado, caso in resumen["casos"].items():
         registrar_previas(repo, id_radicado, caso, "negocio_1" if id_radicado in resumen["excepciones_negocio_1"] else "avanza")
     for id_radicado in resumen["excepciones_sistema"]:
         registrar_previas(repo, id_radicado, None, "sistema")
     registro.auditoria("Inicio de la búsqueda de duplicados EP-003", MODULO)
-    siguen, valores, fallidos = [], {}, 0
+    siguen, valores = [], {}
     for id_radicado in resumen["avanzan"]:
         caso = resumen["casos"][id_radicado]
         padre = caso["radicado_padre"]
@@ -224,7 +236,7 @@ def etapa_duplicados(resumen, registro, escritura, repo):
         try:
             resultado = buscar_duplicados(caso, repo)
         except ErrorRepositorio as error:
-            fallidos += 1
+            resumen["repositorio_caido"].append(id_radicado)
             resumen["excepciones_sistema_repositorio"].append(id_radicado)
             duplicados_sistema(registro, repo, id_radicado, padre, str(error))
             continue
@@ -244,7 +256,7 @@ def etapa_duplicados(resumen, registro, escritura, repo):
             siguen.append(id_radicado)
             valores[id_radicado] = resultado["restantes"]
     registro.auditoria("Fin de la búsqueda de duplicados EP-003", MODULO)
-    resumen["repositorio_inaccesible"] = bool(resumen["avanzan"]) and fallidos == len(resumen["avanzan"])
+    resumen["repositorio_inaccesible"] = bool(resumen["avanzan"]) and len(resumen["repositorio_caido"]) == len(resumen["avanzan"])
     return siguen, valores
 
 

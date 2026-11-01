@@ -1,5 +1,5 @@
 """Mapa de salud por bloque (D-21, práctica experimental): por cada bloque del robot, qué hace, su entrada y salida y QUÉ
-ESCENARIO DEL BANCO lo cubre. La cobertura se MIDE: cada escenario de EP-001 y EP-002 corre el JSON del robot en el
+ESCENARIO DEL BANCO lo cubre. La cobertura se MIDE: cada escenario de EP-001, EP-002 y EP-003 corre el JSON del robot en el
 intérprete (`interprete_robot`) y se anota qué bloques se ejecutaron. Un bloque sin escenario es un hueco de cobertura.
 
 Uso:  python banco/salud_por_bloque.py            (reescribe docs/SALUD-POR-BLOQUE.md)
@@ -60,13 +60,14 @@ def cobertura():
     cubiertos = {}
     escenarios1 = json.loads((REPO / "banco" / "escenarios" / "EP-001.json").read_text(encoding="utf-8"))
     escenarios2 = json.loads((REPO / "banco" / "escenarios" / "EP-002.json").read_text(encoding="utf-8"))
+    escenarios3 = json.loads((REPO / "banco" / "escenarios" / "EP-003.json").read_text(encoding="utf-8"))
     with mock.patch.dict(os.environ, {"ZEUS_DOBLE_CLIENT_ID": ENTORNO["ZEUS_DOBLE_CLIENT_ID"],
                                       "ZEUS_DOBLE_CLIENT_SECRET": ENTORNO["ZEUS_DOBLE_CLIENT_SECRET"]}):
         for esc in escenarios1:
             eq.escenario(esc, eq.ejecutar_robot_interpretado)
             for ruta in interprete_robot.ULTIMO.ejecutados:
                 cubiertos.setdefault(ruta, []).append(esc["id"])
-        for esc in escenarios2:
+        for esc in escenarios2 + escenarios3:
             b2.correr_escenario(esc, robot=True)
             for ruta in interprete_robot.ULTIMO.ejecutados:
                 cubiertos.setdefault(ruta, []).append(esc["id"])
@@ -74,7 +75,7 @@ def cobertura():
 
 
 def abreviar(ids):
-    cortos = [i.replace("EP00", "E").replace("EP-00", "E").split("-")[0] + "-" + i.split("-")[1] if i.startswith("EP00") else i for i in ids]
+    cortos = [i.replace("EP00", "E").replace("EP-00", "E").split("-")[0] + "-" + i.split("-")[1] if i.startswith("EP00") and not i.startswith(("EP002", "EP003")) else i.split("-")[0] + "-" + i.split("-")[1] for i in ids]
     cortos = sorted(set(cortos))
     return ", ".join(cortos[:4]) + (f" (+{len(cortos) - 4})" if len(cortos) > 4 else "")
 
@@ -88,7 +89,7 @@ def documento(robot, cubiertos):
     lineas = [
         "# Salud por bloque del robot `LabHabeasData`", "",
         "> Práctica **experimental** D-21 (test por bloque en Studio). Generado por `python banco/salud_por_bloque.py`; **no editar a mano**. "
-        "La cobertura se mide: cada escenario del banco (EP-001: 16, EP-002: 19) corre el JSON del robot en el intérprete "
+        "La cobertura se mide: cada escenario del banco (EP-001: 18, EP-002: 20, EP-003: 8) corre el JSON del robot en el intérprete "
         "(`banco/interprete_robot.py`) y se anota qué bloques ejecutó.", "",
         "## Cómo probar un bloque solo",
         "1. En Studio, botón de test del bloque: ejecuta `commands:[ese bloque]` con las variables actuales; `playNode` arranca desde cualquier bloque.",
@@ -110,7 +111,7 @@ def documento(robot, cubiertos):
         escenarios = abreviar(cubiertos[ruta]) if ruta in cubiertos else "**sin cubrir**"
         lineas.append(f"| {ruta} | {ROTULO.get(c['father'], c['father'])} | {c.get('description', '').replace('|', '/')} | "
                       f"{', '.join(entrada) or '—'} | {', '.join(salida) or '—'} | {escenarios} |")
-    lineas += ["", "Escenarios: `E001-NN` = banco EP-001 (`banco/escenarios/EP-001.json`), `EP002-NN` = banco EP-002.", ""]
+    lineas += ["", "Escenarios: `E001-NN` = banco EP-001 (`banco/escenarios/EP-001.json`), `EP002-NN` = banco EP-002, `EP003-NN` = banco EP-003.", ""]
     return "\n".join(lineas), sin
 
 

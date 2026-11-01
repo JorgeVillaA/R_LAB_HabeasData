@@ -10,10 +10,11 @@ Todas devuelven un diccionario `{"ok": bool, "mensaje": str, ...}`; el robot dec
 import ast
 import time
 
-from . import ep001
+from . import ep001, ep003
 from .config import cargar
 from .redaccion import resumen_seguro
 from .registro import Registro
+from .repositorio import ErrorRepositorio
 from .zeus import ClienteZeus, EscrituraComentario, ErrorZeus
 
 MODULO = ep001.MODULO
@@ -25,6 +26,8 @@ class _Sesion:
         self.registro = Registro(cfg)
         self.cliente = ClienteZeus(cfg, self.registro)
         self.escritura = EscrituraComentario(self.cliente)
+        self.repo = None
+        self.stub = ep003.cargar_stub()
 
 
 class _SesionPerezosa:
@@ -306,4 +309,82 @@ def registrar_identidad(id_radicado, caso, identidad):
     from . import ep002
     caso, i = objeto(caso), objeto(identidad)
     ep002.registrar(_sesion.registro, id_radicado, caso["radicado_padre"], i["etapa"], i["via"], i["puntaje"], i["motivo"], i["codigo"])
+    if _sesion.cfg.proceso.get("Repositorio", {}).get("Habilitado"):
+        ep003.transaccion_identidad(_repo(), str(id_radicado), i["etapa"])
     return _ok()
+
+
+# ---------- EP-003: repositorio local (HU-010 duplicados, HU-011 exclusión) ----------
+def _repo():
+    """Repositorio de la corrida: se abre al primer uso (la sesión de un bloque probado solo también funciona, D-21)."""
+    if _sesion.repo is None:
+        _sesion.repo = ep003.abrir_repositorio(_sesion.cfg)
+    return _sesion.repo
+
+
+def repositorio():
+    """¿EP-003 está habilitado en esta corrida? (`Repositorio.Habilitado` de ConfiguracionProceso). Abre el repositorio si lo está."""
+    ajustes = _sesion.cfg.proceso.get("Repositorio", {"Habilitado": False})
+    if not ajustes.get("Habilitado"):
+        return _ok(habilitado=False)
+    try:
+        _repo()
+    except (OSError, ErrorRepositorio) as error:
+        return _fallo(error, habilitado=True)
+    return _ok(habilitado=True)
+
+
+def registrar_previas(id_radicado, caso, estado):
+    caso = objeto(caso) if estado != "sistema" else None
+    ep003.registrar_previas(_repo(), str(id_radicado), caso, estado)
+    return _ok()
+
+
+def buscar_duplicados(caso):
+    """HU-010: cada valor se consulta por separado; `duplicados` son solo los valores que ya estaban excluidos."""
+    caso = objeto(caso)
+    ep003.duplicados_inicio(_sesion.registro, _repo(), caso["radicado_hijo"])
+    try:
+        resultado = ep003.buscar_duplicados(caso, _repo())
+    except ErrorRepositorio as error:
+        return _fallo(error, duplicados=[], continua=False)
+    return _ok(**resultado)
+
+
+def comentar_duplicado(caso, duplicado):
+    caso, duplicado = objeto(caso), objeto(duplicado)
+    try:
+        _sesion.escritura.comentar(caso["radicado_hijo"], ep003.comentario_excepcion_4(duplicado))
+    except ErrorZeus as error:
+        return _fallo(error)
+    return _ok()
+
+
+def registrar_duplicado_excepcion_4(caso, duplicado):
+    caso = objeto(caso)
+    ep003.duplicados_excepcion_4(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], objeto(duplicado))
+    return _ok()
+
+
+def registrar_duplicado_sin_excepcion(caso):
+    caso = objeto(caso)
+    ep003.duplicados_sin_excepcion(_sesion.registro, _repo(), caso["radicado_hijo"])
+    return _ok()
+
+
+def registrar_duplicado_sistema(caso, mensaje, origen):
+    """origen = repositorio (no respondió) | comentario (Zeus rechazó la nota de duplicado)."""
+    caso = objeto(caso)
+    paso = ep003.duplicados_sistema if origen == "repositorio" else ep003.duplicados_comentario_fallido
+    paso(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], str(mensaje))
+    return _ok()
+
+
+def registrar_exclusion(caso, duplicado):
+    """HU-011: inserta, cruza y elimina de la maestra solo los valores que siguieron adelante (`restantes`)."""
+    caso, duplicado = objeto(caso), objeto(duplicado)
+    fecha = _sesion.registro.reloj().strftime("%d/%m/%Y")
+    resultado = ep003.exclusion_del_caso(_sesion.registro, _repo(), caso, (duplicado or {}).get("restantes", []), _sesion.stub, fecha)
+    if resultado["error"]:
+        return _fallo(resultado["error"], operacion=resultado["operacion"])
+    return _ok(insertados=len(resultado["insertados"]), eliminados=len(resultado["eliminados"]))

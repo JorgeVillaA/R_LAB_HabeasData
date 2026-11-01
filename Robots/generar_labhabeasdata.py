@@ -13,6 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bloques_ep002 import construir as construir_ep002  # noqa: E402
+from bloques_ep003 import construir as construir_ep003  # noqa: E402
 
 DESTINO = Path(__file__).resolve().parent / "LabHabeasData.robot.json"
 P = '{glbDicParametros}'
@@ -89,6 +90,13 @@ INICIALIZAR = grupo("HU002HU003HU004 - Inicializar el Asistente", [
     sv("Radicados derivados a gestión manual (HU-006, HU-007, HU-026a)", "glbArrGestionManual", "[]"),
     sv("Radicados en excepción de sistema de identidad", "glbArrExcepcionesSistemaIdentidad", "[]"),
     sv("Códigos de error de identidad por radicado", "glbDicCodigos", "{}"),
+    sv("Radicados que siguen a la validación de identidad (tras HU-004 y HU-010)", "glbArrSiguenIdentidad", "[]"),
+    sv("Radicados en excepción de negocio 4 (HU-010)", "glbArrExcepcionesNegocioCuatro", "[]"),
+    sv("Radicados en excepción de sistema del repositorio (HU-010)", "glbArrExcepcionesSistemaRepositorio", "[]"),
+    sv("Radicados que no pudieron consultar el repositorio (HU-010)", "glbArrRepositorioCaido", "[]"),
+    sv("Radicados con la exclusión registrada (HU-011)", "glbArrExclusionRegistrada", "[]"),
+    sv("Radicados en excepción de sistema de la exclusión (HU-011)", "glbArrExcepcionesSistemaExclusion", "[]"),
+    paso("Lee si el repositorio local está habilitado y lo abre (Repositorio.Habilitado)", "glbDicRepositorio", "pasos.repositorio()"),
     sv("Chrome aún no está abierto", "glbBlnChromeAbierto", "False"),
     paso("Lee el modo, las URL de los portales y los reintentos del captcha; en modo real exige autorización y ventana operativa",
          "glbDicPortales", "pasos.portales()"),
@@ -189,6 +197,7 @@ HU004 = grupo("HU004 - Validar campos obligatorios", [
     si("El caso está completo", LEIDO + " and len({locArrMotivos}) == 0", [
         paso("Registra el avance a la validación de deuda en el reporte", "locDicResultado", "pasos.registrar_avance(GetVar('locDicCaso'))"),
         sv("Anota el radicado en los que avanzan", "glbArrAvanzan", anexar("glbArrAvanzan", "'{locStrIdRadicado}'")),
+        sv("Anota el radicado en los que siguen a identidad", "glbArrSiguenIdentidad", anexar("glbArrSiguenIdentidad", "'{locStrIdRadicado}'")),
     ]),
     si("El caso está incompleto: excepción de negocio 1", LEIDO + " and len({locArrMotivos}) > 0", [
         paso("Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle", "locDicComentario",
@@ -209,13 +218,17 @@ HU004 = grupo("HU004 - Validar campos obligatorios", [
     ]),
 ])
 
+HU010, HU011 = construir_ep003({"paso": paso, "sv": sv, "si": si, "grupo": grupo, "anexar": anexar})
+
 ITERACION = si("Hay radicados que procesar", "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) > 0", [
     para("Iteración por radicado de exclusión", "{glbArrIdsRadicados}", "locStrIdRadicado", [
         paso("Deja constancia del inicio del radicado en el log de auditoría", "locDicEvento",
              "pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado'))"),
         HU003,
         HU004,
+        HU010,
         *construir_ep002({"paso": paso, "sv": sv, "si": si, "grupo": grupo, "para": para, "anexar": anexar}),
+        HU011,
         paso("Deja constancia del fin del radicado en el log de auditoría", "locDicEvento",
              "pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado'))"),
     ]),
@@ -252,7 +265,24 @@ CONTROL = {"father": "trycatch", "description": "Control de ejecución", "childr
            "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
            [paso("Deja constancia del inicio de la validación de identidad en el log de auditoría", "locDicEvento",
                  "pasos.evento('Inicio de la validación de identidad EP-002 (modo ' + pasos.objeto(GetVar('glbDicPortales'))['modo'] + ')', 'EP-002')")]),
+        si("El repositorio está habilitado y la selección terminó bien: deja constancia del inicio de la búsqueda de duplicados",
+           "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del inicio de la búsqueda de duplicados (EP-003)", "locDicEvento",
+                 "pasos.evento('Inicio de la búsqueda de duplicados EP-003', 'EP-003')")]),
         ITERACION,
+        si("El repositorio está habilitado y la selección terminó bien: deja constancia del fin de la búsqueda y del registro",
+           "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del fin de la búsqueda de duplicados (EP-003)", "locDicEvento",
+                 "pasos.evento('Fin de la búsqueda de duplicados EP-003', 'EP-003')"),
+            paso("Deja constancia del inicio del registro de exclusión (EP-003)", "locDicEvento",
+                 "pasos.evento('Inicio del registro de exclusión EP-003', 'EP-003')"),
+            paso("Deja constancia del fin del registro de exclusión (EP-003)", "locDicEvento",
+                 "pasos.evento('Fin del registro de exclusión EP-003', 'EP-003')")]),
+        si("Ningún caso pudo consultar el repositorio: punto de control crítico, se detiene la ejecución",
+           "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok' and len({glbArrAvanzan}) > 0 "
+           "and len({glbArrRepositorioCaido}) == len({glbArrAvanzan})",
+           [sv("Estado de la ejecución: detenido, repositorio inaccesible para todos los casos", "glbDicEstado",
+               "dict({glbDicEstado}, estado='detenido', motivo_detencion='repositorio inaccesible para todos los casos')")]),
         si("La identidad está habilitada y la selección terminó bien: deja constancia de su fin",
            "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
            [paso("Deja constancia del fin de la validación de identidad en el log de auditoría", "locDicEvento",
@@ -272,7 +302,10 @@ VARIABLES = [("glbBlnEstadoSistema", "True"), ("glbBlnEstadoProceso", "True"), (
              ("glbDicEstado", ""),
              ("glbDicInicio", ""), ("glbDicParametros", ""), ("glbDicAutenticacion", ""), ("glbDicSeleccion", ""),
              ("glbDicDescartados", ""), ("glbDicRegistroDescartados", ""), ("glbDicGeneral", ""), ("glbDicSinCasos", ""),
-             ("glbDicDetencion", ""), ("glbDicReintento", ""), ("glbStrAsuntoAviso", ""), 
+             ("glbDicDetencion", ""), ("glbDicReintento", ""), ("glbDicRepositorio", ""),
+             ("glbArrSiguenIdentidad", ""), ("glbArrExcepcionesNegocioCuatro", ""), ("glbArrExcepcionesSistemaRepositorio", ""),
+             ("glbArrRepositorioCaido", ""), ("glbArrExclusionRegistrada", ""), ("glbArrExcepcionesSistemaExclusion", ""),
+             ("locDicDuplicado", ""), ("locDicComentarioDuplicado", ""), ("locDicExclusion", ""), ("glbStrAsuntoAviso", ""), 
              ("glbArrIdsRadicados", ""), ("glbArrIdsDescartados", ""), ("glbArrAvanzan", ""),
              ("glbArrExcepcionesNegocioUno", ""), ("glbArrExcepcionesSistema", ""),
              ("glbArrValidadas", ""), ("glbArrExcepcionesNegocioTres", ""), ("glbArrRevisionHumana", ""), ("glbArrSinNombre", ""),

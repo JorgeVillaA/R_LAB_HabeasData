@@ -38,11 +38,13 @@ class TestEstructuraLegible(unittest.TestCase):
             "HU002 - Filtrar radicados de Exclusión de Datos",
             "HU003 - Leer datos paramétricos",
             "HU004 - Validar campos obligatorios",
+            "HU010 - Buscar duplicados de exclusión (repositorio local)",
             "HU006 - Consultar la Policía Nacional (Chrome)",
             "HU007 - Consultar la Procuraduría (Chrome)",
             "HU026a - Resolver el captcha de pregunta (servicio de captchas)",
             "HU008 - Comparar nombres (umbral 0.80, sin depender del orden)",
             "HU006HU007HU008 - Registrar el resultado de identidad",
+            "HU011 - Registrar la exclusión en base centralizada (repositorio local)",
             "HU002HU003HU004 - Cierre y registro de ejecución",
         ]
         self.assertEqual(GRUPOS, esperados)
@@ -111,12 +113,13 @@ class TestEstructuraLegible(unittest.TestCase):
                  if c["father"] == "evaluateIf" or c["father"] == "group"]
         propios = [c for c, _ in recorrer(ROBOT["commands"])]
         grupos_ep002 = [g for g in TODOS if g["father"] == "group" and g["description"].split(" - ")[0] in
-                        ("HU006", "HU007", "HU026a", "HU008", "HU006HU007HU008")]
+                        ("HU006", "HU007", "HU026a", "HU008", "HU006HU007HU008", "HU010", "HU011")]
         dentro = {id(x) for g in grupos_ep002 for x, _ in recorrer([g])}
         init_ep002 = 17  # listas, códigos, Chrome, portales y URLs de la inicialización + inicio y fin de la identidad
+        init_ep003 = 17  # listas del repositorio, su apertura, las constancias de inicio/fin y la detención crítica
         ep001 = [c for c in propios if id(c) not in dentro]
-        self.assertLessEqual(len(ep001), 84 + 9 + init_ep002)
-        self.assertLessEqual([c["father"] for c in ep001].count("setVar"), 36 + 3 + 11)
+        self.assertLessEqual(len(ep001), 84 + 9 + init_ep002 + init_ep003)
+        self.assertLessEqual([c["father"] for c in ep001].count("setVar"), 36 + 3 + 11 + 8)
 
     def test_los_motivos_de_incompletitud_coinciden_con_las_reglas_de_python(self):
         en_robot = []

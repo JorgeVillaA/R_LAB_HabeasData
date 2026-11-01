@@ -75,6 +75,46 @@
    "data": ""
   },
   {
+   "name": "glbDicRepositorio",
+   "data": ""
+  },
+  {
+   "name": "glbArrSiguenIdentidad",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesNegocioCuatro",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesSistemaRepositorio",
+   "data": ""
+  },
+  {
+   "name": "glbArrRepositorioCaido",
+   "data": ""
+  },
+  {
+   "name": "glbArrExclusionRegistrada",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesSistemaExclusion",
+   "data": ""
+  },
+  {
+   "name": "locDicDuplicado",
+   "data": ""
+  },
+  {
+   "name": "locDicComentarioDuplicado",
+   "data": ""
+  },
+  {
+   "name": "locDicExclusion",
+   "data": ""
+  },
+  {
    "name": "glbStrAsuntoAviso",
    "data": ""
   },
@@ -339,6 +379,47 @@
        "var": "glbDicCodigos",
        "command": "{}",
        "description": "Códigos de error de identidad por radicado"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrSiguenIdentidad",
+       "command": "[]",
+       "description": "Radicados que siguen a la validación de identidad (tras HU-004 y HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesNegocioCuatro",
+       "command": "[]",
+       "description": "Radicados en excepción de negocio 4 (HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesSistemaRepositorio",
+       "command": "[]",
+       "description": "Radicados en excepción de sistema del repositorio (HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrRepositorioCaido",
+       "command": "[]",
+       "description": "Radicados que no pudieron consultar el repositorio (HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExclusionRegistrada",
+       "command": "[]",
+       "description": "Radicados con la exclusión registrada (HU-011)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesSistemaExclusion",
+       "command": "[]",
+       "description": "Radicados en excepción de sistema de la exclusión (HU-011)"
+      },
+      {
+       "father": "execScriptPython",
+       "description": "Lee si el repositorio local está habilitado y lo abre (Repositorio.Habilitado)",
+       "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicRepositorio', pasos.repositorio())"
       },
       {
        "father": "setVar",
@@ -648,6 +729,19 @@
       },
       {
        "father": "evaluateIf",
+       "description": "El repositorio está habilitado y la selección terminó bien: deja constancia del inicio de la búsqueda de duplicados",
+       "command": "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del inicio de la búsqueda de duplicados (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio de la búsqueda de duplicados EP-003', 'EP-003'))"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
        "description": "Hay radicados que procesar",
        "command": "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) > 0",
        "children": [
@@ -784,6 +878,12 @@
                "var": "glbArrAvanzan",
                "command": "{glbArrAvanzan} + ['{locStrIdRadicado}']",
                "description": "Anota el radicado en los que avanzan"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "{glbArrSiguenIdentidad} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en los que siguen a identidad"
               }
              ],
              "else": []
@@ -836,6 +936,165 @@
           },
           {
            "father": "group",
+           "description": "HU010 - Buscar duplicados de exclusión (repositorio local)",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locDicDuplicado",
+             "command": "{'ok': True, 'duplicados': [], 'continua': True}",
+             "description": "Resultado de duplicados del radicado (vacío al empezar)"
+            },
+            {
+             "father": "setVar",
+             "var": "locDicComentarioDuplicado",
+             "command": "{'ok': True}",
+             "description": "Resultado del comentario de duplicado (vacío al empezar)"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Repositorio habilitado: deja en Transacciones las etapas previas del radicado (selección, lectura, completitud)",
+             "command": "{glbDicRepositorio}['habilitado'] == True",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra las transacciones previas del radicado",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_previas(GetVar('locStrIdRadicado'), GetVar('locDicCaso'), 'avanza' if GetVar('locStrIdRadicado') in pasos.objeto(GetVar('glbArrAvanzan')) else ('negocio_1' if GetVar('locStrIdRadicado') in pasos.objeto(GetVar('glbArrExcepcionesNegocioUno')) else 'sistema')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El radicado avanzó (HU-004): busca cada valor de cada canal por separado (maestra y exclusión con llave compuesta)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Busca duplicados: identificación + celular en Celulares, identificación + correo en Correos",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicDuplicado', pasos.buscar_duplicados(GetVar('locDicCaso')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El repositorio no respondió tras 3 intentos: excepción de sistema del caso (el bot continúa)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == False",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la excepción de sistema del repositorio",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_sistema(GetVar('locDicCaso'), pasos.objeto(GetVar('locDicDuplicado'))['mensaje'], 'repositorio'))"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistemaRepositorio",
+               "command": "{glbArrExcepcionesSistemaRepositorio} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema del repositorio"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrRepositorioCaido",
+               "command": "{glbArrRepositorioCaido} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en los que no pudieron consultar el repositorio"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "[x for x in {glbArrSiguenIdentidad} if x != '{locStrIdRadicado}']",
+               "description": "El radicado no sigue a identidad"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Hay valores duplicados: escribe la nota de excepción de negocio 4 en Gestión → Detalle",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Comentario de la excepción de negocio 4 (revisión de Cartera)",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicComentarioDuplicado', pasos.comentar_duplicado(GetVar('locDicCaso'), GetVar('locDicDuplicado')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La nota no se pudo registrar: excepción de sistema del caso",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0 and {locDicComentarioDuplicado}['ok'] == False",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la excepción de sistema (nota de duplicado rechazada)",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_sistema(GetVar('locDicCaso'), pasos.objeto(GetVar('locDicComentarioDuplicado'))['mensaje'], 'comentario'))"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistemaRepositorio",
+               "command": "{glbArrExcepcionesSistemaRepositorio} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema del repositorio"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "[x for x in {glbArrSiguenIdentidad} if x != '{locStrIdRadicado}']",
+               "description": "El radicado no sigue a identidad"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La nota quedó registrada: excepción de negocio 4 (solo los valores duplicados)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0 and {locDicComentarioDuplicado}['ok'] == True",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la excepción de negocio 4 en el reporte y en Transacciones",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_excepcion_4(GetVar('locDicCaso'), GetVar('locDicDuplicado')))"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesNegocioCuatro",
+               "command": "{glbArrExcepcionesNegocioCuatro} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de negocio 4"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Ningún valor es duplicado: sigue a la validación de identidad",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) == 0",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra «sin duplicado» en Transacciones",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_sin_excepcion(GetVar('locDicCaso')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Todos sus valores ya estaban excluidos: no sigue a identidad",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0 and {locDicComentarioDuplicado}['ok'] == True and {locDicDuplicado}['continua'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "[x for x in {glbArrSiguenIdentidad} if x != '{locStrIdRadicado}']",
+               "description": "El radicado no sigue a identidad"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "group",
            "description": "HU006 - Consultar la Policía Nacional (Chrome)",
            "children": [
             {
@@ -847,7 +1106,7 @@
             {
              "father": "evaluateIf",
              "description": "El radicado avanzó (HU-004) y la identidad está habilitada: prepara los datos del caso",
-             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
              "children": [
               {
                "father": "execScriptPython",
@@ -883,7 +1142,7 @@
             {
              "father": "evaluateIf",
              "description": "Avanzó a identidad y el documento es cédula de ciudadanía: empieza por la Policía",
-             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDocumento}['cedula'] == True",
+             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrSiguenIdentidad} and {locDicDocumento}['cedula'] == True",
              "children": [
               {
                "father": "setVar",
@@ -897,7 +1156,7 @@
             {
              "father": "evaluateIf",
              "description": "Avanzó a identidad y el documento no es cédula: va directo a la Procuraduría",
-             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDocumento}['cedula'] == False",
+             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrSiguenIdentidad} and {locDicDocumento}['cedula'] == False",
              "children": [
               {
                "father": "setVar",
@@ -1600,7 +1859,7 @@
             {
              "father": "evaluateIf",
              "description": "Deja el resultado de identidad en el reporte y los logs",
-             "command": "'{locStrIdRadicado}' in {glbArrAvanzan} and not {locDicIdentidad}['etapa'] == 'inicio'",
+             "command": "'{locStrIdRadicado}' in {glbArrSiguenIdentidad} and not {locDicIdentidad}['etapa'] == 'inicio'",
              "children": [
               {
                "father": "execScriptPython",
@@ -1613,7 +1872,7 @@
             {
              "father": "evaluateIf",
              "description": "Resultado «validada»",
-             "command": "{locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "command": "{locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
              "children": [
               {
                "father": "setVar",
@@ -1627,7 +1886,7 @@
             {
              "father": "evaluateIf",
              "description": "Resultado «excepcion_negocio_3»",
-             "command": "{locDicIdentidad}['etapa'] == 'excepcion_negocio_3' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "command": "{locDicIdentidad}['etapa'] == 'excepcion_negocio_3' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
              "children": [
               {
                "father": "setVar",
@@ -1641,7 +1900,7 @@
             {
              "father": "evaluateIf",
              "description": "Resultado «revision_humana»",
-             "command": "{locDicIdentidad}['etapa'] == 'revision_humana' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "command": "{locDicIdentidad}['etapa'] == 'revision_humana' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
              "children": [
               {
                "father": "setVar",
@@ -1655,7 +1914,7 @@
             {
              "father": "evaluateIf",
              "description": "Resultado «sin_nombre»",
-             "command": "{locDicIdentidad}['etapa'] == 'sin_nombre' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "command": "{locDicIdentidad}['etapa'] == 'sin_nombre' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
              "children": [
               {
                "father": "setVar",
@@ -1669,7 +1928,7 @@
             {
              "father": "evaluateIf",
              "description": "Resultado «gestion_manual»",
-             "command": "{locDicIdentidad}['etapa'] == 'gestion_manual' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "command": "{locDicIdentidad}['etapa'] == 'gestion_manual' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
              "children": [
               {
                "father": "setVar",
@@ -1683,7 +1942,7 @@
             {
              "father": "evaluateIf",
              "description": "Resultado «excepcion_sistema»: el caso va a gestión manual",
-             "command": "{locDicIdentidad}['etapa'] == 'excepcion_sistema' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "command": "{locDicIdentidad}['etapa'] == 'excepcion_sistema' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
              "children": [
               {
                "father": "setVar",
@@ -1709,11 +1968,101 @@
            ]
           },
           {
+           "father": "group",
+           "description": "HU011 - Registrar la exclusión en base centralizada (repositorio local)",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locDicExclusion",
+             "command": "{'ok': True}",
+             "description": "Resultado del registro de exclusión (vacío al empezar)"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Identidad validada: inserta la exclusión, cruza contra las maestras y elimina el registro de la maestra",
+             "command": "{glbDicRepositorio}['habilitado'] == True and {locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la exclusión (Exclusion + una fila por valor en Celulares/Correos), verifica y elimina de la maestra",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicExclusion', pasos.registrar_exclusion(GetVar('locDicCaso'), GetVar('locDicDuplicado')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Exclusión registrada",
+             "command": "{glbDicRepositorio}['habilitado'] == True and {locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicExclusion}['ok'] == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrExclusionRegistrada",
+               "command": "{glbArrExclusionRegistrada} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en exclusiones registradas"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El repositorio falló de forma persistente: excepción de sistema del caso (el bot continúa)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and {locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicExclusion}['ok'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistemaExclusion",
+               "command": "{glbArrExcepcionesSistemaExclusion} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema de la exclusión"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
            "father": "execScriptPython",
            "description": "Deja constancia del fin del radicado en el log de auditoría",
            "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado')))"
           }
          ]
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
+       "description": "El repositorio está habilitado y la selección terminó bien: deja constancia del fin de la búsqueda y del registro",
+       "command": "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del fin de la búsqueda de duplicados (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin de la búsqueda de duplicados EP-003', 'EP-003'))"
+        },
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del inicio del registro de exclusión (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio del registro de exclusión EP-003', 'EP-003'))"
+        },
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del fin del registro de exclusión (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin del registro de exclusión EP-003', 'EP-003'))"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
+       "description": "Ningún caso pudo consultar el repositorio: punto de control crítico, se detiene la ejecución",
+       "command": "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok' and len({glbArrAvanzan}) > 0 and len({glbArrRepositorioCaido}) == len({glbArrAvanzan})",
+       "children": [
+        {
+         "father": "setVar",
+         "var": "glbDicEstado",
+         "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion='repositorio inaccesible para todos los casos')",
+         "description": "Estado de la ejecución: detenido, repositorio inaccesible para todos los casos"
         }
        ],
        "else": []
