@@ -75,7 +75,7 @@ def correr_escenario(escenario):
         cfg = cargar(raiz)
         registro = Registro(cfg, RELOJ)
         cliente = ClienteZeus(cfg, registro, ENTORNO, dormir=lambda segundos: None)
-        resumen = ep001.procesar(cfg, cliente, registro)
+        resumen = ep001.procesar(cfg, cliente, registro, dormir=lambda segundos: None)
         comentarios = sorted(c["IDRADICADO"] for c in doble.estado.comentarios)
         archivos = sorted(p.relative_to(raiz).as_posix() for p in raiz.rglob("*.csv"))
         lineas_auditoria = registro.ruta_auditoria().read_text(encoding="utf-8").count("\n")
@@ -99,6 +99,8 @@ def verificar(escenario, resumen, comentarios, archivos):
             igual(clave, sorted(resumen[clave]), sorted(espera[clave]))
     if "motivo_sin_casos" in espera:
         igual("motivo_sin_casos", resumen["motivo_sin_casos"], espera["motivo_sin_casos"])
+    if "reintentos" in espera:
+        igual("reintentos", resumen["reintentos"], espera["reintentos"])
     if "comentarios" in espera:
         igual("comentarios", comentarios, sorted(espera["comentarios"]))
     if "descartados" in espera:

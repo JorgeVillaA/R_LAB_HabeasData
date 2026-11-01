@@ -9,8 +9,8 @@
 4. Los bloques de Chrome necesitan los clones de portales arriba (`python dobles/portales/servidor.py 8766`) y el servicio de captchas.
 
 ## Resumen
-- Bloques: **216** (Chrome: clic 9, Decisión 57, Paso (componente) 33, Bucle 2, Grupo 10, Log 1, Chrome: URL 2, Chrome: abrir 1, Chrome: escribir 4, Asignar 82, Chrome: leer texto 4, Control de errores 5, Chrome: esperar 6).
-- Cubiertos por al menos un escenario: **207**; **sin cubrir: 9**.
+- Bloques: **224** (Chrome: clic 9, Decisión 60, Paso (componente) 34, Bucle 2, Grupo 10, Log 1, Chrome: URL 2, Chrome: abrir 1, Chrome: escribir 4, Asignar 86, Chrome: leer texto 4, Control de errores 5, Chrome: esperar 6).
+- Cubiertos por al menos un escenario: **214**; **sin cubrir: 10**.
 
 ### Huecos de cobertura (bloques sin escenario)
 
@@ -19,6 +19,7 @@
 | 1.1.18.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló |
 | 1.2.1.2.4.3.3.e.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló |
 | 1.2.1.2.4.4.2.e.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló |
+| 1.2.1.3.3.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló |
 | 1.2.3.1.4.8.1 | Asignar | Etapa: revisión humana (reCAPTCHA) |
 | 1.2.3.1.4.10.e.1 | Asignar | Policía caída durante la consulta: se consulta la Procuraduría |
 | 1.2.e.1 | Asignar | Marca fallo de sistema en el proceso principal |
@@ -86,6 +87,14 @@ Un bloque sin escenario no tiene prueba que lo ejercite: se reporta como hueco, 
 | 1.2.1.2.4.4.2.e.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló | glbDicEstado, glbDicGeneral | glbDicEstado | **sin cubrir** |
 | 1.2.1.2.4.e.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló | glbDicEstado, glbDicSeleccion | glbDicEstado | E1-04, E1-05, E1-06 |
 | 1.2.1.2.e.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló | glbDicAutenticacion, glbDicEstado | glbDicEstado | E1-07 |
+| 1.2.1.3 | Decisión | Sigue sin casos: agenda el reintento (espera la cadencia y vuelve a consultar) | glbArrIdsRadicados, glbDicEstado | — | E1-01, E1-02, E1-03, E1-04 (+32) |
+| 1.2.1.3.1 | Paso (componente) | Espera MinutosEntreReintentos y reconsulta, hasta MaximoReintentosDiarios o hasta que aparezcan casos (CADENCIA_REINTENTO_BANDEJA_VACIA) | glbStrRutaRaiz | glbDicReintento | E1-02, E1-03, E1-16 |
+| 1.2.1.3.2 | Decisión | Hubo reintentos y la consulta respondió | glbDicReintento | — | E1-02, E1-03, E1-16 |
+| 1.2.1.3.2.1 | Asignar | Guarda los radicados seleccionados en el reintento | glbDicReintento | glbArrIdsRadicados | E1-02, E1-03, E1-16 |
+| 1.2.1.3.2.2 | Asignar | Guarda los descartados del último intento | glbDicReintento | glbArrIdsDescartados | E1-02, E1-03, E1-16 |
+| 1.2.1.3.2.3 | Asignar | Motivo con el que terminó el último intento | glbDicEstado, glbDicReintento | glbDicEstado | E1-02, E1-03, E1-16 |
+| 1.2.1.3.3 | Decisión | El reintento se detuvo por una falla crítica | glbDicReintento | — | E1-02, E1-03, E1-16 |
+| 1.2.1.3.3.1 | Asignar | Marca la ejecución como detenida y guarda el motivo del paso que falló | glbDicEstado, glbDicReintento | glbDicEstado | **sin cubrir** |
 | 1.2.2 | Decisión | La identidad está habilitada y la selección terminó bien: deja constancia de su inicio | glbDicEstado, glbDicPortales | — | E1-01, E1-02, E1-03, E1-04 (+32) |
 | 1.2.2.1 | Paso (componente) | Deja constancia del inicio de la validación de identidad en el log de auditoría | glbDicPortales, glbStrRutaRaiz | locDicEvento | E2-01, E2-02, E2-03, E2-04 (+16) |
 | 1.2.3 | Decisión | Hay radicados que procesar | glbArrIdsRadicados, glbDicEstado | — | E1-01, E1-02, E1-03, E1-04 (+32) |

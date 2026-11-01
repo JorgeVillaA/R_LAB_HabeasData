@@ -79,3 +79,61 @@ class TestHU002(PruebaConDoble):
         self.configurar_doble(radicados=solo)
         lista = ep001.filtrar_exclusion(self.cliente, self.cfg, self.registro)
         self.assertEqual((lista["ids"], lista["motivo_sin_casos"]), ([], "solo_descartados"))
+
+
+class TestHU002Reintento(PruebaConDoble):
+    """AC-04 y AC-05: con la bandeja sin casos el bot AGENDA el reintento según CADENCIA_REINTENTO_BANDEJA_VACIA."""
+
+    def test_bandeja_vacia_espera_la_cadencia_y_reintenta_hasta_el_maximo_diario(self):
+        self.configurar_doble(radicados=[])
+        esperas = []
+        resumen = ep001.procesar(self.cfg, self.cliente, self.registro, dormir=esperas.append)
+        cadencia = self.cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]
+        self.assertEqual((cadencia["MinutosEntreReintentos"], cadencia["MaximoReintentosDiarios"]), (60, 3))
+        self.assertEqual(esperas, [3600, 3600, 3600])
+        self.assertEqual((resumen["estado"], resumen["motivo_sin_casos"], resumen["reintentos"]), ("ok", "bandeja_vacia", 3))
+        auditoria = self.texto_log(self.registro.ruta_auditoria())
+        self.assertEqual(auditoria.count("0 casos (bandeja_vacia)"), 4)  # intento inicial + 3 reintentos
+        self.assertIn("Reintento 3 de 3 de la bandeja", auditoria)
+
+    def test_los_radicados_que_aparecen_en_un_reintento_se_procesan(self):
+        self.configurar_doble(radicados=[])
+        esperas = []
+
+        def dormir(segundos):
+            esperas.append(segundos)
+            if len(esperas) == 2:  # entre el 1.º y el 2.º reintento llegan casos
+                self.configurar_doble(radicados=RADICADOS)
+        resumen = ep001.procesar(self.cfg, self.cliente, self.registro, dormir=dormir)
+        self.assertEqual(esperas, [3600, 3600])  # no reintenta más al encontrar casos
+        self.assertIsNone(resumen["motivo_sin_casos"])
+        self.assertTrue(resumen["avanzan"] or resumen["excepciones_negocio_1"])
+        self.assertEqual(resumen["reintentos"], 2)
+
+    def test_la_cadencia_y_el_maximo_son_parametro_no_logica(self):
+        self.configurar_doble(radicados=[])
+        self.cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"].update(MinutosEntreReintentos=15, MaximoReintentosDiarios=1)
+        esperas = []
+        ep001.procesar(self.cfg, self.cliente, self.registro, dormir=esperas.append)
+        self.assertEqual(esperas, [900])
+
+    def test_sin_reintentos_diarios_no_espera(self):
+        self.configurar_doble(radicados=[])
+        self.cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"]["MaximoReintentosDiarios"] = 0
+        esperas = []
+        ep001.procesar(self.cfg, self.cliente, self.registro, dormir=esperas.append)
+        self.assertEqual(esperas, [])
+
+    def test_una_falla_critica_durante_el_reintento_detiene_la_corrida(self):
+        self.configurar_doble(radicados=[])
+
+        def dormir(segundos):
+            self.configurar_doble(denegar=True)  # la API deja de aceptar el token
+        resumen = ep001.procesar(self.cfg, self.cliente, self.registro, dormir=dormir)
+        self.assertEqual(resumen["estado"], "detenido")
+        self.assertIn("Ejecución detenida", self.texto_log(self.registro.ruta_errores()))
+
+    def test_con_casos_en_el_primer_intento_no_hay_espera(self):
+        esperas = []
+        resumen = ep001.procesar(self.cfg, self.cliente, self.registro, dormir=esperas.append)
+        self.assertEqual((esperas, resumen["reintentos"]), ([], 0))
