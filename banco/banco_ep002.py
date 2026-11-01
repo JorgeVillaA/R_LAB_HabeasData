@@ -22,17 +22,44 @@ from correr_matriz import ENTORNO, CREDENCIALES, RELOJ, preparar_raiz, radicados
 from dobles.portales.captchas import ServicioCaptchas as DobleCaptchas  # noqa: E402
 from dobles.portales.servidor import DoblePortales  # noqa: E402
 from dobles.zeus_api.servidor import DobleZeus  # noqa: E402
-from habeasdata import ep001, ep002  # noqa: E402
+from habeasdata import ep001, ep002, ep003  # noqa: E402
 from habeasdata.captcha import ServicioCaptchas  # noqa: E402
 from habeasdata.config import cargar  # noqa: E402
 from habeasdata.portales import ClientePortales  # noqa: E402
 from habeasdata.registro import Registro  # noqa: E402
 from habeasdata.zeus import ClienteZeus  # noqa: E402
-from equivalencia_robot import rastro  # noqa: E402
+from equivalencia_robot import rastro as rastro_logs  # noqa: E402
 from tests.soporte_ep002 import padrones  # noqa: E402
+
+def instantanea_repositorio(raiz):
+    """Lo que dejó el repositorio (sin fechas ni consecutivos): conteos por tabla y las transacciones ordenadas."""
+    import sqlite3
+    archivos = list(Path(raiz).glob("Documentos/repositorio/*.sqlite"))
+    if not archivos:
+        return None
+    con = sqlite3.connect(archivos[0])
+    try:
+        tablas = {t: con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                  for t in ("Exclusion", "Celulares", "Correos", "MaestraCelulares", "MaestraCorreos", "Insumo")}
+        transacciones = sorted(tuple(f) for f in con.execute(
+            "SELECT RadicadoZeus, Etapa, EstadoAnterior, EstadoNuevo, Resultado, Motivo FROM Transacciones"))
+        return {"tablas": tablas, "transacciones": [list(t) for t in transacciones]}
+    finally:
+        con.close()
+
+
+def rastro(raiz):
+    """Rastro de logs y reporte (como EP-001/EP-002) más, si hubo repositorio, lo que dejó en sus tablas."""
+    resultado = rastro_logs(raiz)
+    instantanea = instantanea_repositorio(raiz)
+    if instantanea is not None:
+        resultado["repositorio"] = instantanea
+    return resultado
+
 
 CLAVES_LISTA = ("validadas", "excepciones_negocio_3", "gestion_manual", "revision_humana", "sin_nombre",
                 "excepciones_sistema_identidad")
+CLAVES_EP003 = ("excepciones_negocio_4", "excepciones_sistema_repositorio", "exclusion_registrada", "excepciones_sistema_exclusion")
 
 
 def correr_escenario(escenario, robot=False):
@@ -43,7 +70,10 @@ def correr_escenario(escenario, robot=False):
     zeus = DobleZeus(CREDENCIALES, filas).iniciar()
     web = DoblePortales().iniciar()
     servicio = DobleCaptchas().iniciar()
-    raiz = preparar_raiz(zeus.puerto, escenario.get("proceso", {}))
+    proceso = json.loads(json.dumps(escenario.get("proceso", {})))
+    repositorio = escenario.get("repositorio")  # EP-003: {"Fallas": {...}}; ausente = escenario de EP-002 sin repositorio
+    proceso.setdefault("Repositorio", {}).update(Habilitado=repositorio is not None, **(repositorio or {}))
+    raiz = preparar_raiz(zeus.puerto, proceso)
     if robot == "studio":  # Studio no hereda el entorno de este proceso: el par sintético del doble va en la configuración temporal
         ruta = raiz / "Configuracion" / "ConfiguracionProceso.json"
         datos = json.loads(ruta.read_text(encoding="utf-8"))
@@ -80,7 +110,8 @@ def correr_escenario(escenario, robot=False):
         cliente = ClienteZeus(cfg, registro, ENTORNO, dormir=lambda s: None)
         portales = ClientePortales(cfg, dormir=lambda s: None)
         captchas = ServicioCaptchas(datos["Portales"]["Fixture"]["UrlCaptchas"], 3, (0,), 5, dormir=lambda s: None)
-        resumen = ep002.procesar(cfg, cliente, registro, ep001.EscrituraComentario(cliente), portales, captchas)
+        repo = ep003.abrir_repositorio(cfg, dormir=lambda s: None, reloj=RELOJ) if repositorio is not None else None
+        resumen = ep002.procesar(cfg, cliente, registro, ep001.EscrituraComentario(cliente), portales, captchas, repo=repo)
         resumen["rastro"] = rastro(raiz)
         comentarios = sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)
         consultas = {"policia": len(web.estado.consultas["policia"]), "procuraduria": len(web.estado.consultas["procuraduria"]),

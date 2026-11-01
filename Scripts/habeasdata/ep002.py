@@ -100,20 +100,30 @@ def registrar(registro, id_radicado, padre, etiqueta, via, puntaje=None, motivo=
     registro.auditoria(f"Fin de la identidad del radicado {id_radicado}: {etiqueta}", MODULO)
 
 
-def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None):
+def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, repo=None, stub=None):
     from .captcha import ServicioCaptchas
     resumen = procesar_ep001(cfg, cliente, registro, escritura)
     resumen.update(validadas=[], excepciones_negocio_3=[], gestion_manual=[], revision_humana=[], sin_nombre=[],
                    excepciones_sistema_identidad=[], via={}, codigos={})
     if resumen["estado"] != "ok":
         return resumen
+    avanzan, valores = resumen["avanzan"], {}
+    if repo is not None:  # EP-003 / HU-010: los duplicados se buscan ANTES de la identidad
+        from . import ep003
+        avanzan, valores = ep003.etapa_duplicados(resumen, registro, escritura, repo)
+        if resumen["repositorio_inaccesible"]:  # punto de control crítico: ningún caso pudo consultar el repositorio
+            notif = cfg.maquina["Notificaciones"]
+            registro.error("Ejecución detenida: repositorio inaccesible para todos los casos", ep003.MODULO)
+            resumen.update(estado="detenido", notificacion={"asunto": notif["AsuntoDetenido"], "destinatario": notif["CorreoDetenido"],
+                                                            "motivo": "repositorio inaccesible para todos los casos"})
+            return resumen
     portales = portales or ClientePortales(cfg)
     ajustes = portales.ajustes
     captchas = captchas or ServicioCaptchas(ajustes["UrlCaptchas"], portales.reintentos, portales.backoff, portales.timeout,
                                             portales.dormir)
     umbral = cfg.maestro["UMBRAL_COINCIDENCIA_NOMBRES"]
     registro.auditoria(f"Inicio de la validación de identidad EP-002 (modo {portales.modo})", MODULO)
-    for id_radicado in resumen["avanzan"]:
+    for id_radicado in avanzan:
         caso = resumen["casos"][id_radicado]
         padre = caso["radicado_padre"]
         registro.auditoria(f"Inicio de la identidad del radicado {id_radicado}", MODULO)
@@ -133,4 +143,6 @@ def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None):
         registrar(registro, id_radicado, padre, etiqueta, via, (resultado.get("veredicto") or {}).get("puntaje"),
                   (resultado.get("veredicto") or {}).get("motivo") or resultado.get("motivo"), resultado.get("codigo"))
     registro.auditoria("Fin de la validación de identidad EP-002", MODULO)
+    if repo is not None:  # EP-003 / HU-011: registro de la exclusión de los casos con identidad validada
+        ep003.etapa_registro(resumen, registro, repo, valores, stub or ep003.cargar_stub(), registro.reloj().strftime("%d/%m/%Y"))
     return resumen

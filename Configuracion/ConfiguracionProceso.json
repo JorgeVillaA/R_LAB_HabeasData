@@ -70,5 +70,13 @@
   },
   "Identidad": {
     "Habilitada": true
+  },
+  "Repositorio": {
+    "Habilitado": true,
+    "Motor": "sqlite",
+    "Carpeta": "repositorio",
+    "Archivo": "lab.sqlite",
+    "SembrarSinteticos": true,
+    "Fallas": {}
   }
 }

@@ -1,0 +1,23 @@
+{
+  "nota": "Stub de HU-009 (Cobra, sin endpoints): datos sintéticos que en producción vienen de Cobra.",
+  "por_defecto": {
+    "ID CLIENTE": "CLI-DEFECTO",
+    "ID CODEUDOR": "COD-DEFECTO",
+    "TIPO USUARIO": "TITULAR",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "GESTOR": "GESTOR-SINTETICO-1",
+    "SUCURSAL": "SUCURSAL-SINTETICA-1"
+  },
+  "por_radicado": {
+    "900008": {
+      "TIPO USUARIO": "CODEUDOR",
+      "GESTOR": "GESTOR-SINTETICO-2",
+      "SUCURSAL": "SUCURSAL-SINTETICA-2"
+    }
+  },
+  "catalogo_fuentes": [
+    "FUENTE-SINTETICA-A",
+    "FUENTE-SINTETICA-B",
+    "FUENTE-SINTETICA-C"
+  ]
+}
