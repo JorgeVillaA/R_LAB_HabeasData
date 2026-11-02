@@ -8,9 +8,11 @@ mezclan con el padrón sintético completo, vaciar_policia), `servicio` (modo de
 El banco valida flujo y orquestación contra clones; NO valida la veracidad de los portales reales.
 """
 import json
+import os
 import re
 import shutil
 import sys
+from unittest import mock
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -72,6 +74,7 @@ def correr_escenario(escenario, robot=False):
     zeus = DobleZeus(CREDENCIALES, filas).iniciar()
     web = DoblePortales().iniciar()
     servicio = DobleCaptchas().iniciar()
+    entorno_real = None
     proceso = json.loads(json.dumps(escenario.get("proceso", {})))
     repositorio = escenario.get("repositorio")  # EP-003: {"Fallas": {...}}; ausente = escenario de EP-002 sin repositorio
     proceso.setdefault("Repositorio", {}).update(Habilitado=repositorio is not None, **(repositorio or {}))
@@ -95,7 +98,7 @@ def correr_escenario(escenario, robot=False):
         for tipo, numero in ajustes.get("con_antecedentes", []):
             procuraduria[(tipo, numero)]["antecedentes"] = True
         web.estado.configurar({"policia_padron": policia, "procuraduria_padron": procuraduria,
-                               **{k: v for k, v in ajustes.items() if k in ("policia_modo", "procuraduria_modo", "captcha_rechaza", "familias")}})
+                               **{k: v for k, v in ajustes.items() if k in ("policia_modo", "procuraduria_modo", "captcha_rechaza", "familias", "fallas_get")}})
         servicio.configurar(escenario.get("servicio", "normal"))
         ruta = raiz / "Configuracion" / "ConfiguracionProceso.json"
         datos = json.loads(ruta.read_text(encoding="utf-8"))
@@ -104,9 +107,24 @@ def correr_escenario(escenario, robot=False):
             UrlPolicia=f"{web.url}/policia/WebJudicial/index.xhtml",
             UrlProcuraduria=f"{web.url}/procuraduria/consulta-de-antecedentes.aspx",
             UrlCaptchas=f"http://127.0.0.1:{servicio.puerto}/resolver")
+        if escenario.get("modo_real"):  # los clones hacen de «portales reales»: la autorización y la ventana se declaran, el captcha NO se evade
+            datos["Portales"]["Modo"] = "real"
+            datos["Portales"]["Real"].update(UrlPolicia=datos["Portales"]["Fixture"]["UrlPolicia"], UrlProcuraduria=datos["Portales"]["Fixture"]["UrlProcuraduria"],
+                                             UrlCaptchas=datos["Portales"]["Fixture"]["UrlCaptchas"], VentanaOperativa={"Desde": "00:00", "Hasta": "23:59"})
         ruta.write_text(json.dumps(datos), encoding="utf-8")
+        if escenario.get("maestro"):  # p. ej. UMBRAL_COINCIDENCIA_NOMBRES distinto del 0.80 por defecto
+            ruta_maestro = raiz / "Configuracion" / "Maestro_Configuracion.json"
+            maestro = json.loads(ruta_maestro.read_text(encoding="utf-8"))
+            maestro.update(escenario["maestro"])
+            ruta_maestro.write_text(json.dumps(maestro), encoding="utf-8")
+        if escenario.get("modo_real"):
+            entorno_real = mock.patch.dict(os.environ, {"PORTALES_REAL_AUTORIZADO": "1"})
+            entorno_real.start()
         if robot:  # el robot de Studio, ejecutado por el intérprete (navegador emulado), contra los mismos dobles
-            return vista_del_robot(raiz, zeus, studio=robot == "studio")
+            vista, capturados = vista_del_robot(raiz, zeus, studio=robot == "studio")
+            vista["rastro"]["consultas"] = {"policia": len(web.estado.consultas["policia"]), "procuraduria": len(web.estado.consultas["procuraduria"]),
+                                            "casilla_marcada": sum(1 for c in web.estado.consultas["policia"] if c["recaptcha"])}
+            return vista, capturados
         cfg = cargar(raiz)
         registro = Registro(cfg, RELOJ)
         cliente = ClienteZeus(cfg, registro, ENTORNO, dormir=lambda s: None)
@@ -118,11 +136,14 @@ def correr_escenario(escenario, robot=False):
         comentarios = sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)
         consultas = {"policia": len(web.estado.consultas["policia"]), "procuraduria": len(web.estado.consultas["procuraduria"]),
                      "casilla_marcada": sum(1 for c in web.estado.consultas["policia"] if c["recaptcha"])}
+        resumen["rastro"]["consultas"] = consultas
         archivos = sorted(p.relative_to(raiz).as_posix() for p in raiz.rglob("*.csv"))
         texto_logs = " ".join(p.read_text(encoding="utf-8") for p in raiz.rglob("*.csv"))
         lineas_auditoria = registro.ruta_auditoria().read_text(encoding="utf-8").count("\n")
         return resumen, comentarios, consultas, archivos, texto_logs, lineas_auditoria, portales.modo
     finally:
+        if entorno_real is not None:
+            entorno_real.stop()
         for doble in (zeus, web, servicio):
             doble.detener()
         shutil.rmtree(raiz, ignore_errors=True)
@@ -156,6 +177,12 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
         igual("vias", {k: v for k, v in resumen["via"].items() if k in espera["vias"]}, espera["vias"])
     if "comentarios" in espera:
         igual("comentarios", [c[0] for c in comentarios], sorted(espera["comentarios"]))
+    for marca in espera.get("comentario_contiene", []):
+        for radicado, detalle in comentarios:
+            if marca not in detalle:
+                fallos.append(f"el comentario de {radicado} no contiene «{marca}»")
+    for portal, exacto in espera.get("consultas_exactas", {}).items():
+        igual(f"consultas a {portal}", consultas[portal], exacto)
     for portal, tope in espera.get("consultas_maximas", {}).items():
         if consultas[portal] > tope:
             fallos.append(f"consultas a {portal}: {consultas[portal]} > {tope}")
@@ -174,7 +201,7 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
 def vista_de_resumen(resumen, comentarios):
     # El detalle del motivo de un fallo de portal difiere (el parser conoce el HTTP; Chrome solo ve el selector ausente): se
     # compara hasta el CÓDIGO del error.
-    rastro_ = dict(resumen["rastro"], errores=sorted(re.sub(r"^(.*?Radicado \d+: [A-Z_]+):.*$", r"", f) for f in resumen["rastro"]["errores"]))
+    rastro_ = dict(resumen["rastro"], errores=sorted(re.sub(r"^(.*?Radicado \d+: [A-Z_]+):.*$", r"\1", f) for f in resumen["rastro"]["errores"]))
     resumen = dict(resumen, rastro=rastro_)
     vista = {"estado": resumen["estado"], **{k: sorted(resumen[k]) for k in CLAVES_LISTA}, "codigos": resumen["codigos"],
              "comentarios": comentarios, "rastro": resumen["rastro"]}
@@ -234,6 +261,9 @@ def principal_studio(ids=None):
     resultados, todos = [], True
     for esc in escenarios:
         if ids and esc["id"].split("-")[1] not in ids:
+            continue
+        if esc.get("solo_interprete"):  # Studio no recibe variables de entorno del banco (p. ej. la autorización del modo real)
+            print("OMITIDO", esc["id"], "(solo intérprete)")
             continue
         if esc.get("solo_orquestador"):  # p. ej. la detención crítica deja un último «Fin de ejecución» distinto en el robot
             print("OMITIDO", esc["id"], "(solo orquestador)")

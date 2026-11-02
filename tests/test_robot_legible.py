@@ -121,6 +121,16 @@ class TestEstructuraLegible(unittest.TestCase):
         self.assertLessEqual(len(ep001), 84 + 9 + init_ep002 + init_ep003)
         self.assertLessEqual([c["father"] for c in ep001].count("setVar"), 36 + 3 + 11 + 8)
 
+    def test_los_intentos_de_apertura_de_cada_portal_coinciden_con_NUMERO_REINTENTOS_SISTEMA(self):
+        """HU-006/HU-007: el robot reintenta abrir cada portal tantas veces como dice el maestro (bloques visibles por intento)."""
+        import json as _json
+        maestro = _json.loads((REPO / "Configuracion" / "Maestro_Configuracion.json").read_text(encoding="utf-8"))
+        n = maestro["NUMERO_REINTENTOS_SISTEMA"]
+        for portal in ("Policía", "Procuraduría"):
+            intentos = [c for c in TODOS if c["father"] == "trycatch" and c["description"].startswith(f"{portal}: abre el portal")]
+            self.assertEqual(len(intentos), n, portal)
+            self.assertTrue(all(f"de {n})" in c["description"] for c in intentos), portal)
+
     def test_los_motivos_de_incompletitud_coinciden_con_las_reglas_de_python(self):
         en_robot = []
         for comando in TODOS:

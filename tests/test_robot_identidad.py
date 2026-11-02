@@ -29,7 +29,8 @@ class TestRobotIdentidad(unittest.TestCase):
 
 CON_EXCEPCION_ESPERADA = {  # el trycatch del robot captura a propósito la caída o el bloqueo del portal
     "EP002-05-policia-caida-persistente-deriva-a-procuraduria", "EP002-06-procuraduria-caida", "EP002-07-procuraduria-waf-bloquea",
-    "EP002-08-procuraduria-webcert-incidentes"}
+    "EP002-08-procuraduria-webcert-incidentes", "EP002-22-portal-con-falla-transitoria-reintenta",
+    "EP002-25-portal-con-dos-fallas-transitorias-resuelve-en-el-tercer-intento"}
 
 if __name__ == "__main__":
     unittest.main()

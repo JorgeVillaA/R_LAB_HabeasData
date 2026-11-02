@@ -31,6 +31,9 @@ def web_esperar(descripcion, xpath):
         "object": xpath, "option": "xpath", "wait_time": "15", "wait_for": "visible", "before": 0, "after": 0}}
 
 
+INTENTOS_PORTAL = 3  # = NUMERO_REINTENTOS_SISTEMA (maestro); una prueba comprueba que coincidan
+
+
 def construir(h):
     """`h` trae los constructores comunes del generador (py, paso, sv, si, grupo, para, anexar)."""
     paso, sv, si, grupo, para, anexar = h["paso"], h["sv"], h["si"], h["grupo"], h["para"], h["anexar"]
@@ -52,7 +55,7 @@ def construir(h):
     # ---------- HU-006: Policía ----------
     hu006 = grupo("HU006 - Consultar la Policía Nacional (Chrome)", [
         sv("Estado de la identidad del radicado (empieza en «inicio»)", "locDicIdentidad",
-           "{'etapa': 'inicio', 'via': None, 'puntaje': None, 'motivo': None, 'codigo': None, 'nombre_portal': None}"),
+           "{'etapa': 'inicio', 'via': None, 'puntaje': None, 'motivo': None, 'codigo': None, 'nombre_portal': None, 'abierta_policia': False, 'abierta_procuraduria': False}"),
         si("El radicado avanzó (HU-004) y la identidad está habilitada: prepara los datos del caso",
            "{glbDicPortales}['habilitada'] == True and " + AVANZA, [
                paso("Deja constancia del inicio de la identidad del radicado en el log de auditoría", "locDicEvento",
@@ -74,8 +77,8 @@ def construir(h):
                {"father": "openbrowser", "option": "chrome", "command": json.dumps({"url": "", "id_driver": "", "profile": ""}),
                 "extra": {"default": "chrome"}, "description": "Abre Chrome (el robot corre en Chrome)"},
                sv("Chrome quedó abierto", "glbBlnChromeAbierto", "True")]),
-        {"father": "trycatch", "description": "Policía: abre el portal y acepta los términos", "children": [
-            si("Consulta en la Policía", etapa("policia"), [
+        *[{"father": "trycatch", "description": f"Policía: abre el portal y acepta los términos (intento {n} de {INTENTOS_PORTAL})", "children": [
+            si(f"Consulta en la Policía (intento {n})", etapa("policia") + " and {locDicIdentidad}['abierta_policia'] == False", [
                 {"father": "openUrl", "command": "{glbStrUrlPolicia}",
                  "description": "Abre el portal de la Policía"},
                 web_esperar("Espera la página de términos", "//input[@id='aceptaOption:0']"),
@@ -83,9 +86,14 @@ def construir(h):
                 web_clic("Pulsa «Continuar»", "//button[@id='continuarBtn']"),
                 web_esperar("Espera el formulario de consulta", "//input[@id='cedulaInput']"),
                 web_texto("Lee el texto de la página (aviso de cuota, si lo hay)", "//body", "locStrTexto"),
-                paso("Lee el texto de la página de la Policía", "locDicPagina", "pasos.leer_pagina_policia(GetVar('locStrTexto'))")])],
-         "else": [pasa_a("Policía caída o con estructura inesperada: se consulta la Procuraduría", etapa="procuraduria",
-                         motivo="Policía caída o con estructura inesperada")]},
+                paso("Lee el texto de la página de la Policía", "locDicPagina", "pasos.leer_pagina_policia(GetVar('locStrTexto'))"),
+                sv("El portal abrió bien: no hace falta reintentar", "locDicIdentidad", "dict({locDicIdentidad}, abierta_policia=True)")])],
+            "else": ([paso(f"Espera el backoff antes del intento {n + 1}", "locDicEvento", f"pasos.esperar_reintento_portal({n})")]
+                     if n < INTENTOS_PORTAL else [])} for n in range(1, INTENTOS_PORTAL + 1)],
+        si(f"La Policía no abrió tras {INTENTOS_PORTAL} intentos: se consulta la Procuraduría",
+           etapa("policia") + " and {locDicIdentidad}['abierta_policia'] == False",
+           [pasa_a("Policía caída o con estructura inesperada: se consulta la Procuraduría", etapa="procuraduria",
+                   motivo="Policía caída o con estructura inesperada")]),
         si("Cuota agotada del reCAPTCHA de la Policía: el bot no lo evade, queda en revisión humana",
            etapa("policia") + " and {locDicPagina}['cuota'] == True",
            [pasa_a("Etapa: revisión humana (cuota agotada)", etapa="revision_humana", via="policia",
@@ -93,7 +101,7 @@ def construir(h):
         si("Modo real: el reCAPTCHA v2 lo resuelve una persona; el bot se detiene",
            etapa("policia") + " and " + MODO + " == 'real'",
            [pasa_a("Etapa: revisión humana (reCAPTCHA)", etapa="revision_humana", via="policia",
-                   motivo="reCAPTCHA v2 de la Policía: lo resuelve una persona")]),
+                   motivo="reCAPTCHA v2 de la Policía: lo resuelve una persona (no se automatiza su evasión)")]),
         si("Modo fixture: el clon entrega el captcha ya resuelto (el lab no ejercita la resolución)",
            etapa("policia") + " and " + MODO + " == 'fixture'",
            [web_clic("Marca la casilla del clon «No soy un robot»", "//*[@id='recaptchaCheckbox']")]),
@@ -130,16 +138,21 @@ def construir(h):
            etapa("procuraduria") + " and {locDicDocumento}['codigo_tipo'] is None",
            [pasa_a("Etapa: gestión manual (tipo sin consulta)", etapa="gestion_manual",
                    motivo="tipo de documento sin consulta en la Procuraduría")]),
-        {"father": "trycatch", "description": "Procuraduría: abre el portal y acepta los términos", "children": [
-            si("Consulta en la Procuraduría", etapa("procuraduria"), [
+        *[{"father": "trycatch", "description": f"Procuraduría: abre el portal y acepta los términos (intento {n} de {INTENTOS_PORTAL})", "children": [
+            si(f"Consulta en la Procuraduría (intento {n})", etapa("procuraduria") + " and {locDicIdentidad}['abierta_procuraduria'] == False", [
                 {"father": "openUrl", "command": "{glbStrUrlProcuraduria}", "description": "Abre el portal de la Procuraduría"},
                 web_esperar("Espera la página de términos", "//input[@id='rbAcepto']"),
                 web_clic("Marca «Acepto» los términos", "//input[@id='rbAcepto']"),
                 web_clic("Pulsa «Continuar»", "//input[@id='continuarBtn']"),
-                web_esperar("Espera la pregunta del captcha", "//*[@id='lblPregunta']")])],
-         "else": [pasa_a("Procuraduría caída, bloqueada o con estructura inesperada: excepción de sistema",
-                         etapa="excepcion_sistema", via="procuraduria", codigo="PORTAL_NO_DISPONIBLE",
-                         motivo="Procuraduría caída, bloqueada (WAF) o con estructura inesperada")]},
+                web_esperar("Espera la pregunta del captcha", "//*[@id='lblPregunta']"),
+                sv("El portal abrió bien: no hace falta reintentar", "locDicIdentidad", "dict({locDicIdentidad}, abierta_procuraduria=True)")])],
+            "else": ([paso(f"Espera el backoff antes del intento {n + 1}", "locDicEvento", f"pasos.esperar_reintento_portal({n})")]
+                     if n < INTENTOS_PORTAL else [])} for n in range(1, INTENTOS_PORTAL + 1)],
+        si(f"La Procuraduría no abrió tras {INTENTOS_PORTAL} intentos: excepción de sistema",
+           etapa("procuraduria") + " and {locDicIdentidad}['abierta_procuraduria'] == False",
+           [pasa_a("Procuraduría caída, bloqueada o con estructura inesperada: excepción de sistema",
+                   etapa="excepcion_sistema", via="procuraduria", codigo="PORTAL_NO_DISPONIBLE",
+                   motivo="Procuraduría caída, bloqueada (WAF) o con estructura inesperada")]),
     ])
 
     hu026a = grupo("HU026a - Resolver el captcha de pregunta (servicio de captchas)", [

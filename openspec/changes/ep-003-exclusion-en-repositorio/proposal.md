@@ -21,8 +21,9 @@ EP-003 evita reprocesar y volver a excluir a quien ya fue gestionado (HU-010, or
 ## Supuestos vetables por Villa
 
 - **Maestras `MaestraCelulares`/`MaestraCorreos` (C-16)**: propuesta del lab, pendiente de visto bueno.
-- **Teléfono fijo (HU-011)**: las tablas de canal no tienen columna `FIJO`; el fijo no se registra en ellas (el canal fijo no se ha presentado en la práctica).
-- **Valores no ubicados en la maestra**: se registran igualmente en la exclusión (los AC piden una fila por valor); no hay nada que eliminar ni verificar.
+- **Teléfono fijo (HU-011)**: las tablas de canal no tienen columna `FIJO`; un caso con solo fijo deja únicamente la fila de `Exclusion` y queda «Procesado Parcialmente» (5), no «Exitoso».
+- **Valores no ubicados en la maestra**: se registran igualmente en la exclusión (los AC piden una fila por valor); no hay nada que eliminar ni verificar. HU-011 §4 dice que en ese caso el bot «no toca el repositorio»: contradicción entre el AC y la nota, **pendiente de decisión de Villa**.
+- **Orden de la inserción**: se insertan todas las filas primero y solo después se cruza y se elimina de las maestras (así «insertar falla → no se elimina nada» se cumple también con varios valores).
 - **Etapas previas en `Transacciones`**: selección, lectura y completitud se anotan al llegar a HU-010 (no en el instante de cada una).
 - **Repositorio**: SQLite en `Documentos/repositorio/lab.sqlite`; NocoDB npm 0.301.3 (D-07) no se instaló en este entorno.
 

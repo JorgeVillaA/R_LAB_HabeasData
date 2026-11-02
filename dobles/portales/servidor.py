@@ -157,8 +157,12 @@ class Estado:
         self.contador_preguntas = 0
         self.sesiones = {}
         self.consultas = {"policia": [], "procuraduria": [], "preguntas": []}
+        self.fallas_get = {}            # portal → peticiones de la página principal que devuelven 503 antes de responder bien
+        self._fallas_get_inicial = {}
 
     def configurar(self, cambios):
+        if "fallas_get" in cambios:
+            self.fallas_get, self._fallas_get_inicial = dict(cambios["fallas_get"]), dict(cambios["fallas_get"])
         for clave in ("policia_modo", "procuraduria_modo", "captcha_rechaza", "familias"):
             if clave in cambios:
                 setattr(self, clave, cambios[clave])
@@ -169,6 +173,7 @@ class Estado:
         if cambios.get("reiniciar"):
             self.contador_preguntas = 0
             self.sesiones.clear()
+            self.fallas_get = dict(self._fallas_get_inicial)
             self.consultas = {"policia": [], "procuraduria": [], "preguntas": []}
 
     def siguiente_pregunta(self):
@@ -294,6 +299,9 @@ def crear_servidor(estado, puerto=0):
         # ---------- Procuraduría ----------
         def procuraduria_get(self, ruta):
             modo = estado.procuraduria_modo
+            if estado.fallas_get.get("procuraduria", 0) > 0:
+                estado.fallas_get["procuraduria"] -= 1
+                return self.responder(503, pagina("Servicio no disponible", "<p>Intente más tarde.</p>"))
             if modo == "caido":
                 return self.responder(503, pagina("Servicio no disponible", "<p>Intente más tarde.</p>"))
             if modo == "waf":
@@ -366,6 +374,9 @@ def crear_servidor(estado, puerto=0):
 
         # ---------- Policía ----------
         def policia_get(self, ruta):
+            if estado.fallas_get.get("policia", 0) > 0:
+                estado.fallas_get["policia"] -= 1
+                return self.responder(503, pagina("Servicio no disponible", "<p>Intente más tarde.</p>"))
             if estado.policia_modo == "caido":
                 return self.responder(503, pagina("Servicio no disponible", "<p>Intente más tarde.</p>"))
             sid, sesion, nueva = self.sesion()

@@ -234,6 +234,13 @@ def portales():
                max_captcha=int(cfg.maestro["CAPTCHA_MAX_REINTENTOS"]), umbral=cfg.maestro["UMBRAL_COINCIDENCIA_NOMBRES"])
 
 
+def esperar_reintento_portal(intento):
+    """Espera el backoff parametrizado (`Portales.BackoffSegundos`) antes del siguiente intento de abrir un portal."""
+    espera = _sesion.cfg.proceso["Portales"]["BackoffSegundos"]
+    dormir(espera[min(int(intento) - 1, len(espera) - 1)])
+    return _ok()
+
+
 def clasificar_documento(caso):
     """Lógica pura: ¿cédula?, ¿NIT de exactamente 10 dígitos? y código del desplegable de la Procuraduría."""
     from . import ep002

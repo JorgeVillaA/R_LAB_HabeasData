@@ -25,10 +25,11 @@ leía la página anterior. Una de las 20 pruebas falló una vez (corrida 1 = 19/
 - El repositorio es SQLite con el contrato de `specs/repositorio-local.md`; **NocoDB npm 0.301.3 (D-07) no se instaló** (queda como camino documentado).
 - La descripción del robot en Studio se actualizó (mención a EP-003) después de las corridas de Studio; el flujo es idéntico.
 - `Transacciones`: las etapas previas (selección, lectura, completitud) se anotan al llegar a HU-010, no en el instante de cada una.
+- Una verificación adversarial independiente de EP-002 y EP-003 devolvió NO CERRABLE en su primera ronda (reintentos del robot ante portal caído, modo real sin prueba, umbral y comentario sin prueba de punta a punta, orden de inserción/eliminación de HU-011, fila de `Exclusion` con solo fijo). Todo eso se corrigió y se repitió la verificación (ver el hilo de la sesión).
 - El tope diario de reintentos de HU-002 se cuenta por ejecución y la espera bloquea el robot (3 × 60 min por defecto).
 - Un escenario de EP-003 (detención crítica por repositorio inaccesible) solo se compara en decisiones: la línea final del log difiere entre robot y orquestador.
 
 ## Pendiente de Villa
 1. `git push` de `feature/EP-001` y `feature/EP-002` (el agente no empuja) y abrir las PR con `docs/PR/*.md`.
-2. Decidir: tope diario de reintentos (por día o por ejecución), maestras `MaestraCelulares`/`MaestraCorreos` (C-16), tratamiento del teléfono fijo en HU-011, instalar NocoDB o aceptar SQLite.
+2. Decidir: tope diario de reintentos (por día o por ejecución), maestras `MaestraCelulares`/`MaestraCorreos` (C-16), teléfono fijo en HU-011 (hoy: solo la fila de `Exclusion`, «Procesado Parcialmente»), valores no ubicados en la maestra (el AC pide registrarlos, la nota de HU-011 §4 dice que el bot no toca el repositorio), PEP en HU-006 (la Procuraduría no lo trae: hoy gestión manual), instalar NocoDB o aceptar SQLite.
 3. Revisar la evidencia visual en Chrome (capturas en `banco/evidencia/`).

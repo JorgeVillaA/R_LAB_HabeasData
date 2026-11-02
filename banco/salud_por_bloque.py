@@ -89,7 +89,7 @@ def documento(robot, cubiertos):
     lineas = [
         "# Salud por bloque del robot `LabHabeasData`", "",
         "> Práctica **experimental** D-21 (test por bloque en Studio). Generado por `python banco/salud_por_bloque.py`; **no editar a mano**. "
-        "La cobertura se mide: cada escenario del banco (EP-001: 18, EP-002: 20, EP-003: 8) corre el JSON del robot en el intérprete "
+        "La cobertura se mide: cada escenario del banco (EP-001: 18, EP-002: 25, EP-003: 11) corre el JSON del robot en el intérprete "
         "(`banco/interprete_robot.py`) y se anota qué bloques ejecutó.", "",
         "## Cómo probar un bloque solo",
         "1. En Studio, botón de test del bloque: ejecuta `commands:[ese bloque]` con las variables actuales; `playNode` arranca desde cualquier bloque.",

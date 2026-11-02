@@ -24,6 +24,8 @@ EP-002 concentra la lógica que elimina el error humano de validación de identi
 - **Insumo B3 (métrica de nombres)**: Dice sobre componentes del nombre normalizado (sin tildes, mayúsculas, sin partículas); garantía de 1.0 si todos los componentes del nombre más corto (≥ 2) están en el otro; portal con un solo componente va a excepción 3. Lo produce el agente; lo aprueba Villa.
 - **Regla del «primer nombre»** del doble de captchas: primer componente en el orden recibido (nombres y luego apellidos).
 - **Casilla del reCAPTCHA en fixture**: el clon la recibe marcada por quien consulta; es un fixture, no una resolución de captcha (D-05).
+- **PEP**: HU-006 manda el PEP directo a la Procuraduría, pero su desplegable no trae ese tipo; el lab lo deriva a gestión manual (escenario 18). **Pendiente de decisión de Villa.**
+- **Reintentos al abrir un portal**: el robot reintenta 3 veces (= `NUMERO_REINTENTOS_SISTEMA`) con bloques visibles por intento y espera `Portales.BackoffSegundos`.
 - **Ruta del servicio de captchas**: pendiente de Comercial ↔ CISA; en el lab, el doble local detrás de la misma interfaz.
 
 ## Impact

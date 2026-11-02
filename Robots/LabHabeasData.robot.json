@@ -1100,7 +1100,7 @@
             {
              "father": "setVar",
              "var": "locDicIdentidad",
-             "command": "{'etapa': 'inicio', 'via': None, 'puntaje': None, 'motivo': None, 'codigo': None, 'nombre_portal': None}",
+             "command": "{'etapa': 'inicio', 'via': None, 'puntaje': None, 'motivo': None, 'codigo': None, 'nombre_portal': None, 'abierta_policia': False, 'abierta_procuraduria': False}",
              "description": "Estado de la identidad del radicado (empieza en «inicio»)"
             },
             {
@@ -1192,12 +1192,12 @@
             },
             {
              "father": "trycatch",
-             "description": "Policía: abre el portal y acepta los términos",
+             "description": "Policía: abre el portal y acepta los términos (intento 1 de 3)",
              "children": [
               {
                "father": "evaluateIf",
-               "description": "Consulta en la Policía",
-               "command": "{locDicIdentidad}['etapa'] == 'policia'",
+               "description": "Consulta en la Policía (intento 1)",
+               "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
                "children": [
                 {
                  "father": "openUrl",
@@ -1263,6 +1263,12 @@
                  "father": "execScriptPython",
                  "description": "Lee el texto de la página de la Policía",
                  "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_policia=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
                 }
                ],
                "else": []
@@ -1270,12 +1276,203 @@
              ],
              "else": [
               {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 2",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(1))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Policía: abre el portal y acepta los términos (intento 2 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Policía (intento 2)",
+               "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlPolicia}",
+                 "description": "Abre el portal de la Policía"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='aceptaOption:0']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos de uso",
+                 "command": {
+                  "data": "//input[@id='aceptaOption:0']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//button[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera el formulario de consulta",
+                 "command": {
+                  "object": "//input[@id='cedulaInput']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "textObject",
+                 "description": "Lee el texto de la página (aviso de cuota, si lo hay)",
+                 "command": "//body",
+                 "option": "xpath",
+                 "getvar": "locStrTexto"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Lee el texto de la página de la Policía",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_policia=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": [
+              {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 3",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(2))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Policía: abre el portal y acepta los términos (intento 3 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Policía (intento 3)",
+               "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlPolicia}",
+                 "description": "Abre el portal de la Policía"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='aceptaOption:0']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos de uso",
+                 "command": {
+                  "data": "//input[@id='aceptaOption:0']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//button[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera el formulario de consulta",
+                 "command": {
+                  "object": "//input[@id='cedulaInput']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "textObject",
+                 "description": "Lee el texto de la página (aviso de cuota, si lo hay)",
+                 "command": "//body",
+                 "option": "xpath",
+                 "getvar": "locStrTexto"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Lee el texto de la página de la Policía",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_policia=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La Policía no abrió tras 3 intentos: se consulta la Procuraduría",
+             "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
+             "children": [
+              {
                "father": "setVar",
                "var": "locDicIdentidad",
                "command": "dict({locDicIdentidad}, etapa='procuraduria', motivo='Policía caída o con estructura inesperada')",
                "description": "Policía caída o con estructura inesperada: se consulta la Procuraduría"
               }
-             ]
+             ],
+             "else": []
             },
             {
              "father": "evaluateIf",
@@ -1299,7 +1496,7 @@
               {
                "father": "setVar",
                "var": "locDicIdentidad",
-               "command": "dict({locDicIdentidad}, etapa='revision_humana', via='policia', motivo='reCAPTCHA v2 de la Policía: lo resuelve una persona')",
+               "command": "dict({locDicIdentidad}, etapa='revision_humana', via='policia', motivo='reCAPTCHA v2 de la Policía: lo resuelve una persona (no se automatiza su evasión)')",
                "description": "Etapa: revisión humana (reCAPTCHA)"
               }
              ],
@@ -1478,12 +1675,12 @@
             },
             {
              "father": "trycatch",
-             "description": "Procuraduría: abre el portal y acepta los términos",
+             "description": "Procuraduría: abre el portal y acepta los términos (intento 1 de 3)",
              "children": [
               {
                "father": "evaluateIf",
-               "description": "Consulta en la Procuraduría",
-               "command": "{locDicIdentidad}['etapa'] == 'procuraduria'",
+               "description": "Consulta en la Procuraduría (intento 1)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
                "children": [
                 {
                  "father": "openUrl",
@@ -1537,6 +1734,12 @@
                   "before": 0,
                   "after": 0
                  }
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_procuraduria=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
                 }
                ],
                "else": []
@@ -1544,12 +1747,179 @@
              ],
              "else": [
               {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 2",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(1))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Procuraduría: abre el portal y acepta los términos (intento 2 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Procuraduría (intento 2)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlProcuraduria}",
+                 "description": "Abre el portal de la Procuraduría"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='rbAcepto']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos",
+                 "command": {
+                  "data": "//input[@id='rbAcepto']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//input[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la pregunta del captcha",
+                 "command": {
+                  "object": "//*[@id='lblPregunta']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_procuraduria=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": [
+              {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 3",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(2))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Procuraduría: abre el portal y acepta los términos (intento 3 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Procuraduría (intento 3)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlProcuraduria}",
+                 "description": "Abre el portal de la Procuraduría"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='rbAcepto']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos",
+                 "command": {
+                  "data": "//input[@id='rbAcepto']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//input[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la pregunta del captcha",
+                 "command": {
+                  "object": "//*[@id='lblPregunta']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_procuraduria=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La Procuraduría no abrió tras 3 intentos: excepción de sistema",
+             "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
+             "children": [
+              {
                "father": "setVar",
                "var": "locDicIdentidad",
                "command": "dict({locDicIdentidad}, etapa='excepcion_sistema', via='procuraduria', codigo='PORTAL_NO_DISPONIBLE', motivo='Procuraduría caída, bloqueada (WAF) o con estructura inesperada')",
                "description": "Procuraduría caída, bloqueada o con estructura inesperada: excepción de sistema"
               }
-             ]
+             ],
+             "else": []
             }
            ]
           },
