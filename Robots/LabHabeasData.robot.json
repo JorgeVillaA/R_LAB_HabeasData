@@ -870,7 +870,7 @@
              "children": [
               {
                "father": "execScriptPython",
-               "description": "Registra el avance a la validación de deuda en el reporte",
+               "description": "Registra el avance (campos completos) en el reporte",
                "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
               },
               {
@@ -949,19 +949,6 @@
              "var": "locDicComentarioDuplicado",
              "command": "{'ok': True}",
              "description": "Resultado del comentario de duplicado (vacío al empezar)"
-            },
-            {
-             "father": "evaluateIf",
-             "description": "Repositorio habilitado: deja en Transacciones las etapas previas del radicado (selección, lectura, completitud)",
-             "command": "{glbDicRepositorio}['habilitado'] == True",
-             "children": [
-              {
-               "father": "execScriptPython",
-               "description": "Registra las transacciones previas del radicado",
-               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_previas(GetVar('locStrIdRadicado'), GetVar('locDicCaso'), 'avanza' if GetVar('locStrIdRadicado') in pasos.objeto(GetVar('glbArrAvanzan')) else ('negocio_1' if GetVar('locStrIdRadicado') in pasos.objeto(GetVar('glbArrExcepcionesNegocioUno')) else 'sistema')))"
-              }
-             ],
-             "else": []
             },
             {
              "father": "evaluateIf",

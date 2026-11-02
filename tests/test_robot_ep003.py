@@ -26,7 +26,10 @@ class TestRobotEP003(unittest.TestCase):
                 esperado = b.vista_de_resumen(resumen, comentarios)
                 obtenido, capturadas = b.correr_escenario(esc, robot=True)
                 self.assertEqual(obtenido, esperado)
-                self.assertEqual(capturadas, 0)
+                if esc["id"].startswith("EP003-15"):  # el trycatch del robot captura a propósito la caída de la Procuraduría
+                    self.assertGreater(capturadas, 0)
+                else:
+                    self.assertEqual(capturadas, 0)
 
     def test_la_deteccion_critica_se_prueba_en_el_orquestador(self):
         (esc,) = [e for e in ESCENARIOS if e.get("solo_orquestador")]

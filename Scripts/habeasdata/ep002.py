@@ -102,10 +102,12 @@ def registrar(registro, id_radicado, padre, etiqueta, via, puntaje=None, motivo=
 
 def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, repo=None, stub=None):
     from .captcha import ServicioCaptchas
-    resumen = procesar_ep001(cfg, cliente, registro, escritura)
+    resumen = procesar_ep001(cfg, cliente, registro, escritura, repo=repo, stub=stub)
     resumen.update(validadas=[], excepciones_negocio_3=[], gestion_manual=[], revision_humana=[], sin_nombre=[],
                    excepciones_sistema_identidad=[], via={}, codigos={})
     if resumen["estado"] != "ok":
+        if repo is not None:
+            ep003.cerrar_corrida(repo, stub, "corrida detenida")
         return resumen
     avanzan, valores = resumen["avanzan"], {}
     if repo is not None:  # EP-003 / HU-010: los duplicados se buscan ANTES de la identidad
@@ -137,7 +139,8 @@ def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, re
         registrar(registro, id_radicado, padre, etiqueta, via, (resultado.get("veredicto") or {}).get("puntaje"),
                   (resultado.get("veredicto") or {}).get("motivo") or resultado.get("motivo"), resultado.get("codigo"))
         if repo is not None:
-            ep003.transaccion_identidad(repo, id_radicado, etiqueta)
+            ep003.transaccion_identidad(repo, id_radicado, etiqueta, via, (resultado.get("veredicto") or {}).get("puntaje"),
+                                        (resultado.get("veredicto") or {}).get("motivo") or resultado.get("motivo"), resultado.get("codigo"), stub)
     registro.auditoria("Fin de la validación de identidad EP-002", MODULO)
     if repo is not None:  # EP-003 / HU-011: registro de la exclusión de los casos con identidad validada
         ep003.etapa_registro(resumen, registro, repo, valores, stub or ep003.cargar_stub(), registro.reloj().strftime("%d/%m/%Y"))
@@ -147,4 +150,6 @@ def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, re
             registro.error(f"Ejecución detenida: {motivo}", ep001_modulo)
             resumen.update(estado="detenido", notificacion={"asunto": notif["AsuntoDetenido"], "destinatario": notif["CorreoDetenido"],
                                                             "motivo": motivo})
+    if repo is not None:  # ningún caso queda abierto y la corrida deja su fila resumen
+        ep003.cerrar_corrida(repo, stub, f"estado {resumen['estado']}")
     return resumen

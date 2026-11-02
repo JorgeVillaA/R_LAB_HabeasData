@@ -52,7 +52,11 @@ def comentario_excepcion_4(resultado):
 
 
 def motivo_excepcion_4(resultado):
-    return "duplicado: " + ", ".join(sorted({v["canal"] for v in resultado["duplicados"]}))
+    """Un solo relato de la excepción 4 para el reporte, el log y `Transacciones` (parcial = los demás valores continúan)."""
+    canales = ", ".join(sorted({v["canal"] for v in resultado["duplicados"]}))
+    if resultado["continua"]:
+        return f"excepción de negocio 4 (parcial): duplicado en {canales}, los demás valores continúan"
+    return f"excepción de negocio 4: todos los valores ya excluidos ({canales})"
 
 
 # ---------- HU-009 (stub) ----------
@@ -108,7 +112,7 @@ def registrar_exclusion(caso, valores, repo, cobra, fecha_exclusion):
         if en_maestra:
             resultado["verificados"].append(etiqueta)
             try:
-                repo.eliminar_de_maestra(canal, caso["numero_identificacion"], valor)
+                repo.eliminar_de_maestra(canal, caso["numero_identificacion"], valor, radicado=caso["radicado_hijo"])
             except ErrorRepositorio as error:
                 return dict(resultado, error=str(error), operacion="eliminar")
             resultado["eliminados"].append(etiqueta)
@@ -126,6 +130,15 @@ def sembrar_desde_fixtures(repo, carpeta_fixtures=SINTETICOS):
 
 
 # ---------- apertura del repositorio de la corrida ----------
+def parametros_de_la_corrida(cfg):
+    """Parámetros de negocio vigentes en la corrida (umbral de nombres, reintentos, dígitos, cadencia, modo de portales)."""
+    parametros = {clave: valor for clave, valor in cfg.maestro.items() if isinstance(valor, (str, int, float, bool))}
+    for clave, valor in cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"].items():
+        parametros["CADENCIA_REINTENTO_BANDEJA_VACIA." + clave] = valor
+    parametros["Portales.Modo"] = cfg.proceso["Portales"]["Modo"]
+    return parametros
+
+
 def abrir_repositorio(cfg, dormir=None, reloj=None):
     """Repositorio de la corrida: archivo dentro de `Documentos` de la raíz (ninguna ruta absoluta en la lógica), sembrado con los
     datos sintéticos la primera vez. Los reintentos salen de NUMERO_REINTENTOS_SISTEMA."""
@@ -137,52 +150,93 @@ def abrir_repositorio(cfg, dormir=None, reloj=None):
     repo = Repositorio(carpeta / ajustes["Archivo"], reintentos=cfg.maestro["NUMERO_REINTENTOS_SISTEMA"], **argumentos)
     if not existente and ajustes.get("SembrarSinteticos", True):
         sembrar_desde_fixtures(repo)
+    repo.guardar_parametros(parametros_de_la_corrida(cfg))
     repo.fallas.update(ajustes.get("Fallas", {}))  # simula «el repositorio no responde» (null = falla persistente)
     return repo
 
 
 # ---------- pasos de EP-003 (los usan igual el orquestador y el robot de Studio) ----------
 # Cada función es UN paso visible del robot; el orquestador las encadena y así comparten rastro, reporte y transacciones.
-def registrar_previas(repo, id_radicado, caso, estado):
-    """Transacciones de las etapas previas (selección, lectura, completitud): estado = avanza | negocio_1 | sistema."""
-    if caso is not None:
-        repo.upsert_insumo(caso, 1)
-    repo.registrar_transaccion(id_radicado, "seleccion", 1)
-    repo.registrar_transaccion(id_radicado, "lectura", 2)
-    if estado == "sistema":
-        repo.registrar_transaccion(id_radicado, "lectura", 4, "fallo", "excepción de sistema al leer o escribir el radicado")
-    elif estado == "negocio_1":
-        repo.registrar_transaccion(id_radicado, "validacion_campos", 4, "ok", "excepción de negocio 1: datos incompletos")
-    else:
-        repo.registrar_transaccion(id_radicado, "validacion_campos", 2)
+# Una fila de `Transacciones` = una transición con información (nunca un marcador de inicio vacío) y se escribe en el instante en
+# que ocurre la etapa. `Resultado` = `fallo` cuando el estado nuevo es 4. Toda excepción deja su fila en `Excepciones` y el caso que
+# pasa a gestión manual, la suya en `Gestores` (gestor y agencia del stub de Cobra, HU-009; «SIN ASIGNAR» si no hay dato).
+SIN_ASIGNAR = "SIN ASIGNAR"
 
 
-def duplicados_inicio(registro, repo, id_radicado):
+def cerrar_en_excepcion(repo, id_radicado, etapa, tipo, motivo, stub=None, derivar=True):
+    """Cierra el caso en 4 (No Exitoso) con su excepción (1, 3, 4, sistema o gestion_manual) y lo deriva a gestión manual."""
+    repo.registrar_transaccion(id_radicado, etapa, 4, "fallo", motivo, excepcion=tipo)
+    if derivar:
+        cobra = datos_cobra(stub or cargar_stub(), id_radicado)
+        repo.derivar_a_gestion(id_radicado, cobra.get("GESTOR") or SIN_ASIGNAR, cobra.get("SUCURSAL") or SIN_ASIGNAR,
+                               SIN_ASIGNAR, SIN_ASIGNAR, f"excepción {tipo}: {motivo}")
+
+
+def seleccionado(repo, id_radicado):
+    """HU-002: el bot toma el radicado de la bandeja de exclusión."""
+    repo.abrir_insumo(id_radicado)
+    repo.registrar_transaccion(id_radicado, "seleccion", 1, "ok", "seleccionado de la bandeja de exclusión de Zeus")
+
+
+def leido(repo, id_radicado):
+    """HU-003: el radicado se leyó de Zeus."""
+    repo.registrar_transaccion(id_radicado, "lectura", 2, "ok", "radicado leído de Zeus")
+
+
+def descartado(repo, id_radicado):
+    """HU-002: identificación ausente. Es una transición 1 → 4 como cualquier otra (una sola vez por corrida)."""
+    if repo.estado_en_corrida(id_radicado) is not None:
+        return
+    repo.abrir_insumo(id_radicado)
+    repo.registrar_transaccion(id_radicado, "seleccion", 1, "ok", "en la bandeja de exclusión con identificación ausente")
+    repo.registrar_transaccion(id_radicado, "seleccion", 4, "fallo", "descartado: identificación ausente, sin gestión del bot")
+
+
+def campos_completos(repo, caso):
+    """HU-004: el caso pasa la completitud y sigue a duplicados e identidad."""
+    repo.upsert_insumo(caso)
+    repo.registrar_transaccion(caso["radicado_hijo"], "validacion_campos", 2, "ok", "campos obligatorios completos, continúa a duplicados e identidad")
+
+
+def datos_incompletos(repo, caso, motivos, stub=None):
+    """HU-004: excepción de negocio 1."""
+    repo.upsert_insumo(caso)
+    cerrar_en_excepcion(repo, caso["radicado_hijo"], "validacion_campos", "1",
+                        "excepción de negocio 1: datos incompletos (" + ", ".join(motivos) + ")", stub)
+
+
+def excepcion_sistema_caso(repo, id_radicado, mensaje, stub=None):
+    """Falla de sistema al leer el radicado (etapa lectura) o al escribir su comentario (etapa validación de campos)."""
+    etapa = "lectura" if repo.estado_en_corrida(id_radicado) in (None, 1) else "validacion_campos"
+    cerrar_en_excepcion(repo, id_radicado, etapa, "sistema", f"excepción de sistema: {mensaje}", stub)
+
+
+def duplicados_inicio(registro, id_radicado):
     registro.auditoria(f"Inicio de duplicados del radicado {id_radicado}", MODULO)
-    repo.registrar_transaccion(id_radicado, "duplicados", 2)
 
 
-def duplicados_sistema(registro, repo, id_radicado, padre, mensaje):
+def duplicados_sistema(registro, repo, id_radicado, padre, mensaje, stub=None):
     registro.error(f"Repositorio no respondió en duplicados del radicado {id_radicado}: {mensaje}", MODULO)
     registro.reporte(id_radicado, padre, "excepción de sistema", None, "repositorio no responde: duplicados")
-    repo.registrar_transaccion(id_radicado, "duplicados", 4, "fallo", "el repositorio no respondió tras 3 intentos")
+    cerrar_en_excepcion(repo, id_radicado, "duplicados", "sistema", f"el repositorio no respondió tras {repo.reintentos} intentos", stub)
     registro.auditoria(f"Fin de duplicados del radicado {id_radicado}: excepcion_sistema", MODULO)
 
 
-def duplicados_comentario_fallido(registro, repo, id_radicado, padre, mensaje):
+def duplicados_comentario_fallido(registro, repo, id_radicado, padre, mensaje, stub=None):
     registro.error(f"No se pudo registrar el comentario del radicado {id_radicado}: {mensaje}", MODULO)
     registro.reporte(id_radicado, padre, "excepción de sistema", None, "comentario de duplicado no registrado")
-    repo.registrar_transaccion(id_radicado, "duplicados", 4, "fallo", "comentario de duplicado rechazado por Zeus")
+    cerrar_en_excepcion(repo, id_radicado, "duplicados", "sistema", "comentario de duplicado rechazado por Zeus", stub)
     registro.auditoria(f"Fin de duplicados del radicado {id_radicado}: excepcion_sistema", MODULO)
 
 
-def duplicados_excepcion_4(registro, repo, id_radicado, padre, resultado):
-    registro.reporte(id_radicado, padre, "excepción de negocio 4", "4", motivo_excepcion_4(resultado))
+def duplicados_excepcion_4(registro, repo, id_radicado, padre, resultado, stub=None):
+    motivo = motivo_excepcion_4(resultado)  # el mismo texto en el reporte, el log y la base
+    registro.reporte(id_radicado, padre, "excepción de negocio 4", "4", motivo)
     if resultado["continua"]:
-        repo.registrar_transaccion(id_radicado, "duplicados", 2, "ok", "duplicado parcial: los demás valores continúan")
+        repo.registrar_transaccion(id_radicado, "duplicados", 2, "ok", motivo, excepcion="4")
     else:
-        repo.registrar_transaccion(id_radicado, "duplicados", 4, "ok", "excepción de negocio 4: todos los valores ya excluidos")
-    registro.auditoria(f"Fin de duplicados del radicado {id_radicado}: excepcion_negocio_4", MODULO)
+        cerrar_en_excepcion(repo, id_radicado, "duplicados", "4", motivo, stub)
+    registro.auditoria(f"Fin de duplicados del radicado {id_radicado}: {motivo}", MODULO)
 
 
 def duplicados_sin_excepcion(registro, repo, id_radicado):
@@ -194,12 +248,11 @@ def exclusion_del_caso(registro, repo, caso, valores, stub, fecha_exclusion):
     """HU-011 de un radicado: inserta, cruza y elimina; deja reporte, log de errores y la transacción del resultado."""
     id_radicado, padre = caso["radicado_hijo"], caso["radicado_padre"]
     registro.auditoria(f"Inicio del registro de exclusión del radicado {id_radicado}", MODULO)
-    repo.registrar_transaccion(id_radicado, "registro_exclusion", 2)
     resultado = registrar_exclusion(caso, valores, repo, datos_cobra(stub, id_radicado), fecha_exclusion)
     if resultado["error"]:
         registro.error(f"Repositorio falló al {resultado['operacion']} la exclusión del radicado {id_radicado}", MODULO)
         registro.reporte(id_radicado, padre, "excepción de sistema", None, f"repositorio falla: {resultado['operacion']} exclusión")
-        repo.registrar_transaccion(id_radicado, "registro_exclusion", 4, "fallo", f"falla persistente al {resultado['operacion']}")
+        cerrar_en_excepcion(repo, id_radicado, "registro_exclusion", "sistema", f"falla persistente al {resultado['operacion']}", stub)
     else:
         parcial = repo.parcial(id_radicado)
         sin_canal = not valores
@@ -214,32 +267,42 @@ def exclusion_del_caso(registro, repo, caso, valores, stub, fecha_exclusion):
     return resultado
 
 
-# Resultado de identidad (EP-002) -> estado en Transacciones: el caso sigue (2) o queda sin gestión automática (4)
-ESTADO_IDENTIDAD = {"validada": (2, "ok", "identidad validada"), "sin_nombre": (2, "ok", "respuesta sin nombre: el caso continúa"),
-                    "excepcion_negocio_3": (4, "ok", "excepción de negocio 3: identidad no coincide"),
-                    "revision_humana": (4, "ok", "revisión humana"), "gestion_manual": (4, "ok", "gestión manual"),
-                    "excepcion_sistema": (4, "fallo", "excepción de sistema en la identidad")}
+def transaccion_identidad(repo, id_radicado, etiqueta, via=None, puntaje=None, motivo=None, codigo=None, stub=None):
+    """Resultado de identidad (EP-002) → transición. Validada: el caso sigue (2). Sin nombre (documento no cédula): sigue sin
+    comparar nombre y queda cerrado como Procesado Parcialmente (5), pendiente de Villa. Las demás ramas cierran en 4 con su excepción."""
+    if etiqueta == "validada":
+        repo.registrar_transaccion(id_radicado, "identidad", 2, "ok", f"identidad validada ({via}, puntaje {puntaje})")
+    elif etiqueta == "sin_nombre":
+        repo.registrar_transaccion(id_radicado, "identidad", 5, "ok",
+                                   f"respuesta sin nombre ({via}): el caso continúa sin comparar el nombre, Procesado Parcialmente")
+    elif etiqueta == "excepcion_negocio_3":
+        cerrar_en_excepcion(repo, id_radicado, "identidad", "3",
+                            f"excepción de negocio 3: identidad no coincide ({via}, puntaje {puntaje}): {motivo}", stub)
+    elif etiqueta == "revision_humana":
+        cerrar_en_excepcion(repo, id_radicado, "identidad", "gestion_manual", f"revisión humana (fallback): {motivo}", stub)
+    elif etiqueta == "gestion_manual":
+        cerrar_en_excepcion(repo, id_radicado, "identidad", "gestion_manual", f"gestión manual: {motivo}", stub)
+    else:
+        cerrar_en_excepcion(repo, id_radicado, "identidad", "sistema", f"excepción de sistema en la identidad ({codigo})", stub)  # el código es el mismo en robot y orquestador; el texto del portal no
 
 
-def transaccion_identidad(repo, id_radicado, etiqueta):
-    estado, resultado, motivo = ESTADO_IDENTIDAD.get(etiqueta, (4, "fallo", f"identidad: {etiqueta}"))
-    repo.registrar_transaccion(id_radicado, "identidad", estado, resultado, motivo)
+def cerrar_corrida(repo, stub=None, detalle=None):
+    """Fin de la corrida: ningún caso queda abierto (un caso en 1 o 2 se cierra en 4 con su motivo) y se escribe `LogEjecucion`."""
+    for id_radicado in repo.abiertos_de_la_corrida():
+        cerrar_en_excepcion(repo, id_radicado, "cierre", "sistema", "el caso quedó abierto al terminar la corrida", stub)
+    return repo.registrar_log_ejecucion(detalle)
 
 
 # ---------- orquestación de EP-003 dentro de la corrida ----------
 def etapa_duplicados(resumen, registro, escritura, repo):
     """HU-010 sobre los radicados que avanzaron (HU-004). Devuelve (radicados que siguen a identidad, valores a registrar)."""
     resumen.update(excepciones_negocio_4=[], duplicados={}, excepciones_sistema_repositorio=[], repositorio_caido=[])
-    for id_radicado, caso in resumen["casos"].items():
-        registrar_previas(repo, id_radicado, caso, "negocio_1" if id_radicado in resumen["excepciones_negocio_1"] else "avanza")
-    for id_radicado in resumen["excepciones_sistema"]:
-        registrar_previas(repo, id_radicado, None, "sistema")
     registro.auditoria("Inicio de la búsqueda de duplicados EP-003", MODULO)
     siguen, valores = [], {}
     for id_radicado in resumen["avanzan"]:
         caso = resumen["casos"][id_radicado]
         padre = caso["radicado_padre"]
-        duplicados_inicio(registro, repo, id_radicado)
+        duplicados_inicio(registro, id_radicado)
         try:
             resultado = buscar_duplicados(caso, repo)
         except ErrorRepositorio as error:

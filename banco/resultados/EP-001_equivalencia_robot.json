@@ -1,14 +1,14 @@
 {
-  "head_at_run": "0d81ffc",
+  "head_at_run": "7c2e45a",
   "anchored_at": {
-    "sha": "0d81ffc",
+    "sha": "7c2e45a",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "escenarios": [
     {
       "id": "EP001-01-happy-completo",
       "equivalente": true,
-      "pasos_robot": 946,
+      "pasos_robot": 1030,
       "errores_capturados": 0,
       "diferencias": {}
     },
@@ -57,56 +57,56 @@
     {
       "id": "EP001-08-radicado-no-legible-400",
       "equivalente": true,
-      "pasos_robot": 943,
+      "pasos_robot": 1027,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-09-radicado-no-encontrado-404",
       "equivalente": true,
-      "pasos_robot": 943,
+      "pasos_robot": 1027,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-10-comentario-rechazado-400",
       "equivalente": true,
-      "pasos_robot": 946,
+      "pasos_robot": 1030,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-11-comentario-sin-autorizacion-401",
       "equivalente": true,
-      "pasos_robot": 946,
+      "pasos_robot": 1030,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-12-solo-casos-completos",
       "equivalente": true,
-      "pasos_robot": 245,
+      "pasos_robot": 263,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-13-todos-incompletos",
       "equivalente": true,
-      "pasos_robot": 251,
+      "pasos_robot": 269,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-14-sin-descartar-identificacion-ausente",
       "equivalente": true,
-      "pasos_robot": 1005,
+      "pasos_robot": 1095,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-15-lote-con-first-y-orderby",
       "equivalente": true,
-      "pasos_robot": 247,
+      "pasos_robot": 265,
       "errores_capturados": 0,
       "diferencias": {}
     },
@@ -120,7 +120,7 @@
     {
       "id": "EP001-17-casos-aparecen-en-el-reintento",
       "equivalente": true,
-      "pasos_robot": 959,
+      "pasos_robot": 1043,
       "errores_capturados": 0,
       "diferencias": {}
     },

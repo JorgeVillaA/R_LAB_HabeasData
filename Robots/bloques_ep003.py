@@ -21,11 +21,6 @@ def construir(h):
     hu010 = grupo("HU010 - Buscar duplicados de exclusión (repositorio local)", [
         sv("Resultado de duplicados del radicado (vacío al empezar)", "locDicDuplicado", "{'ok': True, 'duplicados': [], 'continua': True}"),
         sv("Resultado del comentario de duplicado (vacío al empezar)", "locDicComentarioDuplicado", "{'ok': True}"),
-        si("Repositorio habilitado: deja en Transacciones las etapas previas del radicado (selección, lectura, completitud)", REPO, [
-            paso("Registra las transacciones previas del radicado", "locDicEvento",
-                 "pasos.registrar_previas(GetVar('locStrIdRadicado'), GetVar('locDicCaso'), "
-                 "'avanza' if GetVar('locStrIdRadicado') in pasos.objeto(GetVar('glbArrAvanzan')) else "
-                 "('negocio_1' if GetVar('locStrIdRadicado') in pasos.objeto(GetVar('glbArrExcepcionesNegocioUno')) else 'sistema'))")]),
         si("El radicado avanzó (HU-004): busca cada valor de cada canal por separado (maestra y exclusión con llave compuesta)",
            REPO + " and " + AVANZA, [
                paso("Busca duplicados: identificación + celular en Celulares, identificación + correo en Correos", "locDicDuplicado",

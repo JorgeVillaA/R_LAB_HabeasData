@@ -9,7 +9,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "105aae828a919fc99db743acd0d9bc878ba73cb67dbef828dee03dbb2db7e3ee"
+    "huella": "4b91ec6b66cd0bfcf08d1bee2ec743b77996311fa059505f27651407c7310996"
   },
   {
     "id": "EP003-02-duplicado-total-excepcion-4",
@@ -19,7 +19,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "0f576375f156dc14f3c48870acd82583e8f45e44c3bf70ae10ad45e0584b15ce"
+    "huella": "63d1ad35658aaed7a2ebe415281d7da5ad6a988dde0ae03e874b8d4a5df44a67"
   },
   {
     "id": "EP003-03-duplicado-parcial-los-demas-continuan",
@@ -30,7 +30,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "a284ae7edf5d922348412fcd7e6603ff329629c2c8a2169422f755ac84b9e9b5"
+    "huella": "14bea6b3913bc8c3c717e6c18334ceb6b4c41caa43e9eb0713afe0e6913927f8"
   },
   {
     "id": "EP003-04-repositorio-no-responde-en-un-caso",
@@ -40,7 +40,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "576f8bf04eab0cd04e1220e4d7e7ad39d29d0e89336178236882078e88bc8a67"
+    "huella": "be6b6a4b42a601f257dae4cad6ee607231227c47d4e443d0d79e19695ee2d4b0"
   },
   {
     "id": "EP003-05-repositorio-inaccesible-para-todos-detiene",
@@ -50,7 +50,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "692859794db53bec47c4a6c923df37a9422d6a080a3323bbd4c51d6244ba8c5f"
+    "huella": "6f146bb07487062dd002189b8a41881b1e6201395939856c99103da673df8831"
   },
   {
     "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
@@ -60,7 +60,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "918c746b911c3addc79827d999b32f9eb6d7d05ef567bfea25951e4fa96fa2cc"
+    "huella": "0f1e59e5569e8e8643493ac89907767842fbf4f55c57ea3548018c292c455432"
   },
   {
     "id": "EP003-07-eliminacion-falla-conserva-la-fila-insertada",
@@ -70,7 +70,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "d11aadeda1fdc5bcd12d1ab0de9763fa9fc925f25d5a816af341f82b37b8351c"
+    "huella": "53873b9140d54131c01a82a503706040e04f70bd880d6069e38f5e6998bfcd15"
   },
   {
     "id": "EP003-08-identidad-no-valida-no-registra",
@@ -80,7 +80,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "326871aa97f5fd4dc954bc0eb73088b9a660eccbfd33808bed762335b0a59705"
+    "huella": "f6f68607bf8fe24908c6057163b98a97e84e59e5f29439a259fa59a4f6886289"
   },
   {
     "id": "EP003-09-nota-de-duplicado-rechazada",
@@ -90,7 +90,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "3882a7f1c2b22bf35027a3a1ddbc58b85ad07d0bb1e88a7ce191633115490010"
+    "huella": "105f542c4234f28c0ccc6b11673ec1b5a7824ff15f3a899997af556433fd8108"
   },
   {
     "id": "EP003-10-insercion-de-exclusion-falla",
@@ -100,7 +100,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "7c2eb9379432996661134c5b98cf4c494347a3994a1a08f5a172b2db767fbc4e"
+    "huella": "cfd383a8e1c8add5b83d95e2d374c2ac99497e9c9c06e4ba201e9b5d8fe3673d"
   },
   {
     "id": "EP003-11-solo-telefono-fijo-solo-fila-de-exclusion",
@@ -110,6 +110,56 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "6ebcdf1e650c9869d850ae2d2554badfb2ddd5a3005241c3ab248b6f3cd6e87f"
+    "huella": "d405ad703cc151b349e609ec201d34a4c83242e6a2331081f8bc3c6ce5e5a642"
+  },
+  {
+    "id": "EP003-12-corrida-completa-trazabilidad",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002..HU-011 con los 15 radicados sintéticos: Excepciones, Gestores, Parametros, LogEjecucion, descartado, parcial y auditoría de maestras"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "04e990357dc41f134f3a191cdd4bcec563a32ee0fab42fa8f9c499418cdefd5f"
+  },
+  {
+    "id": "EP003-13-no-cedula-sin-nombre-cierra-parcial",
+    "modo": "fixture",
+    "ramas": [
+      "identidad sin nombre (documento no cédula): el caso no queda abierto, cierra en 5 Procesado Parcialmente"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "396188346402f56e1d0097ac78cd68462b1cd714b17cb0d41b68fe1ae10f868e"
+  },
+  {
+    "id": "EP003-14-excepcion-3-deja-excepcion-y-gestor",
+    "modo": "fixture",
+    "ramas": [
+      "identidad no coincide: excepción 3 en Excepciones, fila en Gestores y puntaje en Transacciones"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "f6f68607bf8fe24908c6057163b98a97e84e59e5f29439a259fa59a4f6886289"
+  },
+  {
+    "id": "EP003-15-procuraduria-caida-excepcion-de-sistema",
+    "modo": "fixture",
+    "ramas": [
+      "falla de la Procuraduría: excepción de sistema y gestión manual, con su fila en Excepciones y Gestores"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "53fd8687111b471de5082256c737b69c356245a527f31c477c89e35df9606ed5"
+  },
+  {
+    "id": "EP003-16-nit-9-digitos-gestion-manual",
+    "modo": "fixture",
+    "ramas": [
+      "NIT con 9 dígitos: gestión manual (Excepciones tipo gestion_manual y fila en Gestores)"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "51aca5d20a37e84443df9850ebf7d0e4e2f59747a08b817e5ef48254d4e0374e"
   }
 ]

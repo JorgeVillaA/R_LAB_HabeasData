@@ -15,6 +15,7 @@ import time
 from .config import cargar
 from .redaccion import resumen_seguro
 from .registro import Registro
+from . import ep003
 from .zeus import (APLICATIVO, ClienteZeus, EscrituraComentario, ErrorBloqueo, ErrorNoAutenticado, ErrorNoDisponible,
                    ErrorNoEncontrado, ErrorPermiso, ErrorRespuesta, ErrorSolicitud, ErrorZeus)
 
@@ -102,6 +103,9 @@ def validar_completitud(caso):
     return {"completo": not motivos, "motivos": motivos}
 
 
+MENSAJE_AVANCE = "campos completos: continúa a duplicados e identidad"  # Cobra (HU-009) es un stub: no hay etapa de deuda
+
+
 # ---------- HU-002 ----------
 def mensaje_detencion(error):
     """Motivo con el que una falla de la consulta detiene la corrida (punto de control crítico)."""
@@ -123,13 +127,15 @@ def registrar_sin_casos(registro, cfg, motivo, total):
     return dict(cadencia)
 
 
-def registrar_descartados(registro, ids):
+def registrar_descartados(registro, ids, repo=None):
     for id_descartado in ids:
+        if repo is not None:
+            ep003.descartado(repo, id_descartado)
         registro.auditoria(f"Radicado {id_descartado} descartado por identificación ausente (sin gestión del bot)", MODULO)
         registro.reporte(id_descartado, None, "descartado: identificación ausente", None, "sin gestión del bot")
 
 
-def reintentar_bandeja(cliente, cfg, registro, dormir=time.sleep):
+def reintentar_bandeja(cliente, cfg, registro, dormir=time.sleep, repo=None):
     """HU-002 (AC-04, AC-05): con la bandeja sin casos el bot AGENDA el reintento: espera `MinutosEntreReintentos` y vuelve a
     consultar, hasta `MaximoReintentosDiarios` veces (ambos de CADENCIA_REINTENTO_BANDEJA_VACIA) o hasta que aparezcan casos.
     Cada intento deja su rastro (0 casos, descartados, identificados). Devuelve (última selección, reintentos hechos).
@@ -142,19 +148,19 @@ def reintentar_bandeja(cliente, cfg, registro, dormir=time.sleep):
         registro.auditoria(f"Reintento {hechos} de {maximo} de la bandeja tras esperar {minutos} min", MODULO)
         dormir(minutos * 60)
         lista = filtrar_exclusion(cliente, cfg, registro)
-        registrar_seleccion(registro, lista)
+        registrar_seleccion(registro, lista, repo)
         if lista["ids"]:
             break
     return lista, hechos
 
 
-def _reintentar(cliente, cfg, registro, dormir, inicial):
-    ultima, hechos = reintentar_bandeja(cliente, cfg, registro, dormir)
+def _reintentar(cliente, cfg, registro, dormir, inicial, repo=None):
+    ultima, hechos = reintentar_bandeja(cliente, cfg, registro, dormir, repo)
     return (ultima or inicial), hechos
 
 
-def registrar_seleccion(registro, lista):
-    registrar_descartados(registro, lista["descartados"])
+def registrar_seleccion(registro, lista, repo=None):
+    registrar_descartados(registro, lista["descartados"], repo)
     registro.auditoria(f"{len(lista['ids'])} radicados de exclusión identificados", MODULO)
 
 
@@ -239,7 +245,7 @@ def registrar_excepcion_negocio_1(escritura, caso, motivos):
 
 
 # ---------- orquestación ----------
-def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.sleep):
+def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.sleep, repo=None, stub=None):
     cfg = cfg or cargar()
     registro = registro or Registro(cfg)
     cliente = cliente or ClienteZeus(cfg, registro)
@@ -252,10 +258,10 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.
     registro.auditoria("Ingreso a la API de Zeus", APLICATIVO)
     try:
         lista = filtrar_exclusion(cliente, cfg, registro)
-        registrar_seleccion(registro, lista)
+        registrar_seleccion(registro, lista, repo)
         resumen["motivo_sin_casos"], resumen["descartados_identificacion_ausente"] = lista["motivo_sin_casos"], lista["descartados"]
         if not lista["ids"]:
-            lista, resumen["reintentos"] = _reintentar(cliente, cfg, registro, dormir, lista)
+            lista, resumen["reintentos"] = _reintentar(cliente, cfg, registro, dormir, lista, repo)
     except DetenerEjecucion as error:
         registro.error(f"Ejecución detenida: {error}", MODULO)
         notif = cfg.maquina["Notificaciones"]
@@ -267,22 +273,33 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.
     resumen["descartados_identificacion_ausente"] = lista["descartados"]
     for id_radicado in lista["ids"]:
         registro.auditoria(f"Inicio del radicado {id_radicado}", MODULO)
+        if repo is not None:
+            ep003.seleccionado(repo, id_radicado)
         try:
-            caso = extraer(cliente, cfg, id_radicado)
+            crudo = leer_crudo(cliente, id_radicado, cfg)
+            if repo is not None:
+                ep003.leido(repo, id_radicado)
+            caso = normalizar_caso(crudo, cfg)
             veredicto = validar_completitud(caso)
             resumen["casos"][id_radicado] = caso
             if veredicto["completo"]:
                 resumen["avanzan"].append(id_radicado)
-                registro.reporte(id_radicado, caso["radicado_padre"], "avanza a validación de deuda", None, None)
+                registro.reporte(id_radicado, caso["radicado_padre"], MENSAJE_AVANCE, None, None)
+                if repo is not None:
+                    ep003.campos_completos(repo, caso)
             else:
                 registrar_excepcion_negocio_1(escritura, caso, veredicto["motivos"])
                 resumen["excepciones_negocio_1"].append(id_radicado)
                 registro.reporte(id_radicado, caso["radicado_padre"], "excepción de negocio 1", "1",
                                  ", ".join(veredicto["motivos"]))
+                if repo is not None:
+                    ep003.datos_incompletos(repo, caso, veredicto["motivos"], stub)
         except ExcepcionSistemaCaso as error:
             resumen["excepciones_sistema"].append(id_radicado)
             registro.error(str(error), MODULO)
             registro.reporte(id_radicado, None, "excepción de sistema", None, str(error))
+            if repo is not None:
+                ep003.excepcion_sistema_caso(repo, id_radicado, str(error), stub)
         registro.auditoria(f"Fin del radicado {id_radicado}", MODULO)
     registro.auditoria("Fin de ejecución EP-001", MODULO)
     return resumen

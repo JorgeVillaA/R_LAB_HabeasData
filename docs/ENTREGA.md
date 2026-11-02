@@ -24,7 +24,7 @@ leía la página anterior. Una de las 20 pruebas falló una vez (corrida 1 = 19/
 - Todo contra dobles y clones locales. La API real de QA de CISA, Cobra y los portales reales no se tocaron. El endpoint de escritura del comentario es un supuesto (C-09).
 - El repositorio es SQLite con el contrato de `specs/repositorio-local.md`; **NocoDB npm 0.301.3 (D-07) no se instaló** (queda como camino documentado).
 - La descripción del robot en Studio se actualizó (mención a EP-003) después de las corridas de Studio; el flujo es idéntico.
-- `Transacciones`: las etapas previas (selección, lectura, completitud) se anotan al llegar a HU-010, no en el instante de cada una.
+- `Transacciones`: cada etapa se escribe en su instante (corregido tras la auditoría, D-24). `Gestores` toma gestor y agencia del stub de Cobra; `AuditoriaMaestras` es una tabla propuesta (D-25).
 - Una verificación adversarial independiente de EP-002 y EP-003 devolvió NO CERRABLE en su primera ronda (reintentos del robot ante portal caído, modo real sin prueba, umbral y comentario sin prueba de punta a punta, orden de inserción/eliminación de HU-011, fila de `Exclusion` con solo fijo). Todo eso se corrigió y se repitió la verificación (ver el hilo de la sesión).
 - El tope diario de reintentos de HU-002 se cuenta por ejecución y la espera bloquea el robot (3 × 60 min por defecto).
 - Un escenario de EP-003 (detención crítica por repositorio inaccesible) solo se compara en decisiones: la línea final del log difiere entre robot y orquestador.

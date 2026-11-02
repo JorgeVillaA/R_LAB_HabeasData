@@ -74,6 +74,11 @@ def objeto(valor):
     return valor
 
 
+def _hab():
+    """¿El repositorio local (EP-003) está habilitado? Si no, los pasos de EP-001/EP-002 no escriben transacciones."""
+    return bool(_sesion.cfg.proceso.get("Repositorio", {}).get("Habilitado"))
+
+
 def _ok(**datos):
     return {"ok": True, "mensaje": "", **datos}
 
@@ -106,6 +111,8 @@ def evento(texto, modulo=None):
 def cerrar(resumen):
     """Fin de ejecución: deja el resumen sin PII en modo real."""
     resumen = objeto(resumen)
+    if _hab():  # ningún caso queda abierto y la corrida deja su fila en LogEjecucion
+        ep003.cerrar_corrida(_repo(), _sesion.stub, f"estado {resumen.get('estado')}")
     _sesion.registro.auditoria("Fin de ejecución EP-001" + (" (detenida)" if resumen.get("estado") == "detenido" else ""), MODULO)
     return _ok(resumen=resumen_seguro(dict(resumen, casos={}), _sesion.cfg))
 
@@ -140,7 +147,7 @@ def consultar_seleccion(consulta):
 
 
 def registrar_descartados(ids):
-    ep001.registrar_descartados(_sesion.registro, [str(i) for i in objeto(ids)])
+    ep001.registrar_descartados(_sesion.registro, [str(i) for i in objeto(ids)], _repo() if _hab() else None)
     return _ok()
 
 
@@ -148,7 +155,8 @@ def reintentar_bandeja():
     """HU-002: agenda el reintento de la bandeja sin casos (espera + reconsulta, según CADENCIA_REINTENTO_BANDEJA_VACIA).
     Es solo la espera y la reconsulta con los mismos pasos de la selección; la decisión de reintentar la toma el robot."""
     try:
-        lista, hechos = ep001.reintentar_bandeja(_sesion.cliente, _sesion.cfg, _sesion.registro, lambda s: dormir(s))
+        lista, hechos = ep001.reintentar_bandeja(_sesion.cliente, _sesion.cfg, _sesion.registro, lambda s: dormir(s),
+                                                 _repo() if _hab() else None)
     except ep001.DetenerEjecucion as error:
         return _fallo(error)
     if lista is None:
@@ -171,10 +179,15 @@ def registrar_detencion(motivo):
 # ---------- HU-003 ----------
 def leer_radicado(id_radicado):
     """GET del radicado por IDRADICADO (consulta individual)."""
+    if _hab():
+        ep003.seleccionado(_repo(), str(id_radicado))
     try:
-        return _ok(crudo=ep001.leer_crudo(_sesion.cliente, id_radicado, _sesion.cfg))
+        crudo = ep001.leer_crudo(_sesion.cliente, id_radicado, _sesion.cfg)
     except ep001.ExcepcionSistemaCaso as error:
         return _fallo(error)
+    if _hab():
+        ep003.leido(_repo(), str(id_radicado))
+    return _ok(crudo=crudo)
 
 
 def preparar_campos(lectura):
@@ -199,19 +212,25 @@ def comentar_excepcion_1(caso, motivos):
 
 def registrar_avance(caso):
     caso = objeto(caso)
-    _sesion.registro.reporte(caso["radicado_hijo"], caso["radicado_padre"], "avanza a validación de deuda", None, None)
+    _sesion.registro.reporte(caso["radicado_hijo"], caso["radicado_padre"], ep001.MENSAJE_AVANCE, None, None)
+    if _hab():
+        ep003.campos_completos(_repo(), caso)
     return _ok()
 
 
 def registrar_excepcion_negocio_1(caso, motivos):
     caso, motivos = objeto(caso), objeto(motivos)
     _sesion.registro.reporte(caso["radicado_hijo"], caso["radicado_padre"], "excepción de negocio 1", "1", ", ".join(motivos))
+    if _hab():
+        ep003.datos_incompletos(_repo(), caso, motivos, _sesion.stub)
     return _ok()
 
 
 def registrar_excepcion_sistema(id_radicado, mensaje):
     _sesion.registro.error(mensaje, MODULO)
     _sesion.registro.reporte(id_radicado, None, "excepción de sistema", None, mensaje)
+    if _hab():
+        ep003.excepcion_sistema_caso(_repo(), str(id_radicado), str(mensaje), _sesion.stub)
     return _ok()
 
 
@@ -316,8 +335,8 @@ def registrar_identidad(id_radicado, caso, identidad):
     from . import ep002
     caso, i = objeto(caso), objeto(identidad)
     ep002.registrar(_sesion.registro, id_radicado, caso["radicado_padre"], i["etapa"], i["via"], i["puntaje"], i["motivo"], i["codigo"])
-    if _sesion.cfg.proceso.get("Repositorio", {}).get("Habilitado"):
-        ep003.transaccion_identidad(_repo(), str(id_radicado), i["etapa"])
+    if _hab():
+        ep003.transaccion_identidad(_repo(), str(id_radicado), i["etapa"], i["via"], i["puntaje"], i["motivo"], i["codigo"], _sesion.stub)
     return _ok()
 
 
@@ -341,16 +360,10 @@ def repositorio():
     return _ok(habilitado=True)
 
 
-def registrar_previas(id_radicado, caso, estado):
-    caso = objeto(caso) if estado != "sistema" else None
-    ep003.registrar_previas(_repo(), str(id_radicado), caso, estado)
-    return _ok()
-
-
 def buscar_duplicados(caso):
     """HU-010: cada valor se consulta por separado; `duplicados` son solo los valores que ya estaban excluidos."""
     caso = objeto(caso)
-    ep003.duplicados_inicio(_sesion.registro, _repo(), caso["radicado_hijo"])
+    ep003.duplicados_inicio(_sesion.registro, caso["radicado_hijo"])
     try:
         resultado = ep003.buscar_duplicados(caso, _repo())
     except ErrorRepositorio as error:
@@ -369,7 +382,7 @@ def comentar_duplicado(caso, duplicado):
 
 def registrar_duplicado_excepcion_4(caso, duplicado):
     caso = objeto(caso)
-    ep003.duplicados_excepcion_4(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], objeto(duplicado))
+    ep003.duplicados_excepcion_4(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], objeto(duplicado), _sesion.stub)
     return _ok()
 
 
@@ -383,7 +396,7 @@ def registrar_duplicado_sistema(caso, mensaje, origen):
     """origen = repositorio (no respondió) | comentario (Zeus rechazó la nota de duplicado)."""
     caso = objeto(caso)
     paso = ep003.duplicados_sistema if origen == "repositorio" else ep003.duplicados_comentario_fallido
-    paso(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], str(mensaje))
+    paso(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], str(mensaje), _sesion.stub)
     return _ok()
 
 

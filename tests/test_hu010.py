@@ -40,7 +40,7 @@ class TestHU010(PruebaConRepositorio):
     def test_error_excepcion_4_por_correo_duplicado(self):
         resultado = ep003.buscar_duplicados(caso("1000000007", correos=["sofia.b@ejemplo.invalid"]), self.repo)
         self.assertEqual(len(resultado["duplicados"]), 1)
-        self.assertEqual(ep003.motivo_excepcion_4(resultado), "duplicado: correo")
+        self.assertEqual(ep003.motivo_excepcion_4(resultado), "excepción de negocio 4: todos los valores ya excluidos (correo)")
 
     def test_reborde_varios_valores_solo_el_duplicado_genera_la_excepcion(self):  # AC: exclusión parcial
         resultado = ep003.buscar_duplicados(

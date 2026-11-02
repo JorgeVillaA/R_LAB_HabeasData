@@ -410,5 +410,223 @@
         "900005": 5
       }
     }
+  },
+  {
+    "id": "EP003-12-corrida-completa-trazabilidad",
+    "ramas": [
+      "HU-002..HU-011 con los 15 radicados sintéticos: Excepciones, Gestores, Parametros, LogEjecucion, descartado, parcial y auditoría de maestras"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900002",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900009",
+        "900010",
+        "900011",
+        "900012",
+        "900013",
+        "900014",
+        "900015",
+        "900016"
+      ]
+    },
+    "portales": {},
+    "repositorio": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "tablas": {
+        "Insumo": 15,
+        "Excepciones": 6,
+        "Gestores": 5,
+        "Parametros": 6,
+        "LogEjecucion": 1,
+        "AuditoriaMaestras": 9,
+        "Exclusion": 9
+      },
+      "estado_final": {
+        "900011": 4,
+        "900007": 5,
+        "900001": 3,
+        "900015": 4
+      },
+      "excepciones": {
+        "900007": [
+          "4"
+        ],
+        "900015": [
+          "1"
+        ],
+        "900010": [
+          "1"
+        ]
+      }
+    }
+  },
+  {
+    "id": "EP003-13-no-cedula-sin-nombre-cierra-parcial",
+    "ramas": [
+      "identidad sin nombre (documento no cédula): el caso no queda abierto, cierra en 5 Procesado Parcialmente"
+    ],
+    "doble": {
+      "radicados": [
+        "900013",
+        "900001"
+      ]
+    },
+    "portales": {
+      "sin_nombre": [
+        [
+          "2",
+          "9000000013"
+        ]
+      ]
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "sin_nombre": [
+        "900013"
+      ],
+      "validadas": [
+        "900001"
+      ],
+      "estado_final": {
+        "900013": 5,
+        "900001": 3
+      }
+    },
+    "repositorio": {}
+  },
+  {
+    "id": "EP003-14-excepcion-3-deja-excepcion-y-gestor",
+    "ramas": [
+      "identidad no coincide: excepción 3 en Excepciones, fila en Gestores y puntaje en Transacciones"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {
+      "padron_policia": {
+        "1000000001": "RAMIREZ DIAZ CARLOS"
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "excepciones_negocio_3": [
+        "900001"
+      ],
+      "comentarios": [
+        "900001"
+      ],
+      "comentario_contiene": [
+        "Excepción de negocio 3",
+        "Fuente: policia",
+        "Puntaje:",
+        "Motivo:"
+      ],
+      "estado_final": {
+        "900001": 4
+      },
+      "excepciones": {
+        "900001": [
+          "3"
+        ]
+      }
+    },
+    "repositorio": {}
+  },
+  {
+    "id": "EP003-15-procuraduria-caida-excepcion-de-sistema",
+    "ramas": [
+      "falla de la Procuraduría: excepción de sistema y gestión manual, con su fila en Excepciones y Gestores"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900013"
+      ]
+    },
+    "portales": {
+      "procuraduria_modo": "caido",
+      "vaciar_policia": true
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900001",
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [
+        "900001",
+        "900013"
+      ],
+      "codigos": {
+        "900001": "PORTAL_NO_DISPONIBLE",
+        "900013": "PORTAL_NO_DISPONIBLE"
+      },
+      "estado_final": {
+        "900001": 4,
+        "900013": 4
+      },
+      "excepciones": {
+        "900001": [
+          "sistema"
+        ],
+        "900013": [
+          "sistema"
+        ]
+      }
+    },
+    "repositorio": {}
+  },
+  {
+    "id": "EP003-16-nit-9-digitos-gestion-manual",
+    "ramas": [
+      "NIT con 9 dígitos: gestión manual (Excepciones tipo gestion_manual y fila en Gestores)"
+    ],
+    "doble": {
+      "radicados": [
+        "900013"
+      ],
+      "campos": {
+        "900013": {
+          "NOIDENTIFICACIONDELCLIENTE": "900000013"
+        }
+      }
+    },
+    "portales": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [],
+      "consultas_maximas": {
+        "procuraduria": 0,
+        "policia": 0
+      },
+      "estado_final": {
+        "900013": 4
+      },
+      "excepciones": {
+        "900013": [
+          "gestion_manual"
+        ]
+      }
+    },
+    "repositorio": {}
   }
 ]

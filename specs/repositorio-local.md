@@ -7,13 +7,14 @@ El repositorio es local (NocoDB npm 0.301.3 en loopback, SQLite interno; SQLite 
 | Tabla | Qué guarda | Relación |
 |---|---|---|
 | `Insumo` | Cada radicado extraído de Zeus (documento, nombres, contacto) y su estado de ejecución | 1:N con Excepciones, 1:1 con Exclusion |
-| `Excepciones` | Las 4 excepciones de negocio (datos incompletos, deudor activo, identidad no coincidente, duplicado) y las de sistema, por radicado | N:1 con Insumo |
+| `Excepciones` | Las 4 excepciones de negocio (datos incompletos, deudor activo, identidad no coincidente, duplicado) y las de sistema, por radicado. Columnas: `RadicadoZeus`, `TipoExcepcion` (1, 3, 4, sistema, gestion_manual), `Detalle`, `FechaHora` | N:1 con Insumo |
 | `Exclusion` | Base centralizada de exclusiones efectivas (documento, correo, celular, fecha) | 1:N con Celulares/Correos |
 | `Celulares` | Base de bloqueo de celulares vinculada a cada exclusión | N:1 con Exclusion |
 | `Correos` | Base de bloqueo de correos vinculada a cada exclusión | N:1 con Exclusion |
-| `Gestores` | Relación gestor → agencia → coordinador → correo, para enrutamiento | N:1 con Insumo |
+| `Gestores` | Relación gestor → agencia → coordinador → correo, para enrutamiento. Una fila por caso derivado a gestión manual (gestor y agencia del stub de Cobra; «SIN ASIGNAR» si no hay dato) | N:1 con Insumo |
 | `Parametros` | Parámetros operativos configurables (ventana, umbral, SLA, rutas) | — |
-| `LogEjecucion` | Consolidado por corrida: casos procesados, excepciones y tiempos | — |
+| `LogEjecucion` | Consolidado por corrida: fecha, casos procesados, exitosos, no exitosos, parciales, excepciones y duración en segundos | — |
+| `AuditoriaMaestras` *(tabla ligera, propuesta)* | Fila completa que se borró de `MaestraCelulares`/`MaestraCorreos`, su radicado y la hora: la corrida es reconstruible | N:1 con Insumo |
 | **`Transacciones`** *(adición del 29/10, decisión de Villa)* | **Una fila por cada paso de cada caso: el recorrido completo** | N:1 con Insumo |
 
 ## Tabla `Transacciones` (estado en cada parte del proceso)
@@ -29,7 +30,7 @@ El repositorio es local (NocoDB npm 0.301.3 en loopback, SQLite interno; SQLite 
 | `Resultado` | ok / fallo |
 | `Motivo` | Qué ocurrió, en lenguaje de soporte; `NO APLICA` si no aplica |
 
-**Regla dura:** se escribe en **cada transición, incluidos los fallos**. Un error de login, de red o de API deja su fila con `Resultado=fallo` y el motivo. Ninguna tabla conserva observaciones de corridas anteriores sin que la fila de la transición actual esté primero (lección de Medidas Cautelares: el fallo no escribía estado y la base quedaba con datos viejos).
+**Regla dura:** se escribe en **cada transición con información, en el instante en que ocurre, incluidos los fallos** (nunca un marcador de inicio vacío). `Resultado` es `fallo` siempre que `EstadoNuevo` = 4 y `ok` en los demás. Al terminar la corrida ningún caso queda en estado 1 o 2. Un error de login, de red o de API deja su fila con `Resultado=fallo` y el motivo. Ninguna tabla conserva observaciones de corridas anteriores sin que la fila de la transición actual esté primero (lección de Medidas Cautelares: el fallo no escribía estado y la base quedaba con datos viejos).
 
 **Consultas que debe soportar** (para revisión/auditoría):
 - ¿En qué etapa se quedó cada caso de hoy?

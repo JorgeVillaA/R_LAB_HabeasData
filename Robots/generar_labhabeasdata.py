@@ -195,7 +195,7 @@ HU004 = grupo("HU004 - Validar campos obligatorios", [
     motivo_si("No hay ningún canal de contacto (ni correo ni teléfono)",
               'not {locDicCaso}["canal_correo"] and not {locDicCaso}["canal_telefono"]', "SIN CANAL DE CONTACTO"),
     si("El caso está completo", LEIDO + " and len({locArrMotivos}) == 0", [
-        paso("Registra el avance a la validación de deuda en el reporte", "locDicResultado", "pasos.registrar_avance(GetVar('locDicCaso'))"),
+        paso("Registra el avance (campos completos) en el reporte", "locDicResultado", "pasos.registrar_avance(GetVar('locDicCaso'))"),
         sv("Anota el radicado en los que avanzan", "glbArrAvanzan", anexar("glbArrAvanzan", "'{locStrIdRadicado}'")),
         sv("Anota el radicado en los que siguen a identidad", "glbArrSiguenIdentidad", anexar("glbArrSiguenIdentidad", "'{locStrIdRadicado}'")),
     ]),

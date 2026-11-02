@@ -42,12 +42,22 @@ def instantanea_repositorio(raiz):
     con = sqlite3.connect(archivos[0])
     try:
         tablas = {t: con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
-                  for t in ("Exclusion", "Celulares", "Correos", "MaestraCelulares", "MaestraCorreos", "Insumo")}
+                  for t in ("Exclusion", "Celulares", "Correos", "MaestraCelulares", "MaestraCorreos", "Insumo", "Excepciones", "Gestores",
+                            "Parametros", "LogEjecucion", "AuditoriaMaestras")}
+        consultas = {
+            "insumo": "SELECT RadicadoZeus, Estado, Nombre IS NOT NULL FROM Insumo ORDER BY RadicadoZeus",
+            "excepciones": "SELECT RadicadoZeus, TipoExcepcion, Detalle FROM Excepciones ORDER BY RadicadoZeus, Id",
+            "gestores": "SELECT RadicadoZeus, Gestor, Agencia FROM Gestores ORDER BY RadicadoZeus",
+            "parametros": "SELECT Clave, Valor FROM Parametros ORDER BY Clave",
+            "log": "SELECT CasosProcesados, Exitosos, NoExitosos, Parciales, Excepciones FROM LogEjecucion ORDER BY Id",
+            "auditoria_maestras": "SELECT RadicadoZeus, Tabla, Valor FROM AuditoriaMaestras ORDER BY RadicadoZeus, Id",
+        }
+        adicionales = {k: [list(f) for f in con.execute(q)] for k, q in consultas.items()}
         # orden de cada radicado = el de sus transiciones; entre radicados no hay orden que comparar
         transacciones = [tuple(f) for f in con.execute(
             "SELECT RadicadoZeus, Etapa, EstadoAnterior, EstadoNuevo, Resultado, Motivo FROM Transacciones "
             "ORDER BY RadicadoZeus, IdTransaccion")]
-        return {"tablas": tablas, "transacciones": [list(t) for t in transacciones]}
+        return {"tablas": tablas, "transacciones": [list(t) for t in transacciones], **adicionales}
     finally:
         con.close()
 
@@ -149,6 +159,36 @@ def correr_escenario(escenario, robot=False):
         shutil.rmtree(raiz, ignore_errors=True)
 
 
+def invariantes_del_repositorio(repo):
+    """Reglas de la auditoría que debe cumplir cualquier corrida (devuelve los incumplimientos, vacío si todo está bien)."""
+    fallos = []
+    ultimo = {}
+    for radicado, etapa, anterior, nuevo, resultado, motivo in repo["transacciones"]:
+        ultimo[radicado] = (etapa, nuevo)
+        if (nuevo == 4) != (resultado == "fallo"):
+            fallos.append(f"{radicado}/{etapa}: Resultado={resultado} con EstadoNuevo={nuevo} (fallo solo en 4)")
+        if motivo == "NO APLICA":
+            fallos.append(f"{radicado}/{etapa}: fila sin información (Motivo NO APLICA)")
+    for radicado, (etapa, estado) in ultimo.items():
+        if estado not in (3, 4, 5):
+            fallos.append(f"{radicado}: la corrida terminó con el caso abierto en estado {estado} (etapa {etapa})")
+    insumo = {f[0]: f[1] for f in repo["insumo"]}
+    for radicado, (_, estado) in ultimo.items():
+        if insumo.get(radicado) != estado:
+            fallos.append(f"{radicado}: Insumo.Estado={insumo.get(radicado)} y su último estado es {estado}")
+    con_excepcion = {f[0] for f in repo["excepciones"]}
+    con_gestor = {f[0] for f in repo["gestores"]}
+    for radicado, (etapa, estado) in ultimo.items():
+        descartado = etapa == "seleccion"
+        if estado == 4 and not descartado and (radicado not in con_excepcion or radicado not in con_gestor):
+            fallos.append(f"{radicado}: cerró en 4 sin fila en Excepciones ({radicado in con_excepcion}) o en Gestores ({radicado in con_gestor})")
+    if not repo["log"]:
+        fallos.append("LogEjecucion sin la fila resumen de la corrida")
+    if not any(clave == "UMBRAL_COINCIDENCIA_NOMBRES" for clave, _ in repo["parametros"]):
+        fallos.append("Parametros sin el umbral de similitud de nombres")
+    return fallos
+
+
 def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
     espera, fallos = escenario["espera"], []
 
@@ -164,11 +204,15 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
         if clave in espera:
             igual(clave, sorted(resumen[clave]), sorted(espera[clave]))
     repositorio = resumen["rastro"].get("repositorio")
+    if repositorio is not None:  # invariantes de la trazabilidad: valen en TODOS los escenarios con repositorio
+        fallos.extend(invariantes_del_repositorio(repositorio))
     if "tablas" in espera:
         igual("tablas del repositorio", {t: (repositorio or {"tablas": {}})["tablas"].get(t) for t in espera["tablas"]}, espera["tablas"])
     for radicado, estado in espera.get("estado_final", {}).items():
         filas = [t for t in (repositorio or {"transacciones": []})["transacciones"] if t[0] == radicado]
         igual(f"estado final de {radicado}", filas[-1][3] if filas else None, estado)
+    for radicado, tipos in espera.get("excepciones", {}).items():
+        igual(f"excepciones de {radicado}", sorted(f[1] for f in (repositorio or {"excepciones": []})["excepciones"] if f[0] == radicado), sorted(tipos))
     for radicado, etapas in espera.get("etapas", {}).items():
         igual(f"etapas de {radicado}", sorted({t[1] for t in (repositorio or {"transacciones": []})["transacciones"] if t[0] == radicado}), sorted(etapas))
     if "codigos" in espera:

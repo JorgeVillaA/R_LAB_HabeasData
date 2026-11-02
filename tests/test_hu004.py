@@ -73,7 +73,8 @@ class TestHU004(PruebaConDoble):
                      "Fin de ejecución EP-001"):
             self.assertIn(hito, auditoria)
         reporte = self.texto_log(self.registro.ruta_reporte())
-        self.assertIn(";900008;800001;avanza", reporte)  # hijo y padre en el reporte
+        self.assertIn(";900008;800001;campos completos", reporte)  # hijo y padre en el reporte
+        self.assertNotIn("validación de deuda", reporte)  # Cobra es un stub: no hay etapa de deuda
 
     def test_ejecucion_detenida_por_token_notifica_detenido(self):
         self.configurar_doble(token_ttl=0)

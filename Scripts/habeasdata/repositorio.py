@@ -9,6 +9,7 @@ Reglas que impone este módulo:
 - `Transacciones` se escribe en cada transición, incluidos los fallos, y NO pasa por las fallas inyectadas de las demás
   operaciones: un repositorio que falla sigue dejando su fila de fallo (lección de Medidas Cautelares).
 """
+import json
 import sqlite3
 import time
 from datetime import datetime
@@ -34,22 +35,34 @@ def _tabla_canal(nombre, columnas):
 
 ESQUEMA = [
     "CREATE TABLE IF NOT EXISTS Insumo (RadicadoZeus TEXT PRIMARY KEY, RadicadoPadre TEXT, TipoIdentificacion TEXT, "
-    "Identificacion TEXT, Estado INTEGER, FechaRecepcion TEXT, Actualizado TEXT)",
-    "CREATE TABLE IF NOT EXISTS Excepciones (Id INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT, Tipo TEXT, Detalle TEXT, Fecha TEXT)",
+    "Identificacion TEXT, Estado INTEGER, FechaRecepcion TEXT, Actualizado TEXT, Nombre TEXT, Correos TEXT, Telefonos TEXT)",
+    "CREATE TABLE IF NOT EXISTS Excepciones (Id INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT, TipoExcepcion TEXT, "
+    "Detalle TEXT, FechaHora TEXT)",
     "CREATE TABLE IF NOT EXISTS Exclusion (Id INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT UNIQUE, Identificacion TEXT, "
     "FechaExclusion TEXT)",
     _tabla_canal("Celulares", COLUMNAS_CELULARES),
     _tabla_canal("Correos", COLUMNAS_CORREOS),
-    "CREATE TABLE IF NOT EXISTS Gestores (Id INTEGER PRIMARY KEY AUTOINCREMENT, Gestor TEXT, Agencia TEXT, Coordinador TEXT, Correo TEXT)",
-    "CREATE TABLE IF NOT EXISTS Parametros (Clave TEXT PRIMARY KEY, Valor TEXT)",
+    "CREATE TABLE IF NOT EXISTS Gestores (Id INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT, Gestor TEXT, Agencia TEXT, "
+    "Coordinador TEXT, Correo TEXT, FechaAsignacion TEXT, Motivo TEXT)",
+    "CREATE TABLE IF NOT EXISTS Parametros (Clave TEXT PRIMARY KEY, Valor TEXT, Actualizado TEXT)",
     "CREATE TABLE IF NOT EXISTS LogEjecucion (Id INTEGER PRIMARY KEY AUTOINCREMENT, Fecha TEXT, CasosProcesados INTEGER, "
-    "Excepciones INTEGER, Detalle TEXT)",
+    "Exitosos INTEGER, NoExitosos INTEGER, Parciales INTEGER, Excepciones INTEGER, DuracionSegundos INTEGER, Detalle TEXT)",
+    # tabla ligera: qué se borró de las maestras y cuándo (la corrida es reconstruible)
+    "CREATE TABLE IF NOT EXISTS AuditoriaMaestras (Id INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT, Tabla TEXT, "
+    "Identificacion TEXT, Valor TEXT, FilaEliminada TEXT, FechaHora TEXT)",
     "CREATE TABLE IF NOT EXISTS Transacciones (IdTransaccion INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT, Etapa TEXT, "
     "EstadoAnterior INTEGER, EstadoNuevo INTEGER, FechaHora TEXT, Resultado TEXT, Motivo TEXT)",
     _tabla_canal("MaestraCelulares", COLUMNAS_CELULARES),
     _tabla_canal("MaestraCorreos", COLUMNAS_CORREOS),
 ]
 TABLAS = ("Insumo", "Excepciones", "Exclusion", "Celulares", "Correos", "Gestores", "Parametros", "LogEjecucion")
+# columnas que un archivo creado por una versión anterior no tiene: se añaden al abrirlo (los datos previos se conservan)
+ADICIONES = {"Insumo": (("Nombre", "TEXT"), ("Correos", "TEXT"), ("Telefonos", "TEXT")),
+             "Gestores": (("RadicadoZeus", "TEXT"), ("FechaAsignacion", "TEXT"), ("Motivo", "TEXT")),
+             "Parametros": (("Actualizado", "TEXT"),),
+             "LogEjecucion": (("Exitosos", "INTEGER"), ("NoExitosos", "INTEGER"), ("Parciales", "INTEGER"),
+                              ("DuracionSegundos", "INTEGER"))}
+RENOMBRES = {"Excepciones": (("Tipo", "TipoExcepcion"), ("Fecha", "FechaHora"))}
 
 
 class Repositorio:
@@ -61,7 +74,27 @@ class Repositorio:
         self.con.row_factory = sqlite3.Row
         for sentencia in ESQUEMA:
             self.con.execute(sentencia)
+        self._migrar()
         self.con.commit()
+        # marca de esta corrida: lo escrito después de aquí es «de la corrida» (LogEjecucion, casos huérfanos)
+        self.inicio = self.reloj()
+        self.id_inicial = self.con.execute("SELECT COALESCE(MAX(IdTransaccion), 0) FROM Transacciones").fetchone()[0]
+        self.id_excepciones_inicial = self.con.execute("SELECT COALESCE(MAX(Id), 0) FROM Excepciones").fetchone()[0]
+        self.corrida_cerrada = False
+
+    def _columnas(self, tabla):
+        return {f[1] for f in self.con.execute(f"PRAGMA table_info({tabla})")}
+
+    def _migrar(self):
+        for tabla, pares in RENOMBRES.items():
+            for viejo, nuevo in pares:
+                columnas = self._columnas(tabla)
+                if viejo in columnas and nuevo not in columnas:
+                    self.con.execute(f"ALTER TABLE {tabla} RENAME COLUMN {viejo} TO {nuevo}")
+        for tabla, adiciones in ADICIONES.items():
+            for columna, tipo in adiciones:
+                if columna not in self._columnas(tabla):
+                    self.con.execute(f"ALTER TABLE {tabla} ADD COLUMN {columna} {tipo}")
 
     def cerrar(self):
         self.con.close()
@@ -140,11 +173,19 @@ class Repositorio:
             return "insertado"
         return self._operar("insertar_" + canal, insertar)
 
-    def eliminar_de_maestra(self, canal, identificacion, valor):
-        """Elimina de la maestra el registro cuya identificación (y valor del canal) coincide; devuelve cuántos borró."""
-        _, tabla, _, columna = CANALES[canal]
+    def eliminar_de_maestra(self, canal, identificacion, valor, radicado=None):
+        """Elimina de la maestra el registro cuya identificación (y valor del canal) coincide; devuelve cuántos borró.
+        Antes de borrar deja la fila completa en `AuditoriaMaestras` (misma transacción): la corrida es reconstruible."""
+        _, tabla, columnas, columna = CANALES[canal]
 
         def borrar():
+            filas = self.con.execute(f'SELECT * FROM {tabla} WHERE IDENTIFICACION = ? AND "{columna}" = ?',
+                                     (str(identificacion), str(valor))).fetchall()
+            for fila in filas:
+                self.con.execute("INSERT INTO AuditoriaMaestras (RadicadoZeus, Tabla, Identificacion, Valor, FilaEliminada, FechaHora) "
+                                 "VALUES (?,?,?,?,?,?)",
+                                 (str(radicado) if radicado else None, tabla, str(identificacion), str(valor),
+                                  json.dumps({c: fila[c] for c in columnas}, ensure_ascii=False), self._ahora()))
             return self.con.execute(f'DELETE FROM {tabla} WHERE IDENTIFICACION = ? AND "{columna}" = ?',
                                     (str(identificacion), str(valor))).rowcount
         return self._operar("eliminar_maestra_" + canal, borrar)
@@ -153,12 +194,24 @@ class Repositorio:
         return self.con.execute(f"SELECT COUNT(*) FROM {tabla}").fetchone()[0]
 
     # ---------- Insumo y Transacciones ----------
-    def upsert_insumo(self, caso, estado):
+    def abrir_insumo(self, radicado):
+        """El radicado entra a la corrida: fila de `Insumo` en estado 1 (Sin Procesar), también si venía de una corrida anterior."""
+        self.con.execute("INSERT INTO Insumo (RadicadoZeus, Estado, Actualizado) VALUES (?,1,?) "
+                         "ON CONFLICT(RadicadoZeus) DO UPDATE SET Estado=1, Actualizado=excluded.Actualizado", (str(radicado), self._ahora()))
+        self.con.commit()
+
+    def upsert_insumo(self, caso, estado=None):
+        """Datos del caso (identificación, nombre y contacto). El `Estado` solo lo mueve una transición (o `estado` explícito)."""
+        valores = (caso["radicado_hijo"], caso.get("radicado_padre"), caso.get("tipo_identificacion"), caso.get("numero_identificacion"),
+                   estado if estado is not None else 1, caso.get("fecha_recepcion"), self._ahora(), caso.get("nombre"),
+                   ", ".join(caso.get("correos") or []), ", ".join(t["valor"] for t in caso.get("telefonos") or []))
+        cambia_estado = "Estado=excluded.Estado, " if estado is not None else ""
         self.con.execute(
-            "INSERT INTO Insumo (RadicadoZeus, RadicadoPadre, TipoIdentificacion, Identificacion, Estado, FechaRecepcion, Actualizado) "
-            "VALUES (?,?,?,?,?,?,?) ON CONFLICT(RadicadoZeus) DO UPDATE SET Estado=excluded.Estado, Actualizado=excluded.Actualizado",
-            (caso["radicado_hijo"], caso.get("radicado_padre"), caso.get("tipo_identificacion"), caso.get("numero_identificacion"),
-             estado, caso.get("fecha_recepcion"), self._ahora()))
+            "INSERT INTO Insumo (RadicadoZeus, RadicadoPadre, TipoIdentificacion, Identificacion, Estado, FechaRecepcion, Actualizado, "
+            "Nombre, Correos, Telefonos) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(RadicadoZeus) DO UPDATE SET "
+            "RadicadoPadre=excluded.RadicadoPadre, TipoIdentificacion=excluded.TipoIdentificacion, Identificacion=excluded.Identificacion, "
+            f"FechaRecepcion=excluded.FechaRecepcion, Nombre=excluded.Nombre, Correos=excluded.Correos, Telefonos=excluded.Telefonos, "
+            f"{cambia_estado}Actualizado=excluded.Actualizado", valores)
         self.con.commit()
 
     def estado_de(self, radicado):
@@ -166,19 +219,70 @@ class Repositorio:
                                 (str(radicado),)).fetchone()
         return fila[0] if fila else None
 
+    def estado_en_corrida(self, radicado):
+        """Estado del radicado según su última transición de ESTA corrida (None si todavía no tiene ninguna)."""
+        fila = self.con.execute("SELECT EstadoNuevo FROM Transacciones WHERE RadicadoZeus = ? AND IdTransaccion > ? "
+                                "ORDER BY IdTransaccion DESC LIMIT 1", (str(radicado), self.id_inicial)).fetchone()
+        return fila[0] if fila else None
+
     def parcial(self, radicado):
         """¿El radicado tuvo valores duplicados que siguieron adelante (exclusión parcial)? Lo dice su transacción de duplicados."""
-        fila = self.con.execute("SELECT 1 FROM Transacciones WHERE RadicadoZeus = ? AND Etapa = 'duplicados' AND Motivo LIKE 'duplicado parcial%' LIMIT 1",
-                                (str(radicado),)).fetchone()
+        fila = self.con.execute("SELECT 1 FROM Transacciones WHERE RadicadoZeus = ? AND Etapa = 'duplicados' AND "
+                                "Motivo LIKE 'excepción de negocio 4 (parcial)%' LIMIT 1", (str(radicado),)).fetchone()
         return fila is not None
 
-    def registrar_transaccion(self, radicado, etapa, estado_nuevo, resultado="ok", motivo=None):
-        """Una fila por transición, incluidos los fallos. Nunca se salta por las fallas inyectadas de otras operaciones."""
+    def registrar_transaccion(self, radicado, etapa, estado_nuevo, resultado="ok", motivo=None, excepcion=None):
+        """Una fila por transición (con información), incluidos los fallos. Nunca se salta por las fallas inyectadas de otras
+        operaciones. `Resultado` es `fallo` siempre que el estado nuevo es 4 (No Exitoso); `ok` en los demás. Con `excepcion`
+        (tipo: 1, 3, 4, sistema, gestion_manual) además deja la fila en `Excepciones`. El `Estado` de `Insumo` sigue a la transición."""
         anterior = self.estado_de(radicado)
+        resultado = "fallo" if int(estado_nuevo) == 4 else "ok"
+        texto = (motivo or "NO APLICA").replace(";", ",")
+        ahora = self._ahora()
         self.con.execute("INSERT INTO Transacciones (RadicadoZeus, Etapa, EstadoAnterior, EstadoNuevo, FechaHora, Resultado, Motivo) "
-                         "VALUES (?,?,?,?,?,?,?)",
-                         (str(radicado), etapa, anterior, int(estado_nuevo), self._ahora(), resultado, (motivo or "NO APLICA").replace(";", ",")))
+                         "VALUES (?,?,?,?,?,?,?)", (str(radicado), etapa, anterior, int(estado_nuevo), ahora, resultado, texto))
+        self.con.execute("UPDATE Insumo SET Estado = ?, Actualizado = ? WHERE RadicadoZeus = ?", (int(estado_nuevo), ahora, str(radicado)))
+        if excepcion:
+            self.con.execute("INSERT INTO Excepciones (RadicadoZeus, TipoExcepcion, Detalle, FechaHora) VALUES (?,?,?,?)",
+                             (str(radicado), str(excepcion), texto, ahora))
         self.con.commit()
+
+    def derivar_a_gestion(self, radicado, gestor, agencia, coordinador, correo, motivo):
+        """Un caso que pasa a gestión manual queda con su fila en `Gestores` (una por radicado)."""
+        if self.con.execute("SELECT 1 FROM Gestores WHERE RadicadoZeus = ?", (str(radicado),)).fetchone():
+            return
+        self.con.execute("INSERT INTO Gestores (RadicadoZeus, Gestor, Agencia, Coordinador, Correo, FechaAsignacion, Motivo) VALUES (?,?,?,?,?,?,?)",
+                         (str(radicado), gestor, agencia, coordinador, correo, self._ahora(), motivo))
+        self.con.commit()
+
+    def guardar_parametros(self, parametros):
+        """Parámetros de negocio vigentes en la corrida (umbral de nombres, reintentos, cadencia…): clave → valor, sin duplicar."""
+        for clave, valor in parametros.items():
+            self.con.execute("INSERT INTO Parametros (Clave, Valor, Actualizado) VALUES (?,?,?) ON CONFLICT(Clave) DO UPDATE SET "
+                             "Valor=excluded.Valor, Actualizado=excluded.Actualizado", (str(clave), str(valor), self._ahora()))
+        self.con.commit()
+
+    def abiertos_de_la_corrida(self):
+        """Radicados con transiciones en esta corrida cuyo último estado sigue siendo 1 o 2 (nadie los cerró)."""
+        return [f[0] for f in self.con.execute(
+            "SELECT RadicadoZeus FROM Transacciones WHERE IdTransaccion IN (SELECT MAX(IdTransaccion) FROM Transacciones "
+            "WHERE IdTransaccion > ? GROUP BY RadicadoZeus) AND EstadoNuevo IN (1, 2) ORDER BY RadicadoZeus", (self.id_inicial,))]
+
+    def registrar_log_ejecucion(self, detalle=None):
+        """Fila resumen de la corrida (una sola vez): casos, éxitos, no éxitos, parciales, excepciones y duración."""
+        if self.corrida_cerrada:
+            return None
+        estados = [f[0] for f in self.con.execute(
+            "SELECT EstadoNuevo FROM Transacciones WHERE IdTransaccion IN (SELECT MAX(IdTransaccion) FROM Transacciones "
+            "WHERE IdTransaccion > ? GROUP BY RadicadoZeus)", (self.id_inicial,))]
+        excepciones = self.con.execute("SELECT COUNT(*) FROM Excepciones WHERE Id > ?", (self.id_excepciones_inicial,)).fetchone()[0]
+        duracion = int((self.reloj() - self.inicio).total_seconds())
+        fila = (self._ahora(), len(estados), estados.count(3), estados.count(4), estados.count(5), excepciones, duracion, detalle)
+        self.con.execute("INSERT INTO LogEjecucion (Fecha, CasosProcesados, Exitosos, NoExitosos, Parciales, Excepciones, "
+                         "DuracionSegundos, Detalle) VALUES (?,?,?,?,?,?,?,?)", fila)
+        self.con.commit()
+        self.corrida_cerrada = True
+        return fila
 
     # consultas de revisión (specs/repositorio-local.md)
     def etapa_actual_por_caso(self):
