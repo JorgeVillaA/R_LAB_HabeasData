@@ -196,7 +196,7 @@
   {
     "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
     "ramas": [
-      "HU-011 insertar falla de forma persistente: excepción de sistema, nada se elimina de la maestra del canal"
+      "HU-011 insertar falla de forma persistente (en un valor): excepción de sistema y NADA se elimina de las maestras"
     ],
     "doble": {
       "radicados": [
@@ -221,11 +221,11 @@
       ],
       "exclusion_registrada": [],
       "tablas": {
-        "MaestraCelulares": 6,
-        "MaestraCorreos": 8,
         "Exclusion": 1,
         "Celulares": 2,
-        "Correos": 2
+        "Correos": 2,
+        "MaestraCelulares": 6,
+        "MaestraCorreos": 9
       },
       "estado_final": {
         "900001": 4
@@ -263,7 +263,7 @@
         "MaestraCelulares": 6,
         "MaestraCorreos": 9,
         "Exclusion": 1,
-        "Celulares": 2,
+        "Celulares": 3,
         "Correos": 2
       },
       "estado_final": {
@@ -334,6 +334,80 @@
       "comentarios": [],
       "estado_final": {
         "900004": 4
+      }
+    }
+  },
+  {
+    "id": "EP003-10-insercion-de-exclusion-falla",
+    "ramas": [
+      "HU-011 insertar la fila de Exclusion falla de forma persistente: nada en los canales ni en las maestras"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {},
+    "repositorio": {
+      "Fallas": {
+        "insertar_exclusion": null
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [
+        "900001"
+      ],
+      "exclusion_registrada": [],
+      "excepciones_sistema_exclusion": [
+        "900001"
+      ],
+      "tablas": {
+        "Exclusion": 0,
+        "Celulares": 2,
+        "Correos": 1,
+        "MaestraCelulares": 6,
+        "MaestraCorreos": 9
+      },
+      "estado_final": {
+        "900001": 4
+      }
+    }
+  },
+  {
+    "id": "EP003-11-solo-telefono-fijo-solo-fila-de-exclusion",
+    "ramas": [
+      "HU-011 canal fijo: se registra la fila de Exclusion (sin tabla de canal) y el caso queda Procesado Parcialmente"
+    ],
+    "doble": {
+      "radicados": [
+        "900005"
+      ]
+    },
+    "portales": {},
+    "repositorio": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "casilla_nunca_marcada": false,
+      "validadas": [
+        "900005"
+      ],
+      "exclusion_registrada": [
+        "900005"
+      ],
+      "excepciones_sistema_exclusion": [],
+      "tablas": {
+        "Exclusion": 1,
+        "Celulares": 2,
+        "Correos": 1,
+        "MaestraCelulares": 6,
+        "MaestraCorreos": 9
+      },
+      "estado_final": {
+        "900005": 5
       }
     }
   }

@@ -81,10 +81,33 @@ class TestHU011(PruebaConRepositorio):
         self.assertEqual(self.repo.contar("Correos"), 2)  # la preexistente de 900007 + la insertada, que se conserva
         self.assertTrue(self.repo.existe_exclusion("correo", "1000000001", "maria.lopez@ejemplo.invalid"))
 
-    def test_sin_valores_no_toca_el_repositorio(self):  # canal fijo o datos no ubicados
+    def test_canal_fijo_sin_valores_deja_solo_la_fila_de_exclusion(self):  # HU-011 §4: el fijo se registra en la base de exclusión
         res = ep003.registrar_exclusion(caso(fijos=["4441234"]), [], self.repo, COBRA, "01/11/2026")
-        self.assertFalse(res["exclusion"])
-        self.assertEqual(self.repo.contar("Exclusion"), 0)
+        self.assertTrue(res["exclusion"])
+        self.assertIsNone(res["error"])
+        self.assertEqual((self.repo.contar("Exclusion"), self.repo.contar("Celulares"), self.repo.contar("Correos")), (1, 2, 1))
+
+    def test_error_insertar_la_fila_de_exclusion_no_toca_canales_ni_maestras(self):  # AC: tabla de fallas, insertar
+        self.repo.fallas["insertar_exclusion"] = None
+        c = caso(correos=["maria.lopez@ejemplo.invalid"], celulares=["3101234567"])
+        res = self.registrar(c, ("correo", "maria.lopez@ejemplo.invalid"), ("celular", "3101234567"))
+        self.assertEqual((res["operacion"], res["exclusion"]), ("insertar", False))
+        self.assertEqual((self.repo.contar("Celulares"), self.repo.contar("Correos")), (2, 1))
+        self.assertEqual((self.repo.contar("MaestraCelulares"), self.repo.contar("MaestraCorreos")), (6, 9))
+
+    def test_error_insertar_un_valor_no_elimina_nada_de_ninguna_maestra_ni_de_los_valores_ya_insertados(self):  # AC literal
+        self.repo.fallas["insertar_celular"] = None
+        c = caso(correos=["maria.lopez@ejemplo.invalid"], celulares=["3101234567"])
+        res = self.registrar(c, ("correo", "maria.lopez@ejemplo.invalid"), ("celular", "3101234567"))
+        self.assertEqual(res["operacion"], "insertar")
+        self.assertEqual((self.repo.contar("MaestraCelulares"), self.repo.contar("MaestraCorreos")), (6, 9))  # nada se elimina
+        self.assertEqual(res["eliminados"], [])
+
+    def test_error_al_cruzar_con_la_maestra_se_reporta_como_cruzar_no_como_eliminar(self):
+        self.repo.fallas["buscar_maestra_correo"] = None
+        res = self.registrar(caso(correos=["maria.lopez@ejemplo.invalid"]), ("correo", "maria.lopez@ejemplo.invalid"))
+        self.assertEqual(res["operacion"], "cruzar")
+        self.assertTrue(self.repo.existe_exclusion("correo", "1000000001", "maria.lopez@ejemplo.invalid"))  # lo insertado se conserva
 
     def test_los_datos_de_cobra_salen_del_stub_con_valores_por_defecto(self):
         stub = ep003.cargar_stub()

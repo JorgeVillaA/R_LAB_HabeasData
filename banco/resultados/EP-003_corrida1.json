@@ -56,11 +56,11 @@
     "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
     "modo": "fixture",
     "ramas": [
-      "HU-011 insertar falla de forma persistente: excepción de sistema, nada se elimina de la maestra del canal"
+      "HU-011 insertar falla de forma persistente (en un valor): excepción de sistema y NADA se elimina de las maestras"
     ],
     "paso": true,
     "fallos": [],
-    "huella": "bb5d7f607dc0211a60cb033115afa21f2d53d6bc4b328cedba99d7efb57aad73"
+    "huella": "918c746b911c3addc79827d999b32f9eb6d7d05ef567bfea25951e4fa96fa2cc"
   },
   {
     "id": "EP003-07-eliminacion-falla-conserva-la-fila-insertada",
@@ -70,7 +70,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "0dc92cc1c31e03f1d63de7761c24ea90b0c4d2a65f952f8cc043b89c6af80044"
+    "huella": "d11aadeda1fdc5bcd12d1ab0de9763fa9fc925f25d5a816af341f82b37b8351c"
   },
   {
     "id": "EP003-08-identidad-no-valida-no-registra",
@@ -91,5 +91,25 @@
     "paso": true,
     "fallos": [],
     "huella": "3882a7f1c2b22bf35027a3a1ddbc58b85ad07d0bb1e88a7ce191633115490010"
+  },
+  {
+    "id": "EP003-10-insercion-de-exclusion-falla",
+    "modo": "fixture",
+    "ramas": [
+      "HU-011 insertar la fila de Exclusion falla de forma persistente: nada en los canales ni en las maestras"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "7c2eb9379432996661134c5b98cf4c494347a3994a1a08f5a172b2db767fbc4e"
+  },
+  {
+    "id": "EP003-11-solo-telefono-fijo-solo-fila-de-exclusion",
+    "modo": "fixture",
+    "ramas": [
+      "HU-011 canal fijo: se registra la fila de Exclusion (sin tabla de canal) y el caso queda Procesado Parcialmente"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "6ebcdf1e650c9869d850ae2d2554badfb2ddd5a3005241c3ab248b6f3cd6e87f"
   }
 ]

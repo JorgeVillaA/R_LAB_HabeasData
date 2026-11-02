@@ -133,5 +133,60 @@ class TestTransacciones(PruebaRepositorio):
         self.assertEqual(r.ESTADOS, {1: "Sin Procesar", 2: "Procesando", 3: "Exitoso", 4: "No Exitoso", 5: "Procesado Parcialmente"})
 
 
+class TestFilasDeFalloEnTransacciones(PruebaRepositorio):
+    """Regla dura: cada paso de falla de EP-003 deja su fila `fallo` (no solo lo prueba la matriz del banco)."""
+
+    class RegistroFalso:
+        def __init__(self):
+            self.lineas = []
+
+        def auditoria(self, texto, modulo):
+            self.lineas.append(("auditoria", texto))
+
+        def error(self, texto, modulo):
+            self.lineas.append(("error", texto))
+
+        def reporte(self, *campos):
+            self.lineas.append(("reporte", campos))
+
+    def test_duplicados_sistema_y_comentario_fallido_dejan_su_fila_de_fallo(self):
+        from habeasdata import ep003
+        registro = self.RegistroFalso()
+        ep003.duplicados_sistema(registro, self.repo, "900001", None, "x")
+        ep003.duplicados_comentario_fallido(registro, self.repo, "900002", None, "x")
+        self.assertEqual([(t[0], t[1]) for t in self.repo.transiciones_fallidas()], [("900001", "duplicados"), ("900002", "duplicados")])
+        self.assertEqual(self.repo.estado_de("900001"), 4)
+
+    def test_exclusion_del_caso_con_falla_deja_su_fila_de_fallo_y_estado_4(self):
+        from habeasdata import ep003
+        self.repo.fallas["insertar_exclusion"] = None
+        caso = {"radicado_hijo": "900001", "radicado_padre": None, "nombre": "N", "numero_identificacion": "1", "tipo_identificacion": "CC",
+                "fecha_recepcion": "21/08/2026", "correos": [], "telefonos": []}
+        resultado = ep003.exclusion_del_caso(self.RegistroFalso(), self.repo, caso, [], ep003.cargar_stub(), "01/11/2026")
+        self.assertEqual(resultado["operacion"], "insertar")
+        self.assertEqual(self.repo.transiciones_fallidas()[0][:2], ("900001", "registro_exclusion"))
+        self.assertEqual(self.repo.estado_de("900001"), 4)
+
+
+class TestReintentosDeLaConfiguracion(unittest.TestCase):
+    def test_abrir_repositorio_usa_NUMERO_REINTENTOS_SISTEMA_del_maestro(self):
+        import json
+        from habeasdata import ep003
+        from habeasdata.config import cargar
+        from tests.soporte import copiar_config
+        tmp = Path(tempfile.mkdtemp(prefix="repo_cfg_"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        copiar_config(tmp, 8765)
+        cfg = cargar(tmp)
+        cfg.maestro["NUMERO_REINTENTOS_SISTEMA"] = 5
+        repo = ep003.abrir_repositorio(cfg, dormir=lambda s: None)
+        self.addCleanup(repo.cerrar)
+        repo.fallas["buscar_maestra_correo"] = None
+        with self.assertRaises(r.ErrorRepositorio):
+            repo.existe_en_maestra("correo", "1", "x")
+        self.assertEqual(repo.intentos["buscar_maestra_correo"], 5)
+        self.assertEqual(json.loads(json.dumps(cfg.proceso["Repositorio"]))["Motor"], "sqlite")
+
+
 if __name__ == "__main__":
     unittest.main()

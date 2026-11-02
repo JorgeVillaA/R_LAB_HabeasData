@@ -79,14 +79,13 @@ def fila_exclusion(caso, canal, valor, cobra, fecha_exclusion):
 
 
 def registrar_exclusion(caso, valores, repo, cobra, fecha_exclusion):
-    """Por cada valor: inserta la fila del canal (no duplica un contacto ya presente), lo cruza contra la maestra
-    (verificado = estaba en la maestra; el cruce no la altera) y, confirmada la inserción, elimina el registro de la maestra.
-    Una falla persistente detiene el caso: en la inserción no se elimina nada de la maestra; en la eliminación la fila ya
-    insertada se conserva. Devuelve el resultado con `error` y `operacion` si el caso quedó en excepción de sistema."""
+    """Primero se INSERTA todo (la fila de `Exclusion` siempre, y una fila por valor en `Celulares`/`Correos`; un contacto ya presente
+    no se duplica). Solo cuando todas las inserciones están confirmadas se cruza cada valor contra su maestra (verificado) y se elimina
+    su registro de la maestra. Una falla persistente al insertar deja las maestras intactas; al eliminar o cruzar, las filas ya
+    insertadas se conservan. Devuelve el resultado con `error` y `operacion` (insertar | cruzar | eliminar) si el caso quedó en
+    excepción de sistema. Sin valores de canal (p. ej. solo teléfono fijo, que no tiene tabla de canal) solo queda la fila de `Exclusion`."""
     resultado = {"exclusion": False, "insertados": [], "ya_presentes": [], "verificados": [], "eliminados": [], "error": None,
                  "operacion": None}
-    if not valores:
-        return resultado
     try:
         repo.insertar_exclusion(caso["radicado_hijo"], caso["numero_identificacion"])
     except ErrorRepositorio as error:
@@ -94,20 +93,25 @@ def registrar_exclusion(caso, valores, repo, cobra, fecha_exclusion):
     resultado["exclusion"] = True
     for v in valores:
         canal, valor = v["canal"], v["valor"]
-        etiqueta = f"{canal}:{valor}"
         try:
             estado = repo.insertar_canal(canal, fila_exclusion(caso, canal, valor, cobra, fecha_exclusion))
         except ErrorRepositorio as error:
             return dict(resultado, error=str(error), operacion="insertar")
-        resultado["insertados" if estado == "insertado" else "ya_presentes"].append(etiqueta)
+        resultado["insertados" if estado == "insertado" else "ya_presentes"].append(f"{canal}:{valor}")
+    for v in valores:
+        canal, valor = v["canal"], v["valor"]
+        etiqueta = f"{canal}:{valor}"
         try:
             en_maestra = repo.existe_en_maestra(canal, caso["numero_identificacion"], valor)
-            if en_maestra:
-                resultado["verificados"].append(etiqueta)
-                repo.eliminar_de_maestra(canal, caso["numero_identificacion"], valor)
-                resultado["eliminados"].append(etiqueta)
         except ErrorRepositorio as error:
-            return dict(resultado, error=str(error), operacion="eliminar")
+            return dict(resultado, error=str(error), operacion="cruzar")
+        if en_maestra:
+            resultado["verificados"].append(etiqueta)
+            try:
+                repo.eliminar_de_maestra(canal, caso["numero_identificacion"], valor)
+            except ErrorRepositorio as error:
+                return dict(resultado, error=str(error), operacion="eliminar")
+            resultado["eliminados"].append(etiqueta)
     return resultado
 
 
@@ -198,11 +202,14 @@ def exclusion_del_caso(registro, repo, caso, valores, stub, fecha_exclusion):
         repo.registrar_transaccion(id_radicado, "registro_exclusion", 4, "fallo", f"falla persistente al {resultado['operacion']}")
     else:
         parcial = repo.parcial(id_radicado)
+        sin_canal = not valores
         registro.reporte(id_radicado, padre, "exclusión registrada", None,
                          f"filas: {len(resultado['insertados'])}; ya presentes: {len(resultado['ya_presentes'])}; "
-                         f"verificados en maestra: {len(resultado['verificados'])}; eliminados de maestra: {len(resultado['eliminados'])}")
-        repo.registrar_transaccion(id_radicado, "registro_exclusion", 5 if parcial else 3, "ok",
-                                   "registro parcial (hubo valores duplicados)" if parcial else "exclusión registrada")
+                         f"verificados en maestra: {len(resultado['verificados'])}; eliminados de maestra: {len(resultado['eliminados'])}"
+                         + ("; solo la fila de Exclusion (sin celular ni correo: el fijo no tiene tabla de canal)" if sin_canal else ""))
+        motivo = ("solo la fila de Exclusion: sin celular ni correo (el fijo no tiene tabla de canal)" if sin_canal else
+                  "registro parcial (hubo valores duplicados)" if parcial else "exclusión registrada")
+        repo.registrar_transaccion(id_radicado, "registro_exclusion", 5 if (parcial or sin_canal) else 3, "ok", motivo)
     registro.auditoria(f"Fin del registro de exclusión del radicado {id_radicado}", MODULO)
     return resultado
 

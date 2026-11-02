@@ -162,7 +162,7 @@ def verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs):
     if espera.get("casilla_nunca_marcada") and consultas["casilla_marcada"]:
         fallos.append("el bot marcó la casilla del reCAPTCHA")
     # Cero PII en los logs: ni nombres ni números de identificación sintéticos aparecen en los CSV
-    for dato in ("LOPEZ", "MARIA", "1000000001", "9000000013", "3101234567", "ejemplo.invalid"):
+    for dato in ("LOPEZ", "MARIA", "1000000001", "9000000013", "3101234567", "ejemplo.invalid", "3209876543", "1000000004", "1000000007", "1000000005"):
         if dato in texto_logs:
             fallos.append(f"PII sintética en los logs: {dato}")
     nombres = " ".join(archivos)
