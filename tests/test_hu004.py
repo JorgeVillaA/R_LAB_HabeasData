@@ -1,5 +1,5 @@
 """HU-004 — Validar existencia de campos obligatorios (un test por escenario de la HU)."""
-from tests.soporte import PruebaConDoble
+from tests.soporte import PruebaConDoble, RADICADOS
 from habeasdata import ep001
 
 
@@ -35,14 +35,17 @@ class TestHU004(PruebaConDoble):
     def test_reborde_literal_no_aporta_cuenta_como_ausente(self):
         _, veredicto = self.validar("900011")  # NO APORTA en el número
         self.assertFalse(veredicto["completo"])
-        caso, veredicto = self.validar("900015")  # canales en NO APORTA y heredados ignorados
-        self.assertEqual(veredicto["motivos"], ["SIN CANAL DE CONTACTO"])
+        caso, veredicto = self.validar("900015")  # teléfono de contacto y correo en NO APORTA, pero celular y fijo de exclusión con valor (D-28)
+        self.assertTrue(veredicto["completo"])
+        caso = ep001.normalizar_caso(dict(next(r for r in RADICADOS if str(r["IDRADICADO"]) == "900015"),
+                                          NODECELULARPARAEXCLUSION="NO APORTA", NOFIJOPARAEXCLUSION=""), self.cfg)
+        self.assertEqual(ep001.validar_completitud(caso)["motivos"], ["SIN CANAL DE CONTACTO"])  # sin ningún canal sigue siendo excepción 1
 
     def test_excepcion_de_negocio_1_deja_comentario_en_gestion_detalle(self):
         resumen = ep001.procesar(self.cfg, self.cliente, self.registro)
         con_comentario = {c["IDRADICADO"]: c["Detalle"] for c in self.doble.estado.comentarios}
         self.assertEqual(sorted(resumen["excepciones_negocio_1"]), sorted(con_comentario))
-        self.assertEqual(sorted(con_comentario), ["900002", "900009", "900010", "900015"])  # 900011: descartado por el filtro
+        self.assertEqual(sorted(con_comentario), ["900002", "900009", "900010"])  # 900011: descartado por el filtro
         self.assertIn("SIN CANAL DE CONTACTO", con_comentario["900002"])
         self.assertIn("Excepción de negocio 1", con_comentario["900009"])
 

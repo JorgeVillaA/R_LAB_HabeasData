@@ -10,7 +10,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "f4fdbe87522402e2af310c5632efa0d64f61a07cf0fc2609e2c6dbd87a51449a"
+    "huella": "93519c64d7857202ac6e0ffcfafb4bf59bc7e5d11eaf0496f6b335f9d2efb97c"
   },
   {
     "id": "EP002-02-policia-sin-resultado-deriva-a-procuraduria",
@@ -20,7 +20,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "3a399940ff3eea0bf903abb1b6e93ce128cbd47febe8a05e84267b47348ab356"
+    "huella": "009d89d787f40d4bfafe77970d0415779f0f4c64a6a7aa4f644fc6bd3e58bbc3"
   },
   {
     "id": "EP002-03-policia-cuota-agotada-revision-humana",
@@ -30,7 +30,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "0780e32a4e2ebd586ca347f0037db594b1114475c28d61919174d07908471393"
+    "huella": "e280a32b32db0e01314a67f92545feaaab9f37aa03d736407748cd24ac808de7"
   },
   {
     "id": "EP002-04-policia-reto-de-imagenes-revision-humana",
@@ -40,7 +40,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "beb231127fe5b0cf2392626e3eb881f0f5667417bdc8e855b6508e81b2787306"
+    "huella": "0dca6f8981591f6efdb9406b81b62d04d96e76f90d9bfe4dbed527ee29ed1c25"
   },
   {
     "id": "EP002-05-policia-caida-persistente-deriva-a-procuraduria",
@@ -50,7 +50,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "473224c7e8ac39f57e20a8591d7a60e28685f242a2f70f34a4fd4e21731bc98b"
+    "huella": "ece79e71264119ce131cb04ac1bb8b5904adc92fb7794a39a17df8768ec10ee9"
   },
   {
     "id": "EP002-06-procuraduria-caida",
@@ -60,7 +60,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "875397e0b4d9fc23208c1bfaad34daf7e0eb2431b1ecef697ea801a096216fa3"
+    "huella": "1fcb29fbe0e5ac32c9b4438c2fc839021c466a4bcf6f844e1ba65f2928e93816"
   },
   {
     "id": "EP002-07-procuraduria-waf-bloquea",
@@ -70,7 +70,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "d636a08c1c40567aab27fce9ed361ad9a183f7633da0451afc7724967b595e9d"
+    "huella": "7c8825045fd839974f8610a91c03a7328f1b3c0df0fe11ff9d16755f0edf3151"
   },
   {
     "id": "EP002-08-procuraduria-webcert-incidentes",
@@ -80,7 +80,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "d493dc42121b747b10135177d69ae451d4f1eac621e3c787dd57d0af5d2c6ae1"
+    "huella": "5a0d2da58cbaa9c8548295f4370e29b7a6da5c25a74246f9651a211b4856c5f5"
   },
   {
     "id": "EP002-09-captcha-rechazado-por-el-portal",
@@ -90,7 +90,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "83304fa50fceb92a32c2d24a470bb4af6f36ec6b69b67e0aa1ba1fa6bdfa571b"
+    "huella": "0896bc33174f6a78fb1a4902536f039cff8d5b0bc135d637843ba9fc7d7d2331"
   },
   {
     "id": "EP002-10-servicio-de-captchas-no-disponible",
@@ -100,7 +100,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "15ccd2d63c988f3f789b8328d101e6b9750774f828742c682fccdd2603495361"
+    "huella": "bbcba8595aa23c4fc7c15fadbaf347cc4c052b107df17ebf2235f32d5a807638"
   },
   {
     "id": "EP002-11-familia-no-soportada-capital",
@@ -110,7 +110,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "7299f945eaedaf90e8e42db6d4a07f60f879495a4bb2d4b6671da57548e9b643"
+    "huella": "1173c93f582959135875a2e5b8a7d81c8dfb796eda40562592107e531bc88d1c"
   },
   {
     "id": "EP002-12-rotacion-de-familias",
@@ -120,7 +120,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "281542166a5d002b1f256e29cd889366f44161499c6fb5c5aeb45d2653fd5e29"
+    "huella": "04f74ed34d8619feb569a1573794cc7cbd6bb188cd864044e148a9aa05198533"
   },
   {
     "id": "EP002-13-nombre-no-coincide-excepcion-3",
@@ -130,7 +130,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "3b6ceaaaba11fdf8265beeb08d789540c7f123a1708e35695419c68b3aaa5690"
+    "huella": "f9e64516c73a57d3b8e59c28fd03628ee06e0a00a0e3b4a7bad2876e67449850"
   },
   {
     "id": "EP002-14-nombre-incompleto-excepcion-3",
@@ -140,7 +140,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "64b5cfa4515faa9b19268fecff52515620165e26d030544d31019176af7c5071"
+    "huella": "c590fdf0acb293265c312cf75ec0612e4b53b38b984c092f8aa5daf068ebbcc2"
   },
   {
     "id": "EP002-15-comentario-3-rechazado",
@@ -150,7 +150,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "e28722b0eb945ecd15c1a77f4e11741ace680ed4caa9486aac23b0d9f90a44ed"
+    "huella": "167d9703c5d260b33300f75f81cc09f8479a433025e8e34f3abcc0eaf0011805"
   },
   {
     "id": "EP002-16-nit-con-9-digitos-no-consulta",
@@ -160,7 +160,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "e95e4ae842d949495d8dd20394e68ac6e7f5c9b978a67b442473dd74e2495a7a"
+    "huella": "bf612130c2dce0f8b2ea71207b60ce7aa90c3e8153137e75e423d0aef4b42eb0"
   },
   {
     "id": "EP002-17-no-cedula-sin-nombre-continua",
@@ -170,7 +170,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "0f1a81ba01c4226d630dc4fbee44baa993ed42e6cc413ede952c84204695d47c"
+    "huella": "809a3104636ca30b9949d3acfa33816af52895dcaac55be44868ae3f5fb6c48e"
   },
   {
     "id": "EP002-18-tipo-de-documento-sin-consulta",
@@ -180,7 +180,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "1174ec184d84e87ec4866a33b88e88c5b116663288bbea29fec7afc93b59fc46"
+    "huella": "bc8e7b7992365f42edda5682e55dffa01e58f593c551b61d3eca118ba5e4618b"
   },
   {
     "id": "EP002-20-cedula-sin-resultado-en-ninguna-fuente",
@@ -190,7 +190,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "e73165db62fb79ce5d36eb6bf9592585902659462c6899e04aa6814abce7ed3d"
+    "huella": "5b2748317831764bc613e49c717dff34c80136d52b50bba0123db6aed30a2827"
   },
   {
     "id": "EP002-19-ciudadano-con-antecedentes-igual-valida",
@@ -200,7 +200,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "e1164830fddd86600b1c96cfac6bd00e097d91e10c31c9c9f986127be4eb66e8"
+    "huella": "991ac01e2bb9537a7f811f501a3c4ee0b7e2767154b375eacaddf42b67f5f7b4"
   },
   {
     "id": "EP002-21-modo-real-no-evade-el-recaptcha",
@@ -210,7 +210,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "19f78c6172ff57ebe56b4aa8db7f2720c7e6e1f753b3193d563e9bac0bf4ae25"
+    "huella": "1076db18a9332eb61ca3511ce13ce31c906d0e42a8d34d11c994adb3a322f655"
   },
   {
     "id": "EP002-22-portal-con-falla-transitoria-reintenta",
@@ -220,7 +220,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "9bce6c5d4f5233111b23d9f9fd732ff18635811c07bffdf201da9837cf3f381b"
+    "huella": "714a986c62085f317f017da4b39f76169ac292f1593db2c5ea98692a121924ef"
   },
   {
     "id": "EP002-23-umbral-de-nombres-configurable",
@@ -230,7 +230,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "f42573b4eafb0347cd7f4a952d84d9b57da9a6a81026ca00159bd37690c4483a"
+    "huella": "d3ced3efc5204287b78cce5d9562aaa9596b56319cb1f4b06cda05e03080744a"
   },
   {
     "id": "EP002-24-pasaporte-y-cedula-de-extranjeria",
@@ -240,7 +240,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "71ece2c81a9f6dac7a4b94c97c2f9ddcc88f0ef51b1f5640f6d92fb4000abd6b"
+    "huella": "e5d3703135c7c59ff2f5ca0dbe2cda9746573dcfa46e7f0a26fbf767d199c965"
   },
   {
     "id": "EP002-25-portal-con-dos-fallas-transitorias-resuelve-en-el-tercer-intento",
@@ -250,6 +250,6 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "9bce6c5d4f5233111b23d9f9fd732ff18635811c07bffdf201da9837cf3f381b"
+    "huella": "714a986c62085f317f017da4b39f76169ac292f1593db2c5ea98692a121924ef"
   }
 ]

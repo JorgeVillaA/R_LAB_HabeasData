@@ -444,25 +444,22 @@
       "casilla_nunca_marcada": false,
       "tablas": {
         "Insumo": 15,
-        "Excepciones": 6,
-        "Gestores": 5,
+        "Excepciones": 5,
+        "Gestores": 4,
         "Parametros": 72,
         "LogEjecucion": 1,
         "AuditoriaMaestras": 9,
-        "Exclusion": 9
+        "Exclusion": 10
       },
       "estado_final": {
         "900011": 4,
         "900007": 5,
         "900001": 3,
-        "900015": 4
+        "900015": 3
       },
       "excepciones": {
         "900007": [
           "4"
-        ],
-        "900015": [
-          "1"
         ],
         "900010": [
           "1"

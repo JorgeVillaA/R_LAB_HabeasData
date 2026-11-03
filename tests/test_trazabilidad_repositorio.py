@@ -88,7 +88,7 @@ class TestCorridaCompleta(unittest.TestCase):
 
     def test_blocker_1_excepciones_se_escribe_por_cada_excepcion(self):
         tipos = dict(self.q("SELECT TipoExcepcion, COUNT(*) FROM Excepciones GROUP BY TipoExcepcion"))
-        self.assertEqual(tipos, {"1": 4, "4": 2})
+        self.assertEqual(tipos, {"1": 3, "4": 2})  # 900015 ya no es excepción 1: su celular y fijo de exclusión son canal de contacto (D-28)
         columnas = [f[1] for f in self.q("PRAGMA table_info(Excepciones)")]
         self.assertEqual(columnas, ["Id", "RadicadoZeus", "TipoExcepcion", "Detalle", "FechaHora"])
         self.assertEqual(self.q("SELECT COUNT(*) FROM Excepciones WHERE Detalle IS NULL OR Detalle = 'NO APLICA'")[0][0], 0)
@@ -99,8 +99,15 @@ class TestCorridaCompleta(unittest.TestCase):
         self.assertEqual(self.q("SELECT Valor FROM Parametros WHERE Clave = 'UMBRAL_COINCIDENCIA_NOMBRES'"), [("0.8",)])
         total, exitosos, no_exitosos, parciales, excepciones = self.q(
             "SELECT CasosProcesados, Exitosos, NoExitosos, Parciales, Excepciones FROM LogEjecucion")[0]
-        self.assertEqual((total, exitosos, no_exitosos, parciales, excepciones), (15, 6, 6, 3, 6))
+        self.assertEqual((total, exitosos, no_exitosos, parciales, excepciones), (15, 7, 5, 3, 5))
         self.assertEqual(self.q("SELECT COUNT(*) FROM Gestores WHERE Gestor IS NULL OR Agencia IS NULL")[0][0], 0)
+
+    def test_d28_900015_con_celular_y_fijo_de_exclusion_continua_y_se_registra(self):
+        """Antes se descartaba por «sin canal de contacto»; ahora supera la completitud, la identidad y registra su celular."""
+        self.assertEqual(self.q("SELECT EstadoNuevo FROM Transacciones WHERE RadicadoZeus = '900015' ORDER BY IdTransaccion DESC LIMIT 1"), [(3,)])
+        self.assertEqual(self.q("SELECT COUNT(*) FROM Excepciones WHERE RadicadoZeus = '900015'"), [(0,)])
+        self.assertEqual(self.q("SELECT Telefonos FROM Insumo WHERE RadicadoZeus = '900015'"), [("3134589654, 2695478",)])
+        self.assertEqual(self.q("SELECT COUNT(*) FROM Celulares WHERE CELULAR = '3134589654'"), [(1,)])
 
     def test_blocker_3_ningun_caso_queda_abierto_al_cerrar_la_corrida(self):
         abiertos = self.q("SELECT RadicadoZeus FROM Transacciones WHERE IdTransaccion IN (SELECT MAX(IdTransaccion) FROM Transacciones "

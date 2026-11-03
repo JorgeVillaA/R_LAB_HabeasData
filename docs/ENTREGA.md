@@ -43,10 +43,16 @@ La re-auditoría sobre la corrida limpia cerró los 5 bloqueantes de la primera 
 
 **Evidencia** (ejecutada, contra los dobles y el robot por el intérprete con navegador emulado):
 - Suite completa: 293 tests OK. Bancos EP-001 (18), EP-002 (25) y EP-003 (16): todos pasan y las dos corridas dan huellas idénticas. `validate_robot` perfil trycore: 0 errores, 0 avisos.
-- Corrida limpia desde base nueva (15 radicados sintéticos): el archivo se pudo renombrar al terminar; 0 casos abiertos en estado 1 o 2; 6 filas en `Excepciones` y 6 filas `Resultado = fallo`, igual a los 6 casos en estado 4 (la re-auditoría midió 13 y 13 en su propia corrida; ambas cifras cumplen la regla fallo ⇔ estado 4); `LogEjecucion` con id de corrida y 396 pasos del módulo; reporte (36 filas) y logs con el mismo `IdCorrida`.
+- Corrida limpia desde base nueva (15 radicados sintéticos): el archivo se pudo renombrar al terminar; 0 casos abiertos en estado 1 o 2; 6 filas en `Excepciones` y 6 filas `Resultado = fallo`, igual a los 6 casos en estado 4 (con D-28, tercera ronda, son 5 y 5: 900015 ya no cae en excepción 1) (la re-auditoría midió 13 y 13 en su propia corrida; ambas cifras cumplen la regla fallo ⇔ estado 4); `LogEjecucion` con id de corrida y 396 pasos del módulo; reporte (36 filas) y logs con el mismo `IdCorrida`.
 
 **Límites que se mantienen:**
 - **La equivalencia en Studio con Chrome no se repitió sobre estos commits.** El intento terminó en HTTP 401 porque el Studio abierto traía otro entorno de credenciales; hay que relanzarlo con `studio/R_LAB_HabeasData/R_LAB_HabeasData.bat` y correr `python banco/banco_ep002.py` y `python banco/banco_ep002.py EP-003`. El último resultado válido de Studio es anterior a la segunda ronda.
 - **Un kill forzado de `rocketbot.exe` sigue dejando `lab.sqlite` bloqueado:** el cierre cubre el fin de la corrida y los fallos de Python, no la muerte del proceso.
 - No se repitió la verificación adversarial independiente de la segunda ronda sobre estos commits.
-- Pendientes de Villa: D-28 (celular de exclusión), D-31 (valor del «SLA» del spec) y las columnas propuestas de D-30 y D-32.
+- Pendientes de Villa: D-31 (valor del «SLA» del spec), D-34 (regla «sin correo») y las columnas propuestas de D-30 y D-32. D-28 quedó resuelta el 2026-11-03: el celular y el fijo de exclusión son canal de contacto.
+
+## D-28 resuelta (2026-11-03): el celular y el fijo de exclusión son canal de contacto
+Por evidencia documental de CISA (ver D-28 en `docs/DECISIONES.md`), `preparar_campos` suma `NODECELULARPARAEXCLUSION` y `NOFIJOPARAEXCLUSION` a `TELEFONODECONTACTO` (sin duplicar valores, con la regla de dígitos existente y el campo de origen en `telefonos_campos`). 900015 ya no se descarta por «sin canal de contacto»: supera la completitud y la identidad, registra su celular y cierra en 3. Sin ningún canal (todo en «NO APORTA») sigue siendo excepción 1.
+- **Verificación:** suite completa 295 tests OK; bancos EP-001 (18), EP-002 (25) y EP-003 (16), dos corridas cada uno con huellas idénticas; escenarios de EP-001 y EP-003-12 actualizados al nuevo desenlace de 900015. El robot no cambió (`preparar_campos` es de `Scripts/`), así que no hizo falta re-sincronizar `robot.db`.
+- **Studio con Chrome (sobre este cambio):** `banco/equivalencia_robot.py EP-001` 18/18 iguales; `banco_ep002.py EP-003` escenarios 12 (corrida completa) y 13 iguales, con el archivo del repositorio movible al terminar. EP-002 y el resto de EP-003 no se repitieron en Studio.
+- **Pendiente (D-34):** CISA no gestiona teléfonos fijos y sin correo no hay notificación automática; el código no tiene regla «sin correo» y no se inventó una.

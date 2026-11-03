@@ -1,14 +1,14 @@
 {
-  "head_at_run": "869d834",
+  "head_at_run": "1af4425",
   "anchored_at": {
-    "sha": "869d834",
+    "sha": "1af4425",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "escenarios": [
     {
       "id": "EP001-01-happy-completo",
       "equivalente": true,
-      "pasos_robot": 1016,
+      "pasos_robot": 1014,
       "errores_capturados": 0,
       "diferencias": {}
     },
@@ -57,28 +57,28 @@
     {
       "id": "EP001-08-radicado-no-legible-400",
       "equivalente": true,
-      "pasos_robot": 1013,
+      "pasos_robot": 1011,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-09-radicado-no-encontrado-404",
       "equivalente": true,
-      "pasos_robot": 1013,
+      "pasos_robot": 1011,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-10-comentario-rechazado-400",
       "equivalente": true,
-      "pasos_robot": 1016,
+      "pasos_robot": 1014,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-11-comentario-sin-autorizacion-401",
       "equivalente": true,
-      "pasos_robot": 1016,
+      "pasos_robot": 1014,
       "errores_capturados": 0,
       "diferencias": {}
     },
@@ -99,14 +99,14 @@
     {
       "id": "EP001-14-sin-descartar-identificacion-ausente",
       "equivalente": true,
-      "pasos_robot": 1080,
+      "pasos_robot": 1078,
       "errores_capturados": 0,
       "diferencias": {}
     },
     {
       "id": "EP001-15-lote-con-first-y-orderby",
       "equivalente": true,
-      "pasos_robot": 262,
+      "pasos_robot": 260,
       "errores_capturados": 0,
       "diferencias": {}
     },
@@ -120,7 +120,7 @@
     {
       "id": "EP001-17-casos-aparecen-en-el-reintento",
       "equivalente": true,
-      "pasos_robot": 1029,
+      "pasos_robot": 1027,
       "errores_capturados": 0,
       "diferencias": {}
     },

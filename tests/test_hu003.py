@@ -85,10 +85,21 @@ class TestHU003(PruebaConDoble):
         self.assertIsNone(caso["radicado_padre"])
         self.assertEqual(caso["radicado_para_plantillas"], "900001")
 
-    def test_campos_heredados_y_observaciones_no_se_leen(self):
+    def test_celular_y_fijo_de_exclusion_son_canal_de_contacto_y_dejan_su_campo(self):
+        """D-28: con TELEFONODECONTACTO en NO APORTA, NODECELULARPARAEXCLUSION y NOFIJOPARAEXCLUSION son el teléfono del caso."""
         caso = self.leer("900015")
-        self.assertEqual((caso["correos"], caso["telefonos"]), ([], []))
-        self.assertFalse(caso["canal_correo"] or caso["canal_telefono"])
+        self.assertEqual(caso["correos"], [])  # las OBSERVACIONES siguen sin leerse
+        self.assertEqual(caso["telefonos"], [{"valor": "3134589654", "clase": "celular"}, {"valor": "2695478", "clase": "fijo"}])
+        self.assertEqual(caso["telefonos_campos"], ["NODECELULARPARAEXCLUSION", "NOFIJOPARAEXCLUSION"])
+        self.assertTrue(caso["canal_telefono"] and not caso["canal_correo"])
+
+    def test_un_valor_repetido_en_dos_campos_no_se_duplica_y_conserva_el_primer_campo(self):
+        from habeasdata import ep001
+        registro = dict(next(r for r in RADICADOS if str(r["IDRADICADO"]) == "900001"), TELEFONODECONTACTO="3134589654", NODECELULARPARAEXCLUSION="3134589654",
+                        NOFIJOPARAEXCLUSION="2695478/3134589654")
+        caso = ep001.normalizar_caso(registro, self.cfg)
+        self.assertEqual([t["valor"] for t in caso["telefonos"]], ["3134589654", "2695478"])
+        self.assertEqual(caso["telefonos_campos"], ["TELEFONODECONTACTO", "NOFIJOPARAEXCLUSION"])
 
     def test_nombre_se_extrae_tal_cual_sin_normalizar(self):
         self.assertEqual(self.leer("900014")["nombre"], "TORRES GALINDO NATALIA")

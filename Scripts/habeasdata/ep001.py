@@ -60,8 +60,24 @@ def clasificar_telefono(valor, cfg):
     return "sin_clasificar"
 
 
+# D-28: el teléfono del caso sale de estos tres campos de Zeus (CISA: «correo, celular o teléfono fijo»), en este orden
+CAMPOS_TELEFONO = ("TELEFONODECONTACTO", "NODECELULARPARAEXCLUSION", "NOFIJOPARAEXCLUSION")
+
+
+def telefonos_del_registro(registro_zeus, cfg):
+    """Valores de teléfono sin repetir (un valor que ya vino en un campo anterior no se duplica) y el campo de Zeus de cada uno."""
+    valores, campos = [], []
+    for campo in CAMPOS_TELEFONO:
+        for valor in separar_valores(registro_zeus.get(campo), cfg):
+            if valor not in valores:
+                valores.append(valor)
+                campos.append(campo)
+    return valores, campos
+
+
 def preparar_campos(registro_zeus, cfg):
     """HU-003 (parseo): ausentes a None, valores de cada canal separados por «/». El nombre se conserva tal cual."""
+    telefonos, campos_telefono = telefonos_del_registro(registro_zeus, cfg)
     def limpio(campo):
         valor = registro_zeus.get(campo)
         return None if es_ausente(valor, cfg) else str(valor).strip()
@@ -77,7 +93,8 @@ def preparar_campos(registro_zeus, cfg):
         "numero_identificacion": limpio("NOIDENTIFICACIONDELCLIENTE"),
         "fecha_recepcion": limpio("FECHADERECEPCION"),
         "correos": separar_valores(registro_zeus.get("CORREOELECTRONICOPARAEXCLUSION"), cfg),
-        "telefonos_valores": separar_valores(registro_zeus.get("TELEFONODECONTACTO"), cfg),
+        "telefonos_valores": telefonos,
+        "telefonos_campos": campos_telefono,  # trazabilidad (sin PII): en qué campo de Zeus vino cada teléfono, en el mismo orden
     }
 
 

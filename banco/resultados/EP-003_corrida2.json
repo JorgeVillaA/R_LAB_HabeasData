@@ -9,7 +9,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "839b18aa35e6d4148284576f33cf111bb21b53b34eecec045986797265cd5ac4"
+    "huella": "2be7399e541f1c0a28f3a730ad04c82a45f2fe850811db860cb3894150d0860a"
   },
   {
     "id": "EP003-02-duplicado-total-excepcion-4",
@@ -19,7 +19,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "029bbb699fadc66ac2a1a8987f66b5c3d0c99b7b45763a3a904c63e7a521f0f8"
+    "huella": "6a1c74cf9ec1903aedd9964291b372dc3c5f9f158d6a00a38ca694dea0fdfe4a"
   },
   {
     "id": "EP003-03-duplicado-parcial-los-demas-continuan",
@@ -30,7 +30,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "97cc15a07d0ced426f22324a809ff4077e2a7c7acf360a8242ffedc296966ed1"
+    "huella": "2e24b95cf23a07b880b29c36b3f83eae8a53e7bbe86969e481583f295a527694"
   },
   {
     "id": "EP003-04-repositorio-no-responde-en-un-caso",
@@ -40,7 +40,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "df1c5f20b042cb30569aefc0156eee966ccfffa3822d317f050e3e043b0d6054"
+    "huella": "ebe4ba4153106945013cc726b9a707600bf78a37ba21ac71e141dc85b045b0c4"
   },
   {
     "id": "EP003-05-repositorio-inaccesible-para-todos-detiene",
@@ -50,7 +50,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "cb9bb91a2b187494bdea438a9b41f91ecc2e083940dea32f4595021f8cec5e73"
+    "huella": "010191ce3afbb21910963e16196dd53dbabbe0d25e848c41ff2a909d44cd79b4"
   },
   {
     "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
@@ -60,7 +60,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "1f02a5454545eb6ba5b07f2abf9c78ef6030ee65d841241449b26290a0957709"
+    "huella": "c52afc13d346a4ace6190e5f4a9d99097c9004584663c7f707b9b65751504aa5"
   },
   {
     "id": "EP003-07-eliminacion-falla-conserva-la-fila-insertada",
@@ -70,7 +70,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "47b3255d8f97d88b3918adae1f5a645622bd2b990e3eb2663b79150714f9a214"
+    "huella": "14159bee129f12edf8f28b2d21fe447f98949627444b52da8cecb1307390e6fb"
   },
   {
     "id": "EP003-08-identidad-no-valida-no-registra",
@@ -80,7 +80,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "4177285330d995f306364d8b14b610c2eb2e1cc694f4c23870bb378c5fd489e3"
+    "huella": "377ff5804320d7cc4e7421551217fc8ac42a826a3f884c8fe3cfd6569759490c"
   },
   {
     "id": "EP003-09-nota-de-duplicado-rechazada",
@@ -90,7 +90,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "feecbaa7034d8a82dc420b8d2696a20d5ebe9fdfb569f2a8295e146dead9548b"
+    "huella": "a632268347a118316a6815298f8f8f500395a049707a81db40a73de9ef62c6af"
   },
   {
     "id": "EP003-10-insercion-de-exclusion-falla",
@@ -100,7 +100,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "8b549f9ce8fa386c9989302521180e7f5629995afc7e76d59183dff45de8022b"
+    "huella": "7b7164e6b4e31d370dc3754c6cf282d749e1579d44fc8b86e434667f0a2f8696"
   },
   {
     "id": "EP003-11-solo-telefono-fijo-solo-fila-de-exclusion",
@@ -110,7 +110,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "a2a9ced32418242b51856826c5d26780c3cedf9205c177ba0b163a54ff350f86"
+    "huella": "04e1c4609415e6cb35d25afb864db6d63b6c7ab5f3a554e2cd949cee5a6528fd"
   },
   {
     "id": "EP003-12-corrida-completa-trazabilidad",
@@ -120,7 +120,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "b123ffc51435e3cdde6d4e900f709759169b25a4024e397e32b1db8c8b87cc8a"
+    "huella": "56fdca805fb8ffc0c2b33964ef0fabf4d80fd3f9af04dbac8ef0d27a3a67e437"
   },
   {
     "id": "EP003-13-no-cedula-sin-nombre-cierra-parcial",
@@ -130,7 +130,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "42c5b42c1cc76e2509009439b8d840e55003f51349d24a1cb7d1bafe2fe34850"
+    "huella": "7370b89bde9429d743824ca5600f9ce1132f45ca9535508ad627b81a0b94b9d7"
   },
   {
     "id": "EP003-14-excepcion-3-deja-excepcion-y-gestor",
@@ -140,7 +140,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "4177285330d995f306364d8b14b610c2eb2e1cc694f4c23870bb378c5fd489e3"
+    "huella": "377ff5804320d7cc4e7421551217fc8ac42a826a3f884c8fe3cfd6569759490c"
   },
   {
     "id": "EP003-15-procuraduria-caida-excepcion-de-sistema",
@@ -150,7 +150,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "c7a322834be7cc6db2aa71c3b92ee74c7d1ccec495b88550b1776ffce7856b54"
+    "huella": "d277c59bde2449c918032343c08617e953442f838248a0e157106a2988e76e2c"
   },
   {
     "id": "EP003-16-nit-9-digitos-gestion-manual",
@@ -160,6 +160,6 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "71a1546a327f9375f6c774e6843e0dbf6b46290e7211f97b862301bfbb831599"
+    "huella": "d5cfb5535d6896790634da20c0bb826680349207a19b248168e4e87000915eae"
   }
 ]
