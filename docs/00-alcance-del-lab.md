@@ -3,6 +3,7 @@
 > Documento de alcance del laboratorio agentizado EP-001–EP-003 (más EP-006 en lo que sirve a HU-007).
 > Solo documentación de discovery: **no se construye el robot** ni se toca la configuración del arnés.
 > Fuentes: (1) historias de usuario (HU) del proyecto real OP798698 (cliente CISA), carpeta `docs/04-historias/` y `docs/03-backlog/epicas.md`; (2) nota «Lab agentizado EP-001–003 — plan» del 2026-10-29; (3) **Diseño técnico v1.2** de CISA («DiseñoTécnico Habeas Data - Cisa_.docx», en adelante DT) como fuente de verdad de arquitectura, MER y parámetros; (4) nota «Estado de integración y control de cambios 01 (oct-2026)» (en adelante *nota de integración*).
+> **Directriz de Villa (2026-10-29): el cliente de Zeus se implementa contra la API real** (§13); el doble local pasa a ser solo fixture offline del banco determinista.
 > **Estado del plan: G0 pendiente de aprobación.** Estos documentos son insumo de F0/F2 y **no declaran G0 cerrado** (C-15).
 
 ## 1. Propósito
@@ -139,6 +140,12 @@ Resumen de estado (detalle debajo):
 | C-14 | Resuelta | HU-007 |
 | C-15 | Resuelta (declarada) | — |
 | C-16 | Resuelta con propuesta (**propuesta, pendiente de Villa**) | HU-010, HU-011 |
+| C-17 | Resuelta para el lab | HU-003 |
+| C-18 | Resuelta para el lab (confirmar con respuesta real) | HU-003, HU-004 |
+| C-19 | Resuelta por directriz de Villa; **ejecución real bloqueada** | HU-002, HU-003, HU-004 |
+| C-20 | Resuelta con la regla del validador (pendiente de revisión humana) | — |
+| C-21 | Resuelta con el manual (avisar a Villa) | — |
+| C-22 | **Abierta: decide Villa** | HU-002, HU-004 |
 
 ### C-01 — Cantidad de historias del lab — Resuelta
 - **Resolución**: quedan **9 HU** (HU-002, 003, 004, 006, 007, 026a, 008, 010, 011). El plan agrupaba HU-007 y HU-026a en una sola fila de su tabla de alcance porque HU-026a existe solo al servicio de HU-007 (unidad indivisible); eso explica que la tabla del plan tenga una fila menos que HU. El alcance no cambia.
@@ -208,6 +215,35 @@ Resumen de estado (detalle debajo):
 - **Propuesta (pendiente de Villa)**: en el lab se añaden **dos tablas maestras locales**, `MaestraCelulares` y `MaestraCorreos`, de **14 columnas** cada una (misma estructura de HU-011 §4), como insumo de cruce, **sin tocar las 8 tablas del diseño**. El repositorio local queda con 10 tablas: las 8 del MER más las dos maestras.
 - **Evidencia**: DT §4.6 (relaciones del MER); origen HU-010 §3 y HU-011 §3 (cruce y eliminación en base maestra); nota de integración §6.1 (Tema 10).
 
+### C-17 — Cantidad de campos de la API de Zeus — Resuelta para el lab
+- **Problema**: el plan y la nota de integración hablan de 48 campos; el ejemplo de respuesta del manual de consumo (2026-10-07) trae **51 propiedades**, y la nota de integración suma 10 campos de «Detalles» agregados el 2026-10-15 que el manual no documenta.
+- **Resolución**: el doble y los fixtures implementan las 51 propiedades del manual más las 10 de «Detalles» (estas últimas, forma supuesta del lab). La métrica de fidelidad se mide contra las 51 del manual.
+- **Evidencia**: manual de consumo §5; nota de integración §2.
+
+### C-18 — Literal de ausencia y formato de fecha en la API — Resuelta para el lab (confirmar con una respuesta real)
+- **Problema**: las HU usan el literal «No aporta»; el manual filtra con `'NO APORTA'` en mayúsculas. La nota de integración dice que `FECHADERECEPCION` es `yyyy-MM-dd`; el ejemplo del manual trae `dd/MM/yyyy`.
+- **Resolución**: la comparación del literal de ausencia no distingue mayúsculas (regla cerrada intacta); la fecha se conserva tal cual viene, sin convertirla.
+- **Evidencia**: manual de consumo §4.3 y §5; nota de integración §2.
+
+### C-19 — Modo local aislado frente a la API real — Resuelta por directriz de Villa; ejecución real bloqueada
+- **Problema**: el plan y las reglas de construcción dejaban fuera todo sistema de CISA.
+- **Resolución**: directriz de Villa (2026-10-29): el cliente se implementa contra el contrato real `CamposAdicionalesXRadicadoHabeasData`; el doble local queda como fixture offline del banco. El repositorio trae `ZeusApi.Modo = "fixture"` por defecto y el modo `real` apunta a QA con salvaguardas.
+- **Bloqueos para ejecutar contra la API real**: (1) `client_secret` rotado, por canal seguro; (2) autorización de uso; (3) acceso de red a `qaservices.cisa.gov.co`, no verificado; (4) endpoint de escritura del comentario (C-09). Detalle en `banco/evidencia/EP-001/EVIDENCIA.md`.
+
+### C-20 — Nombre de la tarea principal — Resuelta con la regla del validador (pendiente de revisión humana)
+- **Problema**: el lineamiento pide la tarea principal con el nombre del proyecto (`R_LAB_HabeasData`); `validate_robot` con `perfil:"trycore"` exige §7.1 PascalCase sin guiones bajos.
+- **Resolución**: el proyecto de Studio sigue llamándose `R_LAB_HabeasData` y la tarea principal es `LabHabeasData`.
+- **Evidencia**: salida de `validate_robot`: «debe ser PascalCase descriptivo, sin guiones bajos ni especiales».
+
+### C-21 — Nombre de un campo en `specs/api-zeus-qa.md` — Resuelta con el manual (avisar a Villa)
+- **Problema**: la spec lista `EVIDENCIADLARESPUESTAENVIADA`; el manual de consumo (2026-10-07) trae `EVIDENCIADELARESPUESTAENVIADA`.
+- **Resolución**: el doble y los fixtures usan el nombre del manual, que es la fuente de la spec. EP-001 no consume ese campo, así que no hay efecto funcional; la spec parece tener un error tipográfico.
+
+### C-22 — El filtro compuesto de la spec frente a HU-004 — **Abierta: decide Villa**
+- **Problema**: `specs/api-zeus-qa.md` manda seleccionar con `... and NOIDENTIFICACIONDELCLIENTE ne 'NO APORTA'`. HU-004 (y el origen) mandan que un radicado sin número de identificación vaya a la excepción de negocio 1 con comentario para Cartera. Con el filtro compuesto esos radicados **nunca llegan al bot** y Cartera no recibe el comentario.
+- **Tratamiento provisional**: se sigue la spec (`SeleccionRadicados.DescartarIdentificacionAusente = true`) y los descartados **no se pierden en silencio**: se cuentan con una consulta complementaria y quedan en el log de auditoría, el reporte y el resumen. Con `false` el flujo vuelve al de HU-004 (cubierto por pruebas y por el escenario EP001-14 del banco).
+- **Decide**: Villa, entre (a) mantener el descarte y asumir que esos radicados se gestionan manualmente fuera del bot, o (b) desactivar el descarte para que HU-004 los comente.
+
 ## 10. Pendientes que este documento no cierra
 
 - C-16: la propuesta de las dos tablas maestras espera la aprobación de Villa; el endpoint real de escritura en Zeus (C-09) sigue con IT CISA.
@@ -229,3 +265,13 @@ Directriz de Villa para la construcción, que se suma a las reglas del lab:
 - **Revisión con el MCP `rpa-aio`**: `screenshot`, `get_run_log`, `run_in_studio` y `validate_robot`. Si el MCP no está conectado en la sesión, se invoca por stdio.
 - **Reparto de la verificación**: la funcional la da el banco determinista; la visual la da Chrome. **Sin verificación visual real no se declara verde** (equivalente al gate `fidelity` del arnés).
 - Las capturas siguen la regla de datos: solo sintéticos, cero PII.
+
+## 13. API real de Zeus y fixture offline (directriz de Villa, 2026-10-29)
+
+- **Cliente real, doble como fixture.** `Scripts/habeasdata/zeus.py` habla el contrato real: OAuth 2.0 client credentials (`app_dab_habeasdata`, realm `git_cisa`), token de 300 s con renovación ante 401, OData v4 y consulta individual por `IDRADICADO`. El doble de `dobles/zeus_api/` solo alimenta el banco determinista y las pruebas sin red.
+- **Modos.** `ConfiguracionProceso.ZeusApi.Modo`: `fixture` (por defecto, el que usa el banco, declarado en cada resultado) o `real` (QA de CISA).
+- **Contrato.** El cliente implementa `specs/api-zeus-qa.md` (QA, extraído del manual v1.1). Solo consulta: la escritura del comentario vive en `EscrituraComentario`, separada, y en modo real no existe endpoint entregado, así que se reporta como bloqueo y no se simula.
+- **Secreto.** El `client_secret` sale **solo** del Administrador de credenciales de Windows (credencial `R_LAB_HabeasData/Zeus/QA`, nombre declarado en configuración; el valor nunca). Sin él, o sin `ZEUS_REAL_AUTORIZADO=1`, el cliente se detiene antes de cualquier llamada de red.
+- **PII real.** En modo real, logs, reporte y resumen del robot enmascaran nombre, identificación, correos y teléfonos; toda evidencia con radicados reales debe redactarse.
+- **Navegador.** Toda navegación web del robot corre en Chrome: `openbrowser` con `extra:{default:"chrome"}` y `openUrl` aparte; la ejecución se verifica con `run_in_studio` y captura del MCP. Cualquier ejecución en otro navegador o sin ventana es defecto.
+- **Robot legible a cliente (corrección de Villa).** El flujo de Studio es visible: `trycatch` «Control de ejecución» → grupos por historia (`HU002`, `HU003`, `HU004`, más inicialización y cierre `HU002HU003HU004`) → bloques por paso con descripción. El Python queda para E/S con secretos, parseo/clasificación puros y escritura de logs, invocado desde bloques visibles; nunca contiene el flujo. El comando nativo `request` no se usa porque escribe cabeceras y cuerpo (secreto y Bearer) en el log de Studio. La equivalencia con el orquestador Python se comprueba escenario por escenario (`banco/equivalencia_robot.py`).

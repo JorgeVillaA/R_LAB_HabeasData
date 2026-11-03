@@ -45,3 +45,7 @@ Reportes/
 # NocoDB local del lab (SQLite interno)
 nocodb-data/
 
+
+# Python
+__pycache__/
+*.pyc

@@ -1,0 +1,440 @@
+[
+  {
+    "id": "EP001-01-happy-completo",
+    "ramas": [
+      "HU-002 filtro con casos",
+      "HU-003 extracción",
+      "HU-004 completo avanza",
+      "HU-004 excepción 1 con comentario",
+      "HU-002 descartados por identificación ausente (filtro compuesto)"
+    ],
+    "doble": {
+      "radicados": "todos"
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ],
+      "excepciones_negocio_1": [
+        "900002",
+        "900009",
+        "900010",
+        "900015"
+      ],
+      "excepciones_sistema": [],
+      "motivo_sin_casos": null,
+      "comentarios": [
+        "900002",
+        "900009",
+        "900010",
+        "900015"
+      ],
+      "casos": {
+        "900007": {
+          "correos": [
+            "sofia.a@ejemplo.invalid",
+            "sofia.b@ejemplo.invalid"
+          ]
+        },
+        "900008": {
+          "radicado_padre": "800001",
+          "radicado_para_plantillas": "800001"
+        },
+        "900005": {
+          "telefonos": [
+            {
+              "valor": "4441234",
+              "clase": "fijo"
+            }
+          ]
+        },
+        "900006": {
+          "telefonos": [
+            {
+              "valor": "2101234567",
+              "clase": "sin_clasificar"
+            }
+          ]
+        }
+      },
+      "descartados": [
+        "900011"
+      ]
+    }
+  },
+  {
+    "id": "EP001-02-bandeja-vacia",
+    "ramas": [
+      "HU-002 colección vacía y consulta general vacía"
+    ],
+    "doble": {
+      "radicados": []
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "motivo_sin_casos": "bandeja_vacia",
+      "reintento_minutos": 60,
+      "comentarios": [],
+      "descartados": []
+    }
+  },
+  {
+    "id": "EP001-03-tipologia-ausente",
+    "ramas": [
+      "HU-002 colección vacía con radicados ajenos"
+    ],
+    "doble": {
+      "radicados": [
+        "ajeno"
+      ]
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "motivo_sin_casos": "tipologia_ausente",
+      "reintento_minutos": 60,
+      "comentarios": []
+    }
+  },
+  {
+    "id": "EP001-04-filtro-no-reconocido",
+    "ramas": [
+      "HU-002 400 detiene"
+    ],
+    "proceso": {
+      "Negocio": {
+        "CampoTipologia": "CAMPOINEXISTENTE"
+      }
+    },
+    "doble": {
+      "radicados": "todos"
+    },
+    "espera": {
+      "estado": "detenido",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "notificacion_asunto": "Detenido",
+      "comentarios": []
+    }
+  },
+  {
+    "id": "EP001-05-token-vencido-persistente",
+    "ramas": [
+      "HU-002 401 detiene"
+    ],
+    "doble": {
+      "radicados": "todos",
+      "token_ttl": 0
+    },
+    "espera": {
+      "estado": "detenido",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "notificacion_asunto": "Detenido",
+      "comentarios": []
+    }
+  },
+  {
+    "id": "EP001-06-sin-roles-403",
+    "ramas": [
+      "HU-002 403 detiene"
+    ],
+    "doble": {
+      "radicados": "todos",
+      "denegar": true
+    },
+    "espera": {
+      "estado": "detenido",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "notificacion_asunto": "Detenido",
+      "comentarios": []
+    }
+  },
+  {
+    "id": "EP001-07-api-no-disponible",
+    "ramas": [
+      "HU-002 sin conexión tras reintentos detiene"
+    ],
+    "doble": {
+      "radicados": "todos",
+      "apagado": true
+    },
+    "espera": {
+      "estado": "detenido",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "notificacion_asunto": "Detenido"
+    }
+  },
+  {
+    "id": "EP001-08-radicado-no-legible-400",
+    "ramas": [
+      "HU-003 400 por radicado: excepción de sistema y continúa"
+    ],
+    "doble": {
+      "radicados": "todos",
+      "fallas_radicado": {
+        "900001": 400
+      }
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ],
+      "excepciones_negocio_1": [
+        "900002",
+        "900009",
+        "900010",
+        "900015"
+      ],
+      "excepciones_sistema": [
+        "900001"
+      ],
+      "descartados": [
+        "900011"
+      ]
+    }
+  },
+  {
+    "id": "EP001-09-radicado-no-encontrado-404",
+    "ramas": [
+      "HU-003 404 por radicado: excepción de sistema y continúa"
+    ],
+    "doble": {
+      "radicados": "todos",
+      "fallas_radicado": {
+        "900003": 404
+      }
+    },
+    "espera": {
+      "estado": "ok",
+      "excepciones_sistema": [
+        "900003"
+      ],
+      "avanzan_no_incluye": [
+        "900003"
+      ]
+    }
+  },
+  {
+    "id": "EP001-10-comentario-rechazado-400",
+    "ramas": [
+      "HU-004 escritura rechazada: excepción de sistema"
+    ],
+    "doble": {
+      "radicados": "todos",
+      "falla_comentario": 400
+    },
+    "espera": {
+      "estado": "ok",
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [
+        "900002",
+        "900009",
+        "900010",
+        "900015"
+      ],
+      "comentarios": [],
+      "descartados": [
+        "900011"
+      ]
+    }
+  },
+  {
+    "id": "EP001-11-comentario-sin-autorizacion-401",
+    "ramas": [
+      "HU-004 escritura 401 persistente: excepción de sistema"
+    ],
+    "doble": {
+      "radicados": "todos",
+      "falla_comentario": 401
+    },
+    "espera": {
+      "estado": "ok",
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [
+        "900002",
+        "900009",
+        "900010",
+        "900015"
+      ],
+      "descartados": [
+        "900011"
+      ]
+    }
+  },
+  {
+    "id": "EP001-12-solo-casos-completos",
+    "ramas": [
+      "HU-004 ninguna excepción"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003",
+        "900004"
+      ]
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [
+        "900001",
+        "900003",
+        "900004"
+      ],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "comentarios": [],
+      "descartados": []
+    }
+  },
+  {
+    "id": "EP001-13-todos-incompletos",
+    "ramas": [
+      "HU-004 todos van a excepción 1"
+    ],
+    "doble": {
+      "radicados": [
+        "900002",
+        "900009",
+        "900010",
+        "900011"
+      ]
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [],
+      "excepciones_negocio_1": [
+        "900002",
+        "900009",
+        "900010"
+      ],
+      "excepciones_sistema": [],
+      "comentarios": [
+        "900002",
+        "900009",
+        "900010"
+      ],
+      "descartados": [
+        "900011"
+      ]
+    }
+  },
+  {
+    "id": "EP001-14-sin-descartar-identificacion-ausente",
+    "ramas": [
+      "HU-002 filtro simple",
+      "HU-004 sin número de identificación → excepción 1 con comentario"
+    ],
+    "proceso": {
+      "SeleccionRadicados": {
+        "DescartarIdentificacionAusente": false
+      }
+    },
+    "doble": {
+      "radicados": "todos"
+    },
+    "espera": {
+      "estado": "ok",
+      "excepciones_negocio_1": [
+        "900002",
+        "900009",
+        "900010",
+        "900011",
+        "900015"
+      ],
+      "excepciones_sistema": [],
+      "descartados": [],
+      "comentarios": [
+        "900002",
+        "900009",
+        "900010",
+        "900011",
+        "900015"
+      ]
+    }
+  },
+  {
+    "id": "EP001-15-lote-con-first-y-orderby",
+    "ramas": [
+      "HU-002 $first y $orderby=IDRADICADO desc"
+    ],
+    "proceso": {
+      "SeleccionRadicados": {
+        "LoteMaximo": 3
+      }
+    },
+    "doble": {
+      "radicados": "todos"
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [
+        "900016",
+        "900014"
+      ],
+      "excepciones_negocio_1": [
+        "900015"
+      ],
+      "excepciones_sistema": [],
+      "descartados": [
+        "900011"
+      ],
+      "comentarios": [
+        "900015"
+      ]
+    }
+  },
+  {
+    "id": "EP001-16-solo-descartados",
+    "ramas": [
+      "HU-002 colección vacía por filtro compuesto con descartados"
+    ],
+    "doble": {
+      "radicados": [
+        "900011"
+      ]
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "motivo_sin_casos": "solo_descartados",
+      "reintento_minutos": 60,
+      "descartados": [
+        "900011"
+      ],
+      "comentarios": []
+    }
+  }
+]

@@ -1,0 +1,112 @@
+{
+ "name": "VerificacionVisualDobles",
+ "description": "Abre el doble local de la API de Zeus en Chrome y lee su DOM. Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
+ "vars": [
+  {
+   "name": "glbBlnEstadoSistema",
+   "data": "True"
+  },
+  {
+   "name": "glbBlnEstadoProceso",
+   "data": "True"
+  },
+  {
+   "name": "glbStrObservaciones",
+   "data": ""
+  },
+  {
+   "name": "glbIntReintentos",
+   "data": "3"
+  },
+  {
+   "name": "glbIntReintentosLogin",
+   "data": "3"
+  },
+  {
+   "name": "glbStrUrlDoble",
+   "data": "http://127.0.0.1:8765/_doble/"
+  },
+  {
+   "name": "locStrTitulo",
+   "data": ""
+  },
+  {
+   "name": "locStrTotal",
+   "data": ""
+  }
+ ],
+ "commands": [
+  {
+   "father": "trycatch",
+   "description": "Control de excepciones de la verificacion visual",
+   "children": [
+    {
+     "father": "openbrowser",
+     "option": "chrome",
+     "command": "{\"url\":\"{glbStrUrlDoble}\",\"id_driver\":\"\",\"profile\":\"\"}",
+     "extra": {
+      "default": "chrome"
+     },
+     "description": "Abre Chrome"
+    },
+    {
+     "father": "openUrl",
+     "command": "{glbStrUrlDoble}",
+     "description": "Abre el doble de Zeus"
+    },
+    {
+     "father": "waitforobject",
+     "command": {
+      "object": "//h1",
+      "option": "xpath",
+      "wait_time": "15",
+      "wait_for": "visible",
+      "before": 0,
+      "after": 0
+     },
+     "description": "Espera el titular"
+    },
+    {
+     "father": "textObject",
+     "command": "//h1",
+     "option": "xpath",
+     "getvar": "locStrTitulo",
+     "description": "Lee el titular"
+    },
+    {
+     "father": "textObject",
+     "command": "//*[@id='total']",
+     "option": "xpath",
+     "getvar": "locStrTotal",
+     "description": "Lee el total de radicados"
+    },
+    {
+     "father": "setVar",
+     "var": "glbStrObservaciones",
+     "command": "'Chrome: titulo=' + '{locStrTitulo}' + ' total=' + '{locStrTotal}'",
+     "description": "Arma la observacion"
+    }
+   ],
+   "else": [
+    {
+     "father": "setVar",
+     "var": "glbBlnEstadoSistema",
+     "command": "False",
+     "description": "Marca fallo de sistema"
+    },
+    {
+     "father": "setVar",
+     "var": "glbStrObservaciones",
+     "command": "'Fallo en la verificacion visual en Chrome'",
+     "description": "Observacion"
+    }
+   ]
+  },
+  {
+   "father": "log_message",
+   "option": "info",
+   "command": "{glbStrObservaciones}",
+   "description": "Traza final"
+  }
+ ]
+}

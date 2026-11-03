@@ -1,0 +1,43 @@
+{
+  "ZeusApi": {
+    "Modo": "fixture",
+    "TimeoutSegundos": 10,
+    "BackoffSegundos": [1, 2, 4],
+    "Fixture": {
+      "UrlBase": "http://127.0.0.1:8765/habeasdata/api/CamposAdicionalesXRadicadoHabeasData",
+      "UrlToken": "http://127.0.0.1:8765/sso/git_cisa/token",
+      "UrlComentario": "http://127.0.0.1:8765/habeasdata/api/GestionRadicado/Comentario",
+      "ClientIdEnv": "ZEUS_DOBLE_CLIENT_ID",
+      "ClientSecretEnv": "ZEUS_DOBLE_CLIENT_SECRET"
+    },
+    "Real": {
+      "Ambiente": "QA",
+      "UrlBase": "https://qaservices.cisa.gov.co/habeasdata/api/CamposAdicionalesXRadicadoHabeasData",
+      "UrlToken": "https://qaservices.cisa.gov.co/sso/git_cisa/token",
+      "UrlComentario": null,
+      "ClientId": "app_dab_habeasdata",
+      "CredencialTarget": "R_LAB_HabeasData/Zeus/QA",
+      "AutorizacionEnv": "ZEUS_REAL_AUTORIZADO"
+    }
+  },
+  "SeleccionRadicados": {
+    "DescartarIdentificacionAusente": true,
+    "CampoIdentificacion": "NOIDENTIFICACIONDELCLIENTE",
+    "LiteralIdentificacionAusente": "NO APORTA",
+    "LoteMaximo": 25,
+    "Orden": "IDRADICADO desc"
+  },
+  "Negocio": {
+    "TipologiaExclusion": "EXCLUSION DE DATOS",
+    "CampoTipologia": "PQRCORRESPONDEA",
+    "TextoAusente": "No aporta",
+    "SeparadorValores": "/",
+    "DigitosCelular": 10,
+    "PrefijoCelular": "3",
+    "DigitosFijo": 7
+  },
+  "CADENCIA_REINTENTO_BANDEJA_VACIA": {
+    "MinutosEntreReintentos": 60,
+    "MaximoReintentosDiarios": 3
+  }
+}

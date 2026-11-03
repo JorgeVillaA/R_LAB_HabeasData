@@ -8,6 +8,8 @@ estado: lista
 ---
 # Leer datos paramétricos del radicado
 
+> **OpenSpec change**: `ep-001-ingesta-y-lectura-de-casos` (épica EP-001).
+
 ## 1. Declaración de la historia
 
 Como **analista de operaciones**,
@@ -87,6 +89,10 @@ _Contexto_: En el origen es el paso 4 (pestaña "Campos Adicionales" de Zeus Web
 **Persistencia**: ni el radicado padre ni los demás datos se escriben en Zeus ni en el repositorio en este paso: son variables internas del bot durante el procesamiento (confirmado en el origen, 2026-10-20). El radicado hijo y el padre quedan trazados en el reporte de gestiones (columnas E y F del origen; las columnas del reporte para el lab las define Villa).
 
 **Datos**: sintéticos (nombres inventados, cédulas ficticias); los fixtures cubren sin canal, "No aporta", multivalor, padre/hijo, NIT y nombre invertido.
+
+**Modo real y fixture (directriz de Villa, 2026-10-29)**: el cliente se implementa contra el contrato real de la API (C-19); el doble local es solo fixture offline del banco. Sin `client_secret`, autorización de uso y acceso de red a QA no se ejecuta contra la API real: se reporta como bloqueo.
+
+Contra la API real, el ejemplo del manual trae `FECHADERECEPCION` como `dd/MM/yyyy` y el literal de ausencia en mayúsculas (C-18); se conservan tal cual y la ausencia no distingue mayúsculas.
 
 **Prioridad y complejidad**: se copian del origen (Must, M); la sustitución local no las cambia.
 

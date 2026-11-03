@@ -82,7 +82,7 @@ Las estructuras previas del origen quedan **superadas**: las 12 columnas del arc
 
 **Datos no ubicados**: cuando el canal nunca apareció en las bases maestras, el bot no toca el repositorio (ni inserta en exclusión ni elimina en la maestra). El registro aplica solo a "Datos Excluidos".
 
-**Eliminación en la base maestra (C-16, abierta)**: es la maestra de HU-010, distinta de las tablas que reciben la inserción. El MER de 8 tablas no trae una tabla maestra separada, así que su ubicación y columnas están por definir; las estructuras de 7 y 9 columnas que documentaba el origen quedan superadas por el Tema 10. Los escenarios de esta historia no dependen de esa decisión.
+**Eliminación en la base maestra (C-16, resuelta con propuesta, pendiente de Villa)**: es la maestra de HU-010 (`MaestraCelulares` o `MaestraCorreos`, 14 columnas), distinta de `Celulares` y `Correos`, que reciben la inserción. El MER de 8 tablas no trae tabla maestra; el lab la añade sin tocar las 8 del diseño. Las estructuras de 7 y 9 columnas que documentaba el origen quedan superadas por el Tema 10.
 
 **Canal fijo**: se registra en la base de exclusión sin lista maestra propia; el origen confirma (2026-09-30) que no se ha presentado en la práctica.
 

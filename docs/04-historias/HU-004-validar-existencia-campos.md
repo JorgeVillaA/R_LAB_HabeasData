@@ -8,6 +8,8 @@ estado: lista
 ---
 # Validar existencia de campos obligatorios
 
+> **OpenSpec change**: `ep-001-ingesta-y-lectura-de-casos` (épica EP-001).
+
 ## 1. Declaración de la historia
 
 Como **analista de operaciones**,
@@ -72,6 +74,12 @@ _Contexto_: Control de completitud (Capability 1). Solo valida existencia, no fo
 **Sin número de identificación**: sub-caso de la excepción de negocio 1; va a gestión manual completa y no requiere una excepción propia. Sin tipo de documento: el bot no puede enrutar a Policía ni a Procuraduría y se aplica la misma excepción.
 
 **Relación con la notificación**: pasar esta validación no garantiza notificación automática; un caso con teléfono pero sin correo lo trata la historia de notificación del origen (fuera del lab).
+
+**Modo real y fixture (directriz de Villa, 2026-10-29)**: el cliente se implementa contra el contrato real de la API (C-19); el doble local es solo fixture offline del banco. Sin `client_secret`, autorización de uso y acceso de red a QA no se ejecuta contra la API real: se reporta como bloqueo.
+
+En modo real el comentario de la excepción de negocio 1 **no se puede escribir**: el endpoint de escritura sigue pendiente con IT de CISA (C-09); el cliente lo reporta como bloqueo y el caso queda como excepción de sistema.
+
+**Alcance frente al filtro de HU-002 (C-22)**: con el filtro compuesto del contrato QA, un radicado cuyo número de identificación es «NO APORTA» no llega a esta historia y no recibe comentario; la decisión de mantenerlo o no es de Villa. El caso «sin número de identificación» se conserva en las pruebas con el descarte desactivado.
 
 **Prioridad y complejidad**: se copian del origen (Must, S); la sustitución local no las cambia.
 

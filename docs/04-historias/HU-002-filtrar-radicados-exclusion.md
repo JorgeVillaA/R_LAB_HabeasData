@@ -8,6 +8,8 @@ estado: lista
 ---
 # Filtrar radicados de Exclusión de Datos
 
+> **OpenSpec change**: `ep-001-ingesta-y-lectura-de-casos` (épica EP-001).
+
 ## 1. Declaración de la historia
 
 Como **analista de operaciones**,
@@ -68,6 +70,10 @@ _Contexto_: En el origen esta historia navega la bandeja "Por gestionar" de Zeus
 **Bandeja vacía**: el bot reintenta en otro horario del día; no finaliza sin error registrando solo "0 casos". La cadencia y el número de reintentos diarios son parámetro técnico (`CADENCIA_REINTENTO_BANDEJA_VACIA`), en `ConfiguracionProceso`; ningún valor va en la lógica. Cadencia parametrizable confirmada por el PO en el origen (2026-09-30).
 
 **Paginación**: el origen declara que el listado no tiene paginación. La semántica exacta de `$first` en el manual queda por confirmar (pendiente en `00-alcance-del-lab.md` §10).
+
+**Modo real y fixture (directriz de Villa, 2026-10-29)**: el cliente se implementa contra el contrato real de la API (C-19); el doble local es solo fixture offline del banco. Sin `client_secret`, autorización de uso y acceso de red a QA no se ejecuta contra la API real: se reporta como bloqueo.
+
+**Selección según el contrato QA (`specs/api-zeus-qa.md`)**: `PQRCORRESPONDEA eq 'EXCLUSION DE DATOS' and NOIDENTIFICACIONDELCLIENTE ne 'NO APORTA'`, con `$first` (lote) y `$orderby=IDRADICADO desc`. Los radicados descartados por identificación ausente se cuentan, se reportan y no se gestionan; si el descarte se desactiva, HU-004 los lleva a la excepción de negocio 1 (C-22, decide Villa). El `client_secret` sale solo del Administrador de credenciales de Windows.
 
 **Prioridad y complejidad**: se copian del origen (Must, S); la sustitución local no las cambia.
 
