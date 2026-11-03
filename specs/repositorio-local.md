@@ -8,12 +8,12 @@ El repositorio es local (NocoDB npm 0.301.3 en loopback, SQLite interno; SQLite 
 |---|---|---|
 | `Insumo` | Cada radicado extraído de Zeus (documento, nombres, contacto) y su estado de ejecución | 1:N con Excepciones, 1:1 con Exclusion |
 | `Excepciones` | Las 4 excepciones de negocio (datos incompletos, deudor activo, identidad no coincidente, duplicado) y las de sistema, por radicado. Columnas: `RadicadoZeus`, `TipoExcepcion` (1, 3, 4, sistema, gestion_manual), `Detalle`, `FechaHora` | N:1 con Insumo |
-| `Exclusion` | Base centralizada de exclusiones efectivas (documento, correo, celular, fecha) | 1:N con Celulares/Correos |
+| `Exclusion` | Base centralizada de exclusiones efectivas (documento, correo, celular, fecha). Una fila por radicado **y por corrida** (`IdCorrida`): la segunda corrida deja su propia fila con su fecha | 1:N con Celulares/Correos |
 | `Celulares` | Base de bloqueo de celulares vinculada a cada exclusión | N:1 con Exclusion |
 | `Correos` | Base de bloqueo de correos vinculada a cada exclusión | N:1 con Exclusion |
-| `Gestores` | Relación gestor → agencia → coordinador → correo, para enrutamiento. Una fila por caso derivado a gestión manual (gestor y agencia del stub de Cobra; «SIN ASIGNAR» si no hay dato) | N:1 con Insumo |
+| `Gestores` | Relación gestor → agencia → coordinador → correo, para enrutamiento. Una fila por caso derivado a gestión manual **y por corrida** (`IdCorrida`). Gestor, agencia, coordinador y correo salen del stub de Cobra (`coordinadores_por_sucursal`); el valor de «sin dato» es `sin_asignar` del propio stub, no un literal del código | N:1 con Insumo |
 | `Parametros` | Parámetros operativos configurables (ventana, umbral, SLA, rutas): **todas** las hojas de los tres JSON de configuración con su valor vigente en la corrida (`Clave` con puntos, `Maquina.` para la configuración de máquina) y la raíz efectiva; sin secretos. El SLA no tiene valor definido en ninguna fuente (D-31) | — |
-| `LogEjecucion` | Consolidado por corrida: fecha, casos procesados, exitosos, no exitosos, parciales, excepciones, duración en segundos, `IdCorrida` (el mismo que lleva el reporte y los logs), `PasosModulo` (pasos de `pasos.py`) y `Pasos` (comandos de Studio, anotados por el ejecutor) | — |
+| `LogEjecucion` | Consolidado por corrida: fecha, casos procesados, exitosos, no exitosos, parciales, excepciones, duración en segundos, `IdCorrida` (el mismo que lleva el reporte y los logs), `Pasos` (los cuenta el propio producto: llamadas del robot a `pasos.py`; sin robot, las transacciones de la corrida), `ComandosStudio` (los que cuenta Studio; los anota el ejecutor) y `Descartados` (radicados descartados en la selección, que no cuentan como casos procesados) | — |
 | `AuditoriaMaestras` *(tabla ligera, propuesta)* | Fila completa que se borró de `MaestraCelulares`/`MaestraCorreos`, su radicado y la hora: la corrida es reconstruible | N:1 con Insumo |
 | **`Transacciones`** *(adición del 29/10, decisión de Villa)* | **Una fila por cada paso de cada caso: el recorrido completo** | N:1 con Insumo |
 
@@ -38,7 +38,9 @@ El repositorio es local (NocoDB npm 0.301.3 en loopback, SQLite interno; SQLite 
 - ¿Qué transiciones fallaron y por qué?
 - Recorrido completo de un radicado (todas sus transacciones en orden).
 
-## Una corrida, un identificador (D-29, D-32)
+## Una corrida, un identificador (D-29, D-32, D-36)
+
+**Consulta «qué pasó en la corrida X»:** `Insumo`, `Transacciones`, `Excepciones`, `Exclusion`, `Gestores`, `AuditoriaMaestras` y `LogEjecucion` llevan `IdCorrida`; `Repositorio.resumen_de_corrida(X)` devuelve solo las filas de X. `Insumo` guarda la última corrida que tocó al radicado y la primera `EstadoAnterior` de una corrida es vacía (no hereda el cierre de la anterior).
 
 Cada corrida tiene un `IdCorrida` (`Cyyyymmddhhmmss`) que escriben el reporte de gestión (columna final), los logs (`[IdCorrida] ` al inicio de la observación) y `LogEjecucion`. El reporte cierra cada corrida con `FIN DE CORRIDA` o `CORRIDA DETENIDA`; una corrida que murió sin cerrar queda marcada `CORRIDA INTERRUMPIDA` por la siguiente del día. Al terminar, el robot cierra la conexión del repositorio: el archivo `.sqlite` queda libre para moverse o respaldarse.
 

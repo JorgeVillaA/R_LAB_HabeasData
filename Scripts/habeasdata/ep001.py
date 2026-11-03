@@ -268,6 +268,8 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.
     cliente = cliente or ClienteZeus(cfg, registro)
     escritura = escritura or EscrituraComentario(cliente)
     registro.asegurar_archivos()
+    if repo is not None:
+        repo.adoptar_corrida(registro.id_corrida)
     registro.auditoria("Inicio de ejecución EP-001", MODULO)
     resumen = {"estado": "ok", "modo": cliente.modo, "avanzan": [], "excepciones_negocio_1": [],
                "excepciones_sistema": [], "descartados_identificacion_ausente": [], "casos": {},

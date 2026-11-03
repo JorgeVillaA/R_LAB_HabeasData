@@ -267,7 +267,7 @@ def vista_de_resumen(resumen, comentarios):
 
 def liberar_y_anotar_pasos(raiz, pasos=None):
     """Tras la ejecución en Studio el archivo del repositorio debe poder moverse (si el robot dejó la conexión abierta, falla aquí) y
-    los comandos que Studio contó quedan en `LogEjecucion.Pasos`."""
+    los comandos que Studio contó quedan en `LogEjecucion.ComandosStudio`."""
     from habeasdata import repositorio
     archivo = raiz / "Documentos" / "repositorio" / "lab.sqlite"
     if not archivo.exists():
@@ -278,7 +278,7 @@ def liberar_y_anotar_pasos(raiz, pasos=None):
     except OSError as error:
         raise RuntimeError(f"el robot dejó abierto el repositorio al terminar: {error}") from error
     if pasos is not None:
-        repositorio.anotar_pasos(movido, pasos)
+        repositorio.anotar_comandos_studio(movido, pasos)
     movido.rename(archivo)
 
 
@@ -287,7 +287,7 @@ def vista_del_robot(raiz, zeus, studio=False):
     import os
     from unittest import mock
     import interprete_robot
-    shutil.copytree(REPO / "Scripts", raiz / "Scripts", ignore=shutil.ignore_patterns("__pycache__"))
+    shutil.copytree(REPO / "Scripts", raiz / "Scripts", ignore=shutil.ignore_patterns("__pycache__"), dirs_exist_ok=True)
     robot = json.loads((REPO / "Robots" / "LabHabeasData.robot.json").read_text(encoding="utf-8"))
     if studio:  # Studio en Chrome: el MCP recorta cada variable a 120 caracteres; las listas de 10 radicados caben
         import equivalencia_robot as eq
@@ -352,9 +352,13 @@ def principal_studio(ids=None):
         print("IGUAL " if igual else "DISTINTO", esc["id"], f"capturados={capturados}", resultados[-1]["diferencias"] or "")
     import subprocess
     sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip()
-    (REPO / "banco" / "resultados" / f"{epica}_equivalencia_robot.json").write_text(
-        json.dumps({"head_at_run": sha, "anchored_at": {"sha": sha, "robot": "Robots/LabHabeasData.robot.json"},
-                    "navegador": "Chrome (run_in_studio)", "escenarios": resultados}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    from procedencia import procedencia
+    completa = not ids  # una corrida de algunos escenarios no reemplaza la equivalencia completa: va a un archivo aparte
+    sufijo = "" if completa else "_parcial"
+    (REPO / "banco" / "resultados" / f"{epica}_equivalencia_robot{sufijo}.json").write_text(
+        json.dumps({"procedencia": procedencia(), "head_at_run": sha, "anchored_at": {"sha": sha, "robot": "Robots/LabHabeasData.robot.json"},
+                    "navegador": "Chrome (run_in_studio)", "completa": completa, "escenarios": resultados}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8")
     print("robot de Studio en Chrome equivalente al orquestador en los escenarios corridos:", todos)
     return 0 if todos else 1
 

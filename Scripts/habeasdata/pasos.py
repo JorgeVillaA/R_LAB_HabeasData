@@ -366,6 +366,7 @@ def _repo():
     """Repositorio de la corrida: se abre al primer uso (la sesión de un bloque probado solo también funciona, D-21)."""
     if _sesion.repo is None:
         _sesion._real.repo = ep003.abrir_repositorio(_sesion.cfg)
+        _sesion._real.repo.adoptar_corrida(_sesion.registro.id_corrida)
     return _sesion.repo
 
 

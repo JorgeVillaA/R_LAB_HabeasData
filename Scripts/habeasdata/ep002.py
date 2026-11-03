@@ -102,6 +102,8 @@ def registrar(registro, id_radicado, padre, etiqueta, via, puntaje=None, motivo=
 
 def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, repo=None, stub=None):
     from .captcha import ServicioCaptchas
+    if repo is not None:
+        repo.adoptar_corrida(registro.id_corrida)  # lo que se escribe en el repositorio lleva el id de esta corrida
     resumen = procesar_ep001(cfg, cliente, registro, escritura, repo=repo, stub=stub, cerrar_registro=False)
     resumen.update(validadas=[], excepciones_negocio_3=[], gestion_manual=[], revision_humana=[], sin_nombre=[],
                    excepciones_sistema_identidad=[], via={}, codigos={})

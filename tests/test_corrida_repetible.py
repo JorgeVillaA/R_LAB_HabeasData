@@ -92,7 +92,7 @@ class TestFugaDeConexion(PruebaDeRobot):
 class TestLogEjecucion(PruebaDeRobot):
     def test_la_fila_resumen_trae_el_id_de_la_corrida_y_los_pasos(self):
         self.correr_hasta_el_cierre()
-        id_corrida, pasos_modulo, = self.consultar("SELECT IdCorrida, PasosModulo FROM LogEjecucion")[0]
+        id_corrida, pasos_modulo = self.consultar("SELECT IdCorrida, Pasos FROM LogEjecucion")[0]
         self.assertRegex(id_corrida, r"^C\d{14}$")
         self.assertEqual(pasos_modulo, 4)  # iniciar, repositorio, evento y el propio cierre
         auditoria = "".join(p.read_text(encoding="utf-8") for p in (self.raiz / "Logs").rglob("*LOG_DE_AUDITORIA*.csv"))
@@ -101,14 +101,14 @@ class TestLogEjecucion(PruebaDeRobot):
     def test_el_ejecutor_anota_los_comandos_de_studio_con_el_archivo_ya_libre(self):
         self.correr_hasta_el_cierre()
         id_corrida = self.consultar("SELECT IdCorrida FROM LogEjecucion")[0][0]
-        self.assertEqual(r.anotar_pasos(self.archivo, 1737, id_corrida), 1)
-        self.assertEqual(self.consultar("SELECT Pasos FROM LogEjecucion"), [(1737,)])
+        self.assertEqual(r.anotar_comandos_studio(self.archivo, 1737, id_corrida), 1)
+        self.assertEqual(self.consultar("SELECT ComandosStudio, Pasos FROM LogEjecucion"), [(1737, 4)])  # los de Studio no pisan los del producto
 
     def test_dos_corridas_dejan_dos_filas_con_ids_distintos_y_el_contador_reinicia(self):
         for hora in (9, 10):
             with mock.patch.object(pasos, "Registro", lambda cfg, h=hora: Registro(cfg, lambda: datetime(2026, 11, 3, h, 0, 0))):
                 self.correr_hasta_el_cierre()
-        filas = self.consultar("SELECT IdCorrida, PasosModulo FROM LogEjecucion ORDER BY Id")
+        filas = self.consultar("SELECT IdCorrida, Pasos FROM LogEjecucion ORDER BY Id")
         self.assertEqual(len(filas), 2)
         self.assertNotEqual(filas[0][0], filas[1][0])
         self.assertEqual((filas[0][1], filas[1][1]), (4, 4))
@@ -121,7 +121,7 @@ class TestLogEjecucion(PruebaDeRobot):
         con.commit()
         con.close()
         with r.Repositorio(ruta) as repo:
-            self.assertTrue({"IdCorrida", "Pasos", "PasosModulo"} <= repo._columnas("LogEjecucion"))
+            self.assertTrue({"IdCorrida", "Pasos", "ComandosStudio"} <= repo._columnas("LogEjecucion"))
 
 
 class TestParametros(unittest.TestCase):
@@ -238,6 +238,126 @@ class TestSeparacionPorCorrida(PruebaConDoble):
         self.registro.cerrar_corrida("ok")
         self.registro.cerrar_corrida("detenido")
         self.assertEqual([f[3] for f in self.filas(self.registro.ruta_reporte())], [FIN_DE_CORRIDA])
+
+
+class TestDosCorridasSobreLaMismaBase(unittest.TestCase):
+    """Tercera ronda: una segunda corrida del mismo día deja SU rastro y no hereda como propio el de la anterior."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="lab_dos_corridas_"))
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.ruta = self.tmp / "lab.sqlite"
+        self.stub = ep003.cargar_stub()
+
+    def correr(self, id_corrida, hora, radicados=("900002", "900008")):
+        reloj = lambda: datetime(2026, 11, 3, hora, 0, 0)  # noqa: E731
+        with r.Repositorio(self.ruta, reloj=reloj, id_corrida=id_corrida) as repo:
+            for radicado in radicados:
+                repo.abrir_insumo(radicado)
+                repo.registrar_transaccion(radicado, "seleccion", 1, "ok", "seleccionado")
+                repo.insertar_exclusion(radicado, "1000000000")
+                ep003.cerrar_en_excepcion(repo, radicado, "validacion_campos", "1", f"excepción en la corrida {id_corrida}", self.stub)
+            return repo.resumen_de_corrida(id_corrida)
+
+    def filas(self, sql):
+        con = sqlite3.connect(self.ruta)
+        try:
+            return con.execute(sql).fetchall()
+        finally:
+            con.close()
+
+    def test_gestores_guarda_una_fila_por_radicado_y_por_corrida_con_su_fecha_y_su_motivo(self):
+        self.correr("C1", 9)
+        self.correr("C2", 11)
+        filas = self.filas("SELECT RadicadoZeus, IdCorrida, FechaAsignacion, Motivo FROM Gestores ORDER BY RadicadoZeus, IdCorrida")
+        self.assertEqual(filas, [("900002", "C1", "2026-11-03 09:00:00", "excepción 1: excepción en la corrida C1"),
+                                 ("900002", "C2", "2026-11-03 11:00:00", "excepción 1: excepción en la corrida C2"),
+                                 ("900008", "C1", "2026-11-03 09:00:00", "excepción 1: excepción en la corrida C1"),
+                                 ("900008", "C2", "2026-11-03 11:00:00", "excepción 1: excepción en la corrida C2")])
+
+    def test_exclusion_guarda_una_fila_por_radicado_y_por_corrida_con_su_propia_fecha(self):
+        self.correr("C1", 9)
+        self.correr("C2", 11)
+        self.assertEqual(self.filas("SELECT RadicadoZeus, IdCorrida, FechaExclusion FROM Exclusion ORDER BY RadicadoZeus, IdCorrida"),
+                         [("900002", "C1", "2026-11-03 09:00:00"), ("900002", "C2", "2026-11-03 11:00:00"),
+                          ("900008", "C1", "2026-11-03 09:00:00"), ("900008", "C2", "2026-11-03 11:00:00")])
+
+    def test_dentro_de_una_corrida_no_se_duplica(self):
+        self.correr("C1", 9)
+        self.correr("C1", 9)  # el mismo id: es la misma corrida reintentada, no una nueva
+        self.assertEqual(self.filas("SELECT COUNT(*) FROM Gestores"), [(2,)])
+        self.assertEqual(self.filas("SELECT COUNT(*) FROM Exclusion"), [(2,)])
+
+    def test_que_paso_en_la_corrida_x_devuelve_solo_lo_de_x(self):
+        self.correr("C1", 9)
+        segunda = self.correr("C2", 11, radicados=("900002",))
+        for tabla in ("Transacciones", "Excepciones", "Exclusion", "Gestores", "Insumo"):
+            self.assertTrue(segunda[tabla], tabla)
+            self.assertEqual({f["IdCorrida"] for f in segunda[tabla]}, {"C2"}, tabla)
+        self.assertEqual([f["RadicadoZeus"] for f in segunda["Gestores"]], ["900002"])  # 900008 solo está en C1
+        with r.Repositorio(self.ruta, id_corrida="C1") as repo:
+            self.assertEqual({f["RadicadoZeus"] for f in repo.resumen_de_corrida("C1")["Gestores"]}, {"900002", "900008"})
+
+    def test_la_primera_transaccion_de_la_corrida_nueva_no_hereda_el_estado_final_de_la_anterior(self):
+        self.correr("C1", 9)
+        self.correr("C2", 11)
+        self.assertEqual(self.filas("SELECT IdCorrida, EstadoAnterior, EstadoNuevo FROM Transacciones WHERE RadicadoZeus='900002' "
+                                    "AND Etapa='seleccion' ORDER BY IdTransaccion"), [("C1", None, 1), ("C2", None, 1)])
+
+    def test_insumo_dice_que_corrida_lo_toco_por_ultima_vez(self):
+        self.correr("C1", 9)
+        self.correr("C2", 11, radicados=("900002",))
+        self.assertEqual(self.filas("SELECT RadicadoZeus, IdCorrida FROM Insumo ORDER BY RadicadoZeus"), [("900002", "C2"), ("900008", "C1")])
+
+    def test_un_archivo_con_exclusion_unica_por_radicado_se_migra_sin_perder_filas(self):
+        con = sqlite3.connect(self.ruta)
+        con.execute("CREATE TABLE Exclusion (Id INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT UNIQUE, Identificacion TEXT, FechaExclusion TEXT)")
+        con.execute("INSERT INTO Exclusion (RadicadoZeus, Identificacion, FechaExclusion) VALUES ('900002', '1', '2026-11-02 08:00:00')")
+        con.commit()
+        con.close()
+        self.correr("C2", 11, radicados=("900002",))
+        self.assertEqual(self.filas("SELECT RadicadoZeus, IdCorrida, FechaExclusion FROM Exclusion ORDER BY Id"),
+                         [("900002", None, "2026-11-02 08:00:00"), ("900002", "C2", "2026-11-03 11:00:00")])
+
+
+class TestEnrutamientoDesdeLaConfiguracion(unittest.TestCase):
+    """Coordinador y correo de `Gestores` salen del stub de Cobra (configuración), no de un literal del código."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="lab_enrutamiento_"))
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.ruta = self.tmp / "lab.sqlite"
+
+    def gestion(self, stub, radicado="900002"):
+        with r.Repositorio(self.ruta) as repo:
+            ep003.cerrar_en_excepcion(repo, radicado, "validacion_campos", "1", "motivo", stub)
+            return repo.con.execute("SELECT Gestor, Agencia, Coordinador, Correo FROM Gestores WHERE RadicadoZeus = ?", (radicado,)).fetchone()
+
+    def test_la_configuracion_por_defecto_trae_coordinador_y_correo_por_sucursal(self):
+        stub = ep003.cargar_stub()
+        self.assertEqual(tuple(self.gestion(stub, "900002")), ("GESTOR-SINTETICO-1", "SUCURSAL-SINTETICA-1", "COORDINADOR-SINTETICO-1",
+                                                               "coordinador.sintetico.1@lab.invalid"))
+        self.assertEqual(tuple(self.gestion(stub, "900008")), ("GESTOR-SINTETICO-2", "SUCURSAL-SINTETICA-2", "COORDINADOR-SINTETICO-2",
+                                                               "coordinador.sintetico.2@lab.invalid"))
+
+    def test_ningun_valor_de_enrutamiento_es_un_literal_del_codigo(self):
+        stub = ep003.cargar_stub()
+        stub["por_defecto"].update(GESTOR="G-CAMBIADO", SUCURSAL="S-CAMBIADA", COORDINADOR="C-CAMBIADO")
+        stub["por_defecto"]["CORREO COORDINADOR"] = "cambiado@lab.invalid"
+        stub["coordinadores_por_sucursal"] = {}
+        self.assertEqual(tuple(self.gestion(stub)), ("G-CAMBIADO", "S-CAMBIADA", "C-CAMBIADO", "cambiado@lab.invalid"))
+
+    def test_sin_dato_de_cobra_se_usa_el_valor_declarado_en_la_configuracion(self):
+        stub = ep003.cargar_stub()
+        stub["sin_asignar"] = "PENDIENTE-DE-ASIGNAR"
+        for clave in ("GESTOR", "SUCURSAL", "COORDINADOR", "CORREO COORDINADOR"):
+            stub["por_defecto"].pop(clave)
+        stub["coordinadores_por_sucursal"] = {}
+        self.assertEqual(tuple(self.gestion(stub)), ("PENDIENTE-DE-ASIGNAR",) * 4)
+
+    def test_el_codigo_no_lleva_el_literal(self):
+        import inspect
+        self.assertNotIn("SIN ASIGNAR", inspect.getsource(ep003))
 
 
 if __name__ == "__main__":

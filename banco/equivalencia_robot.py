@@ -213,6 +213,7 @@ def escenario(esc, ejecutor=None):
 
 
 def principal():
+    from procedencia import procedencia
     epica = sys.argv[1]
     escenarios = json.loads((REPO / "banco" / "escenarios" / f"{epica}.json").read_text(encoding="utf-8"))
     resultados = []
@@ -226,7 +227,7 @@ def principal():
     sufijo = "_interprete" if "--interprete" in sys.argv else ""
     sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip()
     (REPO / "banco" / "resultados" / f"{epica}_equivalencia_robot{sufijo}.json").write_text(
-        json.dumps({"head_at_run": sha, "anchored_at": {"sha": sha, "robot": "Robots/LabHabeasData.robot.json"},
+        json.dumps({"procedencia": procedencia(), "head_at_run": sha, "anchored_at": {"sha": sha, "robot": "Robots/LabHabeasData.robot.json"},
                     "escenarios": resultados}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     todos = all(r["equivalente"] for r in resultados)
     print(f"escenarios: {len(resultados)}  robot de Studio equivalente al orquestador Python en todos: {todos}")

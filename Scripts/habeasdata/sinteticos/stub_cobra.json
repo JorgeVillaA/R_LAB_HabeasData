@@ -1,12 +1,25 @@
 {
-  "nota": "Stub de HU-009 (Cobra, sin endpoints): datos sintéticos que en producción vienen de Cobra.",
+  "nota": "Stub de HU-009 (Cobra, sin endpoints): datos sintéticos que en producción vienen de Cobra. Enrutamiento: gestor → sucursal (agencia) → coordinador → correo; `sin_asignar` es el valor cuando Cobra no trae el dato.",
+  "sin_asignar": "SIN ASIGNAR",
   "por_defecto": {
     "ID CLIENTE": "CLI-DEFECTO",
     "ID CODEUDOR": "COD-DEFECTO",
     "TIPO USUARIO": "TITULAR",
     "FUENTE": "FUENTE-SINTETICA-A",
     "GESTOR": "GESTOR-SINTETICO-1",
-    "SUCURSAL": "SUCURSAL-SINTETICA-1"
+    "SUCURSAL": "SUCURSAL-SINTETICA-1",
+    "COORDINADOR": "COORDINADOR-SINTETICO-1",
+    "CORREO COORDINADOR": "coordinador.sintetico.1@lab.invalid"
+  },
+  "coordinadores_por_sucursal": {
+    "SUCURSAL-SINTETICA-1": {
+      "COORDINADOR": "COORDINADOR-SINTETICO-1",
+      "CORREO COORDINADOR": "coordinador.sintetico.1@lab.invalid"
+    },
+    "SUCURSAL-SINTETICA-2": {
+      "COORDINADOR": "COORDINADOR-SINTETICO-2",
+      "CORREO COORDINADOR": "coordinador.sintetico.2@lab.invalid"
+    }
   },
   "por_radicado": {
     "900008": {

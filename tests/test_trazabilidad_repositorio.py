@@ -90,7 +90,7 @@ class TestCorridaCompleta(unittest.TestCase):
         tipos = dict(self.q("SELECT TipoExcepcion, COUNT(*) FROM Excepciones GROUP BY TipoExcepcion"))
         self.assertEqual(tipos, {"1": 3, "4": 2})  # 900015 ya no es excepción 1: su celular y fijo de exclusión son canal de contacto (D-28)
         columnas = [f[1] for f in self.q("PRAGMA table_info(Excepciones)")]
-        self.assertEqual(columnas, ["Id", "RadicadoZeus", "TipoExcepcion", "Detalle", "FechaHora"])
+        self.assertEqual(columnas, ["Id", "RadicadoZeus", "TipoExcepcion", "Detalle", "FechaHora", "IdCorrida"])
         self.assertEqual(self.q("SELECT COUNT(*) FROM Excepciones WHERE Detalle IS NULL OR Detalle = 'NO APLICA'")[0][0], 0)
 
     def test_blocker_2_las_8_tablas_del_mer_tienen_filas(self):
@@ -99,7 +99,8 @@ class TestCorridaCompleta(unittest.TestCase):
         self.assertEqual(self.q("SELECT Valor FROM Parametros WHERE Clave = 'UMBRAL_COINCIDENCIA_NOMBRES'"), [("0.8",)])
         total, exitosos, no_exitosos, parciales, excepciones = self.q(
             "SELECT CasosProcesados, Exitosos, NoExitosos, Parciales, Excepciones FROM LogEjecucion")[0]
-        self.assertEqual((total, exitosos, no_exitosos, parciales, excepciones), (15, 7, 5, 3, 5))
+        self.assertEqual((total, exitosos, no_exitosos, parciales, excepciones), (14, 7, 4, 3, 5))  # 900011, descartado sin datos, no cuenta como caso procesado
+        self.assertEqual(self.q("SELECT Descartados FROM LogEjecucion"), [(1,)])
         self.assertEqual(self.q("SELECT COUNT(*) FROM Gestores WHERE Gestor IS NULL OR Agencia IS NULL")[0][0], 0)
 
     def test_d28_900015_con_celular_y_fijo_de_exclusion_continua_y_se_registra(self):

@@ -67,8 +67,11 @@ def cargar_stub(raiz_repo=SINTETICOS):
 
 
 def datos_cobra(stub, radicado):
-    """Datos que en producción vienen de Cobra (HU-009): del fixture por radicado o los valores por defecto del stub."""
-    return dict(stub["por_defecto"], **stub.get("por_radicado", {}).get(str(radicado), {}))
+    """Datos que en producción vienen de Cobra (HU-009): los valores por defecto del stub, el coordinador de la sucursal (gestor →
+    agencia → coordinador → correo) y lo propio del radicado, en ese orden de precedencia."""
+    propio = stub.get("por_radicado", {}).get(str(radicado), {})
+    sucursal = propio.get("SUCURSAL", stub["por_defecto"].get("SUCURSAL"))
+    return {**stub["por_defecto"], **stub.get("coordinadores_por_sucursal", {}).get(sucursal, {}), **propio}
 
 
 # ---------- HU-011 ----------
@@ -175,8 +178,8 @@ def abrir_repositorio(cfg, dormir=None, reloj=None):
 # Cada función es UN paso visible del robot; el orquestador las encadena y así comparten rastro, reporte y transacciones.
 # Una fila de `Transacciones` = una transición con información (nunca un marcador de inicio vacío) y se escribe en el instante en
 # que ocurre la etapa. `Resultado` = `fallo` cuando el estado nuevo es 4. Toda excepción deja su fila en `Excepciones` y el caso que
-# pasa a gestión manual, la suya en `Gestores` (gestor y agencia del stub de Cobra, HU-009; «SIN ASIGNAR» si no hay dato).
-SIN_ASIGNAR = "SIN ASIGNAR"
+# pasa a gestión manual, la suya en `Gestores` (gestor, agencia, coordinador y correo del stub de Cobra, HU-009; el valor de «sin dato»
+# es `sin_asignar` del propio stub: ningún literal de enrutamiento vive en el código).
 
 
 def cerrar_en_excepcion(repo, id_radicado, etapa, tipo, motivo, stub=None, derivar=True):
@@ -184,8 +187,10 @@ def cerrar_en_excepcion(repo, id_radicado, etapa, tipo, motivo, stub=None, deriv
     repo.registrar_transaccion(id_radicado, etapa, 4, "fallo", motivo, excepcion=tipo)
     if derivar:
         cobra = datos_cobra(stub or cargar_stub(), id_radicado)
-        repo.derivar_a_gestion(id_radicado, cobra.get("GESTOR") or SIN_ASIGNAR, cobra.get("SUCURSAL") or SIN_ASIGNAR,
-                               SIN_ASIGNAR, SIN_ASIGNAR, f"excepción {tipo}: {motivo}")
+        sin_dato = (stub or cargar_stub())["sin_asignar"]
+        repo.derivar_a_gestion(id_radicado, cobra.get("GESTOR") or sin_dato, cobra.get("SUCURSAL") or sin_dato,
+                               cobra.get("COORDINADOR") or sin_dato, cobra.get("CORREO COORDINADOR") or sin_dato,
+                               f"excepción {tipo}: {motivo}")
 
 
 def seleccionado(repo, id_radicado):

@@ -164,7 +164,8 @@ def principal():
     (REPO / "banco" / "resultados").mkdir(exist_ok=True)
     for numero, resultados in enumerate(corridas, 1):
         ruta = REPO / "banco" / "resultados" / f"{argumentos.epica}_corrida{numero}.json"
-        ruta.write_text(json.dumps(resultados, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        from procedencia import procedencia
+        ruta.write_text(json.dumps({"procedencia": procedencia(), "resultados": resultados}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     todos_pasan = all(r["paso"] for corrida in corridas for r in corrida)
     huellas = [[r["huella"] for r in corrida] for corrida in corridas]
     deterministas = all(h == huellas[0] for h in huellas)
