@@ -49,3 +49,5 @@ nocodb-data/
 # Python
 __pycache__/
 *.pyc
+# Repositorio local de la corrida (se regenera en cada ejecución)
+Documentos/repositorio/
