@@ -65,7 +65,7 @@
 
 | Verificación | Resultado | Cómo se comprueba |
 |---|---|---|
-| Suite de pruebas | **293 pruebas OK** | `python -m unittest discover -s tests -t .` |
+| Suite de pruebas | **306 pruebas OK** (2026-11-03 12:20, 309 s) | `python -m unittest discover -s tests -t .` |
 | Reglas Trycore del robot | **0 errores, 0 avisos** | `validate_robot` con perfil trycore |
 | Equivalencia robot ↔ orquestador | **18/18 (EP-001)**, EP-002 y EP-003 con procedencia | `banco/equivalencia_robot.py`, `banco/banco_ep002.py` |
 | Corrida limpia, dos veces sobre la misma base | **verde, 0 fallos** | `banco/corrida_limpia.py` |
