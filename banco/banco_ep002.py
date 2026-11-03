@@ -48,11 +48,13 @@ def instantanea_repositorio(raiz):
             "insumo": "SELECT RadicadoZeus, Estado, Nombre IS NOT NULL FROM Insumo ORDER BY RadicadoZeus",
             "excepciones": "SELECT RadicadoZeus, TipoExcepcion, Detalle FROM Excepciones ORDER BY RadicadoZeus, Id",
             "gestores": "SELECT RadicadoZeus, Gestor, Agencia FROM Gestores ORDER BY RadicadoZeus",
-            "parametros": "SELECT Clave, Valor FROM Parametros ORDER BY Clave",
-            "log": "SELECT CasosProcesados, Exitosos, NoExitosos, Parciales, Excepciones FROM LogEjecucion ORDER BY Id",
+            "parametros": "SELECT Clave, Valor FROM Parametros WHERE Clave NOT IN ('Maquina.RutaRaizEfectiva', 'ZeusApi.Fixture.ClientId') ORDER BY Clave",
+            "log": "SELECT CasosProcesados, Exitosos, NoExitosos, Parciales, Excepciones, IdCorrida IS NOT NULL FROM LogEjecucion ORDER BY Id",
             "auditoria_maestras": "SELECT RadicadoZeus, Tabla, Valor FROM AuditoriaMaestras ORDER BY RadicadoZeus, Id",
         }
-        adicionales = {k: [list(f) for f in con.execute(q)] for k, q in consultas.items()}
+        puerto = lambda c: re.sub(r"127\.0\.0\.1:\d+", "127.0.0.1:PUERTO", c) if isinstance(c, str) else c  # el doble usa un puerto libre distinto cada vez
+        adicionales = {k: [[puerto(c) for c in f] for f in con.execute(q)] for k, q in consultas.items()}
+        tablas["Parametros"] = len(adicionales["parametros"])  # sin la raíz temporal ni el ClientId que el banco inyecta para Studio
         # orden de cada radicado = el de sus transiciones; entre radicados no hay orden que comparar
         transacciones = [tuple(f) for f in con.execute(
             "SELECT RadicadoZeus, Etapa, EstadoAnterior, EstadoNuevo, Resultado, Motivo FROM Transacciones "
@@ -141,7 +143,11 @@ def correr_escenario(escenario, robot=False):
         portales = ClientePortales(cfg, dormir=lambda s: None)
         captchas = ServicioCaptchas(datos["Portales"]["Fixture"]["UrlCaptchas"], 3, (0,), 5, dormir=lambda s: None)
         repo = ep003.abrir_repositorio(cfg, dormir=lambda s: None, reloj=RELOJ) if repositorio is not None else None
-        resumen = ep002.procesar(cfg, cliente, registro, ep001.EscrituraComentario(cliente), portales, captchas, repo=repo)
+        try:
+            resumen = ep002.procesar(cfg, cliente, registro, ep001.EscrituraComentario(cliente), portales, captchas, repo=repo)
+        finally:
+            if repo is not None:
+                repo.cerrar()  # el orquestador también suelta el archivo al terminar
         resumen["rastro"] = rastro(raiz)
         comentarios = sorted((c["IDRADICADO"], c["Detalle"]) for c in zeus.estado.comentarios)
         consultas = {"policia": len(web.estado.consultas["policia"]), "procuraduria": len(web.estado.consultas["procuraduria"]),
@@ -184,8 +190,13 @@ def invariantes_del_repositorio(repo):
             fallos.append(f"{radicado}: cerró en 4 sin fila en Excepciones ({radicado in con_excepcion}) o en Gestores ({radicado in con_gestor})")
     if not repo["log"]:
         fallos.append("LogEjecucion sin la fila resumen de la corrida")
-    if not any(clave == "UMBRAL_COINCIDENCIA_NOMBRES" for clave, _ in repo["parametros"]):
-        fallos.append("Parametros sin el umbral de similitud de nombres")
+    claves = {clave for clave, _ in repo["parametros"]}
+    for obligatoria in ("UMBRAL_COINCIDENCIA_NOMBRES", "Maquina.RutasVentanas.VentanaEjecucion", "Portales.Real.VentanaOperativa.Desde",
+                        "Maquina.RutasVentanas.RutasProceso.Documentos", "CADENCIA_REINTENTO_BANDEJA_VACIA.MinutosEntreReintentos"):
+        if obligatoria not in claves:  # specs/repositorio-local.md: ventana, umbral, rutas
+            fallos.append(f"Parametros sin {obligatoria}")
+    if any(not f[5] for f in repo["log"]):
+        fallos.append("LogEjecucion sin el identificador de la corrida")
     return fallos
 
 
@@ -254,6 +265,23 @@ def vista_de_resumen(resumen, comentarios):
     return vista
 
 
+def liberar_y_anotar_pasos(raiz, pasos=None):
+    """Tras la ejecución en Studio el archivo del repositorio debe poder moverse (si el robot dejó la conexión abierta, falla aquí) y
+    los comandos que Studio contó quedan en `LogEjecucion.Pasos`."""
+    from habeasdata import repositorio
+    archivo = raiz / "Documentos" / "repositorio" / "lab.sqlite"
+    if not archivo.exists():
+        return
+    movido = archivo.with_name("lab_liberado.sqlite")
+    try:
+        archivo.rename(movido)
+    except OSError as error:
+        raise RuntimeError(f"el robot dejó abierto el repositorio al terminar: {error}") from error
+    if pasos is not None:
+        repositorio.anotar_pasos(movido, pasos)
+    movido.rename(archivo)
+
+
 def vista_del_robot(raiz, zeus, studio=False):
     import ast
     import os
@@ -271,6 +299,7 @@ def vista_del_robot(raiz, zeus, studio=False):
         r = eq.mcp("run_in_studio", {"project": proyecto, "robot": robot["name"], "confirmar": True, "max_pasos": 100000})
         if r.get("error"):
             raise RuntimeError(f"el robot falló: {r['error']}")
+        liberar_y_anotar_pasos(raiz, r["pasos"])
         v = {x["nombre"]: x["valor"] for x in r["variables"]}
         lista = lambda n: [str(i) for i in ast.literal_eval(v[n])]  # noqa: E731
         resumen = {"estado": re.search(r"'estado': '(\w+)'", v["glbDicEstado"]).group(1), "codigos": ast.literal_eval(v["glbDicCodigos"]),
@@ -285,6 +314,7 @@ def vista_del_robot(raiz, zeus, studio=False):
     interprete = interprete_robot.Interprete(robot, raiz.as_posix())
     with mock.patch.dict(os.environ, ENTORNO):
         v = interprete_robot.correr(interprete)
+    liberar_y_anotar_pasos(raiz)  # el robot también suelta el archivo en el intérprete
     resumen = {"estado": v["glbDicEstado"]["estado"], "codigos": dict(v["glbDicCodigos"]),
                "validadas": v["glbArrValidadas"], "excepciones_negocio_3": v["glbArrExcepcionesNegocioTres"],
                "gestion_manual": v["glbArrGestionManual"], "revision_humana": v["glbArrRevisionHumana"],

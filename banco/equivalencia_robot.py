@@ -165,6 +165,9 @@ def filas_csv(raiz, patron, columna_fecha):
         for linea in ruta.read_text(encoding="utf-8").splitlines()[1:]:
             columnas = linea.split(";")
             del columnas[columna_fecha]
+            columnas = [re.sub(r"^\[C\d+\] ", "", c) for c in columnas]  # el identificador de corrida cambia entre orquestador y robot
+            if "INFORMEGESTION" in patron:
+                columnas = columnas[:5]
             filas.append(";".join(columnas))
     return sorted(filas)
 

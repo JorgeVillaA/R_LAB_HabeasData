@@ -46,7 +46,8 @@ ESQUEMA = [
     "Coordinador TEXT, Correo TEXT, FechaAsignacion TEXT, Motivo TEXT)",
     "CREATE TABLE IF NOT EXISTS Parametros (Clave TEXT PRIMARY KEY, Valor TEXT, Actualizado TEXT)",
     "CREATE TABLE IF NOT EXISTS LogEjecucion (Id INTEGER PRIMARY KEY AUTOINCREMENT, Fecha TEXT, CasosProcesados INTEGER, "
-    "Exitosos INTEGER, NoExitosos INTEGER, Parciales INTEGER, Excepciones INTEGER, DuracionSegundos INTEGER, Detalle TEXT)",
+    "Exitosos INTEGER, NoExitosos INTEGER, Parciales INTEGER, Excepciones INTEGER, DuracionSegundos INTEGER, Detalle TEXT, "
+    "IdCorrida TEXT, Pasos INTEGER, PasosModulo INTEGER)",
     # tabla ligera: qué se borró de las maestras y cuándo (la corrida es reconstruible)
     "CREATE TABLE IF NOT EXISTS AuditoriaMaestras (Id INTEGER PRIMARY KEY AUTOINCREMENT, RadicadoZeus TEXT, Tabla TEXT, "
     "Identificacion TEXT, Valor TEXT, FilaEliminada TEXT, FechaHora TEXT)",
@@ -61,7 +62,8 @@ ADICIONES = {"Insumo": (("Nombre", "TEXT"), ("Correos", "TEXT"), ("Telefonos", "
              "Gestores": (("RadicadoZeus", "TEXT"), ("FechaAsignacion", "TEXT"), ("Motivo", "TEXT")),
              "Parametros": (("Actualizado", "TEXT"),),
              "LogEjecucion": (("Exitosos", "INTEGER"), ("NoExitosos", "INTEGER"), ("Parciales", "INTEGER"),
-                              ("DuracionSegundos", "INTEGER"))}
+                              ("DuracionSegundos", "INTEGER"), ("IdCorrida", "TEXT"), ("Pasos", "INTEGER"),
+                              ("PasosModulo", "INTEGER"))}
 RENOMBRES = {"Excepciones": (("Tipo", "TipoExcepcion"), ("Fecha", "FechaHora"))}
 
 
@@ -97,7 +99,16 @@ class Repositorio:
                     self.con.execute(f"ALTER TABLE {tabla} ADD COLUMN {columna} {tipo}")
 
     def cerrar(self):
-        self.con.close()
+        """Suelta el archivo: tras cerrar, el .sqlite puede moverse, copiarse o respaldarse. Idempotente."""
+        con, self.con = self.con, None
+        if con is not None:
+            con.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.cerrar()
 
     # ---------- núcleo: reintentos y fallas inyectadas ----------
     def _operar(self, nombre, funcion):
@@ -268,8 +279,9 @@ class Repositorio:
             "SELECT RadicadoZeus FROM Transacciones WHERE IdTransaccion IN (SELECT MAX(IdTransaccion) FROM Transacciones "
             "WHERE IdTransaccion > ? GROUP BY RadicadoZeus) AND EstadoNuevo IN (1, 2) ORDER BY RadicadoZeus", (self.id_inicial,))]
 
-    def registrar_log_ejecucion(self, detalle=None):
-        """Fila resumen de la corrida (una sola vez): casos, éxitos, no éxitos, parciales, excepciones y duración."""
+    def registrar_log_ejecucion(self, detalle=None, id_corrida=None, pasos_modulo=None):
+        """Fila resumen de la corrida (una sola vez): identificador de la corrida, casos, éxitos, no éxitos, parciales, excepciones,
+        duración y pasos del módulo de Python (`Pasos`, los comandos del robot en Studio, los anota el ejecutor con `anotar_pasos`)."""
         if self.corrida_cerrada:
             return None
         estados = [f[0] for f in self.con.execute(
@@ -279,7 +291,8 @@ class Repositorio:
         duracion = int((self.reloj() - self.inicio).total_seconds())
         fila = (self._ahora(), len(estados), estados.count(3), estados.count(4), estados.count(5), excepciones, duracion, detalle)
         self.con.execute("INSERT INTO LogEjecucion (Fecha, CasosProcesados, Exitosos, NoExitosos, Parciales, Excepciones, "
-                         "DuracionSegundos, Detalle) VALUES (?,?,?,?,?,?,?,?)", fila)
+                         "DuracionSegundos, Detalle, IdCorrida, PasosModulo) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                         fila + (id_corrida or f"C{self.inicio:%Y%m%d%H%M%S}", pasos_modulo))
         self.con.commit()
         self.corrida_cerrada = True
         return fila
@@ -305,3 +318,16 @@ class Repositorio:
         return [tuple(f) for f in self.con.execute(
             "SELECT Etapa, EstadoAnterior, EstadoNuevo, Resultado, Motivo FROM Transacciones WHERE RadicadoZeus = ? ORDER BY IdTransaccion",
             (str(radicado),)).fetchall()]
+
+
+def anotar_pasos(ruta, pasos, id_corrida=None):
+    """Anota en `LogEjecucion.Pasos` los comandos que el ejecutor contó (Studio devuelve el total al terminar la ejecución). Sin
+    `id_corrida`, la última corrida. Abre una conexión propia y la cierra: solo se puede si la corrida soltó el archivo."""
+    con = sqlite3.connect(str(ruta))
+    try:
+        donde, args = ("IdCorrida = ?", (id_corrida,)) if id_corrida else ("Id = (SELECT MAX(Id) FROM LogEjecucion)", ())
+        filas = con.execute(f"UPDATE LogEjecucion SET Pasos = ? WHERE {donde}", (int(pasos),) + args).rowcount
+        con.commit()
+        return filas
+    finally:
+        con.close()

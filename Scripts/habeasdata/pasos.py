@@ -8,6 +8,8 @@ ofrece, como un módulo de Rocketbot, lo que no debe ir en variables ni en el lo
 Todas devuelven un diccionario `{"ok": bool, "mensaje": str, ...}`; el robot decide con `evaluateIf`.
 """
 import ast
+import functools
+import inspect
 import time
 
 from . import ep001, ep003
@@ -39,6 +41,7 @@ class _SesionPerezosa:
         self.raiz = None
 
     def abrir(self, raiz):
+        _soltar_repositorio()  # una sesión nueva nunca hereda (ni deja abierto) el archivo de la anterior
         self._real, self.raiz = _Sesion(cargar(raiz)), str(raiz)
         return self._real
 
@@ -74,6 +77,19 @@ def objeto(valor):
     return valor
 
 
+def _soltar_repositorio():
+    """Cierra el archivo del repositorio y olvida la conexión: tras el fin de la corrida el .sqlite no queda bloqueado."""
+    repo = _sesion.__dict__.pop("repo", None)
+    real = _sesion.__dict__.get("_real")
+    if real is not None:
+        repo, real.repo = repo or real.repo, None
+    if repo is not None:
+        repo.cerrar()
+
+
+_pasos = {"n": 0, "profundidad": 0}  # llamadas del robot a este módulo en la corrida (una llamada de nivel superior = un paso)
+
+
 def _hab():
     """¿El repositorio local (EP-003) está habilitado? Si no, los pasos de EP-001/EP-002 no escriben transacciones."""
     return bool(_sesion.cfg.proceso.get("Repositorio", {}).get("Habilitado"))
@@ -91,6 +107,7 @@ def _fallo(mensaje, **datos):
 def iniciar(raiz):
     """Carga los tres JSON, crea la estructura de carpetas y los dos logs del día, y abre la sesión."""
     _sesion.abrir(raiz)
+    _pasos["n"] = 0
     _sesion.registro.asegurar_archivos()
     _sesion.registro.auditoria("Inicio de ejecución EP-001", MODULO)
     return _ok(modo=_sesion.cliente.modo, lote=_sesion.cfg.proceso["SeleccionRadicados"])
@@ -111,9 +128,13 @@ def evento(texto, modulo=None):
 def cerrar(resumen):
     """Fin de ejecución: deja el resumen sin PII en modo real."""
     resumen = objeto(resumen)
-    if _hab():  # ningún caso queda abierto y la corrida deja su fila en LogEjecucion
-        ep003.cerrar_corrida(_repo(), _sesion.stub, f"estado {resumen.get('estado')}")
-    _sesion.registro.auditoria("Fin de ejecución EP-001" + (" (detenida)" if resumen.get("estado") == "detenido" else ""), MODULO)
+    try:
+        if _hab():  # ningún caso queda abierto y la corrida deja su fila en LogEjecucion
+            ep003.cerrar_corrida(_repo(), _sesion.stub, f"estado {resumen.get('estado')}", _sesion.registro, _pasos["n"] + 1)
+        _sesion.registro.auditoria("Fin de ejecución EP-001" + (" (detenida)" if resumen.get("estado") == "detenido" else ""), MODULO)
+        _sesion.registro.cerrar_corrida(resumen.get("estado"))
+    finally:
+        _soltar_repositorio()  # pase lo que pase, el archivo queda libre al terminar
     return _ok(resumen=resumen_seguro(dict(resumen, casos={}), _sesion.cfg))
 
 
@@ -344,7 +365,7 @@ def registrar_identidad(id_radicado, caso, identidad):
 def _repo():
     """Repositorio de la corrida: se abre al primer uso (la sesión de un bloque probado solo también funciona, D-21)."""
     if _sesion.repo is None:
-        _sesion.repo = ep003.abrir_repositorio(_sesion.cfg)
+        _sesion._real.repo = ep003.abrir_repositorio(_sesion.cfg)
     return _sesion.repo
 
 
@@ -408,3 +429,22 @@ def registrar_exclusion(caso, duplicado):
     if resultado["error"]:
         return _fallo(resultado["error"], operacion=resultado["operacion"])
     return _ok(insertados=len(resultado["insertados"]), eliminados=len(resultado["eliminados"]))
+
+
+def _contar(funcion):
+    """Cuenta como UN paso cada llamada de nivel superior del robot (las llamadas internas entre pasos no suman)."""
+    @functools.wraps(funcion)
+    def envuelta(*args, **kwargs):
+        _pasos["profundidad"] += 1
+        try:
+            return funcion(*args, **kwargs)
+        finally:
+            _pasos["profundidad"] -= 1
+            if _pasos["profundidad"] == 0:
+                _pasos["n"] += 1
+    return envuelta
+
+
+for _nombre, _funcion in list(globals().items()):
+    if inspect.isfunction(_funcion) and _funcion.__module__ == __name__ and not _nombre.startswith("_"):
+        globals()[_nombre] = _contar(_funcion)

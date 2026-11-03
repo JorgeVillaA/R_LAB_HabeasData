@@ -8,6 +8,7 @@ gestor, sucursal, ID CLIENTE/CODEUDOR, FUENTE y TIPO USUARIO salen de `habeasdat
 Cada transición se registra en `Transacciones`, incluidos los fallos.
 """
 import json
+import re
 from pathlib import Path
 
 from .repositorio import ErrorRepositorio, Repositorio
@@ -130,13 +131,28 @@ def sembrar_desde_fixtures(repo, carpeta_fixtures=SINTETICOS):
 
 
 # ---------- apertura del repositorio de la corrida ----------
+_SECRETO = re.compile(r"(?i)(secret|password|clave|bearer|accesstoken)")
+
+
+def _aplanar(valor, prefijo=""):
+    """Hojas de un JSON de configuración como (ruta con puntos, valor)."""
+    if isinstance(valor, dict):
+        for clave, hijo in valor.items():
+            yield from _aplanar(hijo, f"{prefijo}.{clave}" if prefijo else str(clave))
+    else:
+        yield prefijo, valor
+
+
 def parametros_de_la_corrida(cfg):
-    """Parámetros de negocio vigentes en la corrida (umbral de nombres, reintentos, dígitos, cadencia, modo de portales)."""
-    parametros = {clave: valor for clave, valor in cfg.maestro.items() if isinstance(valor, (str, int, float, bool))}
-    for clave, valor in cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"].items():
-        parametros["CADENCIA_REINTENTO_BANDEJA_VACIA." + clave] = valor
-    parametros["Portales.Modo"] = cfg.proceso["Portales"]["Modo"]
-    return parametros
+    """TODOS los parámetros operativos vigentes en la corrida (specs/repositorio-local.md: ventana, umbral, rutas…): las hojas de los
+    tres JSON de configuración con su valor efectivo (Maestro sin prefijo, Proceso por su ruta, Máquina con `Maquina.`), más la raíz
+    efectiva. Un valor cuyo nombre sea de un secreto no se guarda (los `*Env` y `*Target` solo nombran la variable o la credencial)."""
+    parametros = dict(_aplanar(cfg.maestro))
+    parametros.update(_aplanar(cfg.proceso))
+    parametros.update(_aplanar(cfg.maquina, "Maquina"))
+    parametros["Maquina.RutaRaizEfectiva"] = str(cfg.raiz)
+    return {clave: (valor if isinstance(valor, str) else json.dumps(valor, ensure_ascii=False)) for clave, valor in parametros.items()
+            if not (_SECRETO.search(clave.rsplit(".", 1)[-1]) and not clave.endswith(("Env", "Target")))}
 
 
 def abrir_repositorio(cfg, dormir=None, reloj=None):
@@ -286,11 +302,12 @@ def transaccion_identidad(repo, id_radicado, etiqueta, via=None, puntaje=None, m
         cerrar_en_excepcion(repo, id_radicado, "identidad", "sistema", f"excepción de sistema en la identidad ({codigo})", stub)  # el código es el mismo en robot y orquestador; el texto del portal no
 
 
-def cerrar_corrida(repo, stub=None, detalle=None):
-    """Fin de la corrida: ningún caso queda abierto (un caso en 1 o 2 se cierra en 4 con su motivo) y se escribe `LogEjecucion`."""
+def cerrar_corrida(repo, stub=None, detalle=None, registro=None, pasos=None):
+    """Fin de la corrida: ningún caso queda abierto (un caso en 1 o 2 se cierra en 4 con su motivo) y se escribe `LogEjecucion` con el
+    identificador de la corrida del registro y los pasos del módulo."""
     for id_radicado in repo.abiertos_de_la_corrida():
         cerrar_en_excepcion(repo, id_radicado, "cierre", "sistema", "el caso quedó abierto al terminar la corrida", stub)
-    return repo.registrar_log_ejecucion(detalle)
+    return repo.registrar_log_ejecucion(detalle, registro.id_corrida if registro is not None else None, pasos)
 
 
 # ---------- orquestación de EP-003 dentro de la corrida ----------

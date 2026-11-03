@@ -245,7 +245,7 @@ def registrar_excepcion_negocio_1(escritura, caso, motivos):
 
 
 # ---------- orquestación ----------
-def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.sleep, repo=None, stub=None):
+def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.sleep, repo=None, stub=None, cerrar_registro=True):
     cfg = cfg or cargar()
     registro = registro or Registro(cfg)
     cliente = cliente or ClienteZeus(cfg, registro)
@@ -268,6 +268,8 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.
         resumen.update(estado="detenido", notificacion={
             "asunto": notif["AsuntoDetenido"], "destinatario": notif["CorreoDetenido"], "motivo": str(error)})
         registro.auditoria("Fin de ejecución EP-001 (detenida)", MODULO)
+        if cerrar_registro:  # EP-002 sigue después de EP-001: ella cierra la corrida
+            registro.cerrar_corrida("detenido")
         return resumen
     resumen["motivo_sin_casos"], resumen["reintento"] = lista["motivo_sin_casos"], lista["reintento"]
     resumen["descartados_identificacion_ausente"] = lista["descartados"]
@@ -302,6 +304,8 @@ def procesar(cfg=None, cliente=None, registro=None, escritura=None, dormir=time.
                 ep003.excepcion_sistema_caso(repo, id_radicado, str(error), stub)
         registro.auditoria(f"Fin del radicado {id_radicado}", MODULO)
     registro.auditoria("Fin de ejecución EP-001", MODULO)
+    if cerrar_registro:
+        registro.cerrar_corrida("ok")
     return resumen
 
 

@@ -12,8 +12,8 @@ El repositorio es local (NocoDB npm 0.301.3 en loopback, SQLite interno; SQLite 
 | `Celulares` | Base de bloqueo de celulares vinculada a cada exclusión | N:1 con Exclusion |
 | `Correos` | Base de bloqueo de correos vinculada a cada exclusión | N:1 con Exclusion |
 | `Gestores` | Relación gestor → agencia → coordinador → correo, para enrutamiento. Una fila por caso derivado a gestión manual (gestor y agencia del stub de Cobra; «SIN ASIGNAR» si no hay dato) | N:1 con Insumo |
-| `Parametros` | Parámetros operativos configurables (ventana, umbral, SLA, rutas) | — |
-| `LogEjecucion` | Consolidado por corrida: fecha, casos procesados, exitosos, no exitosos, parciales, excepciones y duración en segundos | — |
+| `Parametros` | Parámetros operativos configurables (ventana, umbral, SLA, rutas): **todas** las hojas de los tres JSON de configuración con su valor vigente en la corrida (`Clave` con puntos, `Maquina.` para la configuración de máquina) y la raíz efectiva; sin secretos. El SLA no tiene valor definido en ninguna fuente (D-31) | — |
+| `LogEjecucion` | Consolidado por corrida: fecha, casos procesados, exitosos, no exitosos, parciales, excepciones, duración en segundos, `IdCorrida` (el mismo que lleva el reporte y los logs), `PasosModulo` (pasos de `pasos.py`) y `Pasos` (comandos de Studio, anotados por el ejecutor) | — |
 | `AuditoriaMaestras` *(tabla ligera, propuesta)* | Fila completa que se borró de `MaestraCelulares`/`MaestraCorreos`, su radicado y la hora: la corrida es reconstruible | N:1 con Insumo |
 | **`Transacciones`** *(adición del 29/10, decisión de Villa)* | **Una fila por cada paso de cada caso: el recorrido completo** | N:1 con Insumo |
 
@@ -37,6 +37,10 @@ El repositorio es local (NocoDB npm 0.301.3 en loopback, SQLite interno; SQLite 
 - ¿Cuántos casos hay en cada estado?
 - ¿Qué transiciones fallaron y por qué?
 - Recorrido completo de un radicado (todas sus transacciones en orden).
+
+## Una corrida, un identificador (D-29, D-32)
+
+Cada corrida tiene un `IdCorrida` (`Cyyyymmddhhmmss`) que escriben el reporte de gestión (columna final), los logs (`[IdCorrida] ` al inicio de la observación) y `LogEjecucion`. El reporte cierra cada corrida con `FIN DE CORRIDA` o `CORRIDA DETENIDA`; una corrida que murió sin cerrar queda marcada `CORRIDA INTERRUMPIDA` por la siguiente del día. Al terminar, el robot cierra la conexión del repositorio: el archivo `.sqlite` queda libre para moverse o respaldarse.
 
 ## Bases maestras para el cruce (HU-010 / HU-011)
 

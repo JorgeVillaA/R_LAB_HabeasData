@@ -54,13 +54,13 @@ class TestEstructuraYLogs(unittest.TestCase):
         self.reg.auditoria("Inicio de ejecución", "Zeus API")
         lineas = self.reg.ruta_auditoria().read_text(encoding="utf-8").splitlines()
         self.assertEqual(lineas[0], ";".join(CAMPOS))
-        self.assertEqual(lineas[1], "127.0.0.1;2026-10-29 09:30:00;Zeus API;Inicio de ejecución")
+        self.assertEqual(lineas[1], f"127.0.0.1;2026-10-29 09:30:00;Zeus API;[{self.reg.id_corrida}] Inicio de ejecución")  # D-32
 
     def test_faltante_es_no_aplica_nunca_vacio(self):
         self.reg.auditoria(None)
         self.reg.auditoria("   ")
         datos = self.reg.ruta_auditoria().read_text(encoding="utf-8").splitlines()[1:]
-        self.assertTrue(all(linea.endswith(";" + FALTANTE) for linea in datos))
+        self.assertTrue(all(linea.endswith(f";[{self.reg.id_corrida}] {FALTANTE}") for linea in datos))  # faltante = NO APLICA, con el id de la corrida (D-32)
         self.assertEqual(limpiar(""), FALTANTE)
 
     def test_observacion_sin_punto_y_coma_ni_secretos(self):

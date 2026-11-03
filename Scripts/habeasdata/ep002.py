@@ -102,12 +102,13 @@ def registrar(registro, id_radicado, padre, etiqueta, via, puntaje=None, motivo=
 
 def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, repo=None, stub=None):
     from .captcha import ServicioCaptchas
-    resumen = procesar_ep001(cfg, cliente, registro, escritura, repo=repo, stub=stub)
+    resumen = procesar_ep001(cfg, cliente, registro, escritura, repo=repo, stub=stub, cerrar_registro=False)
     resumen.update(validadas=[], excepciones_negocio_3=[], gestion_manual=[], revision_humana=[], sin_nombre=[],
                    excepciones_sistema_identidad=[], via={}, codigos={})
     if resumen["estado"] != "ok":
         if repo is not None:
-            ep003.cerrar_corrida(repo, stub, "corrida detenida")
+            ep003.cerrar_corrida(repo, stub, "corrida detenida", registro)
+        registro.cerrar_corrida(resumen["estado"])
         return resumen
     avanzan, valores = resumen["avanzan"], {}
     if repo is not None:  # EP-003 / HU-010: los duplicados se buscan ANTES de la identidad
@@ -151,5 +152,6 @@ def procesar(cfg, cliente, registro, escritura, portales=None, captchas=None, re
             resumen.update(estado="detenido", notificacion={"asunto": notif["AsuntoDetenido"], "destinatario": notif["CorreoDetenido"],
                                                             "motivo": motivo})
     if repo is not None:  # ningún caso queda abierto y la corrida deja su fila resumen
-        ep003.cerrar_corrida(repo, stub, f"estado {resumen['estado']}")
+        ep003.cerrar_corrida(repo, stub, f"estado {resumen['estado']}", registro)
+    registro.cerrar_corrida(resumen["estado"])
     return resumen
