@@ -42,7 +42,3 @@ de Windows y `ZEUS_REAL_AUTORIZADO=1`; sin ellas se reporta como bloqueo. Ver `d
   un supuesto del lab (C-09).
 - Decisiones y alcance: `docs/DECISIONES.md`, `docs/00-alcance-del-lab.md`. Contrato del repositorio: `specs/repositorio-local.md`.
 
-## Pendiente de Villa
-`git push` de las ramas (el agente no empuja), decisión sobre el tope diario de reintentos de HU-002 (hoy por ejecución), visto bueno
-de las maestras `MaestraCelulares`/`MaestraCorreos` (C-16) y del tratamiento del teléfono fijo en HU-011 (sin columna `FIJO`).
-Detalle en `docs/ENTREGA.md`.
