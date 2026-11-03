@@ -7,11 +7,11 @@ abrirlo, correrlo y verificarlo. Instrucciones de uso: `README.md`.
 | Épica | Rama | Código y pruebas | Studio + Chrome | Verificación adversarial | Cierre |
 |---|---|---|---|---|---|
 | EP-001 (HU-002/003/004) | `feature/EP-001` | 166 tests, banco 18 × 2 | 18/18 IGUAL | CERRABLE (ronda 7) | change archivado, PR preparada (`docs/PR/EP-001.md`) |
-| EP-002 (HU-006/007/008/026a) | `feature/EP-002` | banco 20 × 2 | 20/20 IGUAL | ver `docs/PR/EP-002.md` | PR preparada (incluye EP-001 y EP-003 en la misma rama) |
-| EP-003 (HU-010/011) | `feature/EP-002` | banco 9 × 2 | 8/8 IGUAL + 1 omitido (solo orquestador) | ver `docs/PR/EP-003.md` | change `ep-003-exclusion-en-repositorio` listo para archivar |
+| EP-002 (HU-006/007/008/026a) | `feature/EP-002` | banco 25 × 2 | 20/20 IGUAL | ver `docs/PR/EP-002.md` | PR preparada (incluye EP-001 y EP-003 en la misma rama) |
+| EP-003 (HU-010/011) | `feature/EP-002` | banco 16 × 2 | 8/8 IGUAL + 1 omitido (solo orquestador) | ver `docs/PR/EP-003.md` | change `ep-003-exclusion-en-repositorio` listo para archivar |
 
-Suite completa: `python -m unittest discover -s tests -t .` → 248 tests OK. `validate_robot` perfil trycore: 0 errores, 0 avisos.
-Mapa de salud por bloque (`docs/SALUD-POR-BLOQUE.md`): 9 bloques sin escenario (ramas de error que ningún escenario provoca), reportados, no ocultos.
+Suite completa: `python -m unittest discover -s tests -t .` → 293 tests OK (tras la segunda ronda). `validate_robot` perfil trycore: 0 errores, 0 avisos.
+Mapa de salud por bloque (`docs/SALUD-POR-BLOQUE.md`): 8 bloques sin escenario (ramas de error que ningún escenario provoca), reportados, no ocultos.
 
 ## Qué se corrigió en esta ronda para que el robot funcione en Chrome REAL
 La evidencia anterior de EP-002 («20/20 en Studio») no ejercitaba la identidad (`equivalencia_robot.py` la deja deshabilitada). La prueba real
@@ -30,6 +30,23 @@ leía la página anterior. Una de las 20 pruebas falló una vez (corrida 1 = 19/
 - Un escenario de EP-003 (detención crítica por repositorio inaccesible) solo se compara en decisiones: la línea final del log difiere entre robot y orquestador.
 
 ## Pendiente de Villa
-1. `git push` de `feature/EP-001` y `feature/EP-002` (el agente no empuja) y abrir las PR con `docs/PR/*.md`.
+1. Las PR #1 (EP-001) y #2 (EP-002, que incluye EP-003) ya están mergeadas en `main`. El agente no empuja.
 2. Decidir: tope diario de reintentos (por día o por ejecución), maestras `MaestraCelulares`/`MaestraCorreos` (C-16), teléfono fijo en HU-011 (hoy: solo la fila de `Exclusion`, «Procesado Parcialmente»), valores no ubicados en la maestra (el AC pide registrarlos, la nota de HU-011 §4 dice que el bot no toca el repositorio), PEP en HU-006 (la Procuraduría no lo trae: hoy gestión manual), instalar NocoDB o aceptar SQLite.
 3. Revisar la evidencia visual en Chrome (capturas en `banco/evidencia/`).
+
+## Segunda ronda de la auditoría adversarial (commits `0af7388` y `e27e10c`)
+La re-auditoría sobre la corrida limpia cerró los 5 bloqueantes de la primera ronda y dejó 4 correcciones puntuales (decisiones D-29 a D-32):
+1. **Fuga de conexión.** `pasos.cerrar` cierra el repositorio en un `finally`, `pasos.iniciar` cierra el de una sesión anterior y el banco comprueba que `lab.sqlite` se pueda mover al terminar. Sin el cierre, esa prueba falla con `PermissionError` (el síntoma medido).
+2. **`LogEjecucion`** guarda el identificador de la corrida y los pasos (`PasosModulo`: llamadas del robot a `pasos.py`; `Pasos`: comandos de Studio, que anota el ejecutor).
+3. **`Parametros`** persiste toda la configuración vigente (las 72 hojas de los tres JSON más la raíz efectiva, sin secretos), no un subconjunto.
+4. **Reporte y logs separables por corrida:** columna `IdCorrida` en el reporte, `[IdCorrida]` al inicio de cada observación de log, fila de cierre `FIN DE CORRIDA` / `CORRIDA DETENIDA` y marca `CORRIDA INTERRUMPIDA` para la que murió sin cerrar.
+
+**Evidencia** (ejecutada, contra los dobles y el robot por el intérprete con navegador emulado):
+- Suite completa: 293 tests OK. Bancos EP-001 (18), EP-002 (25) y EP-003 (16): todos pasan y las dos corridas dan huellas idénticas. `validate_robot` perfil trycore: 0 errores, 0 avisos.
+- Corrida limpia desde base nueva (15 radicados sintéticos): el archivo se pudo renombrar al terminar; 0 casos abiertos en estado 1 o 2; 6 filas en `Excepciones` y 6 filas `Resultado = fallo`, igual a los 6 casos en estado 4 (la re-auditoría midió 13 y 13 en su propia corrida; ambas cifras cumplen la regla fallo ⇔ estado 4); `LogEjecucion` con id de corrida y 396 pasos del módulo; reporte (36 filas) y logs con el mismo `IdCorrida`.
+
+**Límites que se mantienen:**
+- **La equivalencia en Studio con Chrome no se repitió sobre estos commits.** El intento terminó en HTTP 401 porque el Studio abierto traía otro entorno de credenciales; hay que relanzarlo con `studio/R_LAB_HabeasData/R_LAB_HabeasData.bat` y correr `python banco/banco_ep002.py` y `python banco/banco_ep002.py EP-003`. El último resultado válido de Studio es anterior a la segunda ronda.
+- **Un kill forzado de `rocketbot.exe` sigue dejando `lab.sqlite` bloqueado:** el cierre cubre el fin de la corrida y los fallos de Python, no la muerte del proceso.
+- No se repitió la verificación adversarial independiente de la segunda ronda sobre estos commits.
+- Pendientes de Villa: D-28 (celular de exclusión), D-31 (valor del «SLA» del spec) y las columnas propuestas de D-30 y D-32.

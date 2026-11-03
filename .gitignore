@@ -51,3 +51,4 @@ __pycache__/
 *.pyc
 # Repositorio local de la corrida (se regenera en cada ejecución)
 Documentos/repositorio/
+Documentos/repositorio_*/
