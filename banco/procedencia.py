@@ -13,7 +13,7 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 def _git(*args):
-    return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True, encoding="utf-8").stdout.strip()
+    return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True, encoding="utf-8").stdout.rstrip()
 
 
 def procedencia(comando=None):
