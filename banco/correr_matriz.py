@@ -10,6 +10,7 @@ El banco valida flujo y orquestación contra dobles; NO valida la veracidad de l
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -27,7 +28,8 @@ from habeasdata.registro import Registro  # noqa: E402
 from habeasdata.zeus import ClienteZeus  # noqa: E402
 from dobles.zeus_api.servidor import DobleZeus  # noqa: E402
 
-CREDENCIALES = ("cliente-banco", "secreto-banco-no-real")
+# el par sintético del doble: por defecto el del banco; si el Studio abierto trae otro (ZEUS_DOBLE_CLIENT_ID/SECRET), se usa ese
+CREDENCIALES = (os.environ.get("ZEUS_DOBLE_CLIENT_ID", "cliente-banco"), os.environ.get("ZEUS_DOBLE_CLIENT_SECRET", "secreto-banco-no-real"))
 ENTORNO = {"ZEUS_DOBLE_CLIENT_ID": CREDENCIALES[0], "ZEUS_DOBLE_CLIENT_SECRET": CREDENCIALES[1]}
 RADICADOS = json.loads((REPO / "fixtures" / "zeus" / "radicados.json").read_text(encoding="utf-8"))
 RELOJ = lambda: datetime(2026, 10, 29, 9, 30, 0)  # noqa: E731
