@@ -1,187 +1,197 @@
-[
-  {
-    "id": "EP001-01-happy-completo",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 filtro con casos",
-      "HU-003 extracción",
-      "HU-004 completo avanza",
-      "HU-004 excepción 1 con comentario",
-      "HU-002 descartados por identificación ausente (filtro compuesto)"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "b3ed7d69e0f314f93fe0a399a88ce3406572f2cc5bb305d5434b464cf3b4e476"
+{
+  "procedencia": {
+    "commit": "51c6bd12f8417c33f70e2045b8ab4253547a2c7e",
+    "rama": "fix/tercera-ronda",
+    "cambios_sin_commit": [],
+    "fecha_hora": "2026-11-03T11:30:26-05:00",
+    "comando": "python banco/correr_matriz.py EP-001",
+    "robot_sha256": "dd44d0ce42f98fb502f2efa706df73c756e45b1e400a882dcaee863dfa59b8ca"
   },
-  {
-    "id": "EP001-02-bandeja-vacia",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 colección vacía y consulta general vacía"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "ab7340acd557085003ca95d965a8d5002508ff9d03b897560b8773e7607748db"
-  },
-  {
-    "id": "EP001-03-tipologia-ausente",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 colección vacía con radicados ajenos"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "f8b8d643886d4a32428cc157b5e744b8816c9ac8ece38616b34ba7b83623eb19"
-  },
-  {
-    "id": "EP001-04-filtro-no-reconocido",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 400 detiene"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "aa06635e8ae05926c9fc243c3885cd0cc49f09efa848076cdf8b04d5e80bfc66"
-  },
-  {
-    "id": "EP001-05-token-vencido-persistente",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 401 detiene"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "9f3b6466be143bdd31f42de8b68cc09b4f9da332e6973ef0fc1b7a68332d9cf6"
-  },
-  {
-    "id": "EP001-06-sin-roles-403",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 403 detiene"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "127781ffe75df3cd20af964ac637955e65d4270c683c7b0931e275ee5bae857a"
-  },
-  {
-    "id": "EP001-07-api-no-disponible",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 sin conexión tras reintentos detiene"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "b0674b3952ec45110a10937c566ef205de5b5ded3262276662c21a9eb64e4bea"
-  },
-  {
-    "id": "EP001-08-radicado-no-legible-400",
-    "modo": "fixture",
-    "ramas": [
-      "HU-003 400 por radicado: excepción de sistema y continúa"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "9e9a39cdf96c7c68ac4668ff532ca722e9d1483aa063f33ef48ae496f1bf997c"
-  },
-  {
-    "id": "EP001-09-radicado-no-encontrado-404",
-    "modo": "fixture",
-    "ramas": [
-      "HU-003 404 por radicado: excepción de sistema y continúa"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "bb4708ed9e0ddb7f83f25461e3ee2f7cc079bfc0995070198d0d22bc37bb6a81"
-  },
-  {
-    "id": "EP001-10-comentario-rechazado-400",
-    "modo": "fixture",
-    "ramas": [
-      "HU-004 escritura rechazada: excepción de sistema"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "7fb7f69bbadf790ea3b6885f7e74464619b21dedb0a73f688909ee113a958e8c"
-  },
-  {
-    "id": "EP001-11-comentario-sin-autorizacion-401",
-    "modo": "fixture",
-    "ramas": [
-      "HU-004 escritura 401 persistente: excepción de sistema"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "c779d6783ab765672ce0bd789aac27d79fb1080429dfb8404f74042a2e7989b0"
-  },
-  {
-    "id": "EP001-12-solo-casos-completos",
-    "modo": "fixture",
-    "ramas": [
-      "HU-004 ninguna excepción"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "36c08b3124071be14f6593efe7108666d945cec7f0dc09f94a1ec6484e292e3a"
-  },
-  {
-    "id": "EP001-13-todos-incompletos",
-    "modo": "fixture",
-    "ramas": [
-      "HU-004 todos van a excepción 1"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "e93d6375ede41819183475cccaa0d1d4e3eda48281838a43f2057a33df9d1dd2"
-  },
-  {
-    "id": "EP001-14-sin-descartar-identificacion-ausente",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 filtro simple",
-      "HU-004 sin número de identificación → excepción 1 con comentario"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "431fa29712a417bf08aa1ead9f674eb933b0c97ca7c8b35a053ed8f50ce62efb"
-  },
-  {
-    "id": "EP001-15-lote-con-first-y-orderby",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 $first y $orderby=IDRADICADO desc"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "af164b69e4b82526d5a92b05ed69c09b91abcec23f9ba17964352daf097353d1"
-  },
-  {
-    "id": "EP001-16-solo-descartados",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 colección vacía por filtro compuesto con descartados"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "8477fda28192de1a1a00533e3b3da8d4d39390acd81ac1e407c8edbbbefeebec"
-  },
-  {
-    "id": "EP001-17-casos-aparecen-en-el-reintento",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 bandeja vacía, el reintento agendado encuentra casos y el bot los procesa (AC-04, AC-05)"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "e4677b0b4e3556cc2114f144b507fb3d5cc33413442612532a0db15a56dabaf5"
-  },
-  {
-    "id": "EP001-18-falla-durante-el-reintento",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002 bandeja vacía, la API deja de responder durante el reintento: se detiene y alerta"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "708eb81ec642a9d4aebd5bedb5db6631d57563632d391adc35852fbb84d6ab45"
-  }
-]
+  "resultados": [
+    {
+      "id": "EP001-01-happy-completo",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 filtro con casos",
+        "HU-003 extracción",
+        "HU-004 completo avanza",
+        "HU-004 excepción 1 con comentario",
+        "HU-002 descartados por identificación ausente (filtro compuesto)"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "b3ed7d69e0f314f93fe0a399a88ce3406572f2cc5bb305d5434b464cf3b4e476"
+    },
+    {
+      "id": "EP001-02-bandeja-vacia",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 colección vacía y consulta general vacía"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "ab7340acd557085003ca95d965a8d5002508ff9d03b897560b8773e7607748db"
+    },
+    {
+      "id": "EP001-03-tipologia-ausente",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 colección vacía con radicados ajenos"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "f8b8d643886d4a32428cc157b5e744b8816c9ac8ece38616b34ba7b83623eb19"
+    },
+    {
+      "id": "EP001-04-filtro-no-reconocido",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 400 detiene"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "aa06635e8ae05926c9fc243c3885cd0cc49f09efa848076cdf8b04d5e80bfc66"
+    },
+    {
+      "id": "EP001-05-token-vencido-persistente",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 401 detiene"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "9f3b6466be143bdd31f42de8b68cc09b4f9da332e6973ef0fc1b7a68332d9cf6"
+    },
+    {
+      "id": "EP001-06-sin-roles-403",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 403 detiene"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "127781ffe75df3cd20af964ac637955e65d4270c683c7b0931e275ee5bae857a"
+    },
+    {
+      "id": "EP001-07-api-no-disponible",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 sin conexión tras reintentos detiene"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "b0674b3952ec45110a10937c566ef205de5b5ded3262276662c21a9eb64e4bea"
+    },
+    {
+      "id": "EP001-08-radicado-no-legible-400",
+      "modo": "fixture",
+      "ramas": [
+        "HU-003 400 por radicado: excepción de sistema y continúa"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "9e9a39cdf96c7c68ac4668ff532ca722e9d1483aa063f33ef48ae496f1bf997c"
+    },
+    {
+      "id": "EP001-09-radicado-no-encontrado-404",
+      "modo": "fixture",
+      "ramas": [
+        "HU-003 404 por radicado: excepción de sistema y continúa"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "bb4708ed9e0ddb7f83f25461e3ee2f7cc079bfc0995070198d0d22bc37bb6a81"
+    },
+    {
+      "id": "EP001-10-comentario-rechazado-400",
+      "modo": "fixture",
+      "ramas": [
+        "HU-004 escritura rechazada: excepción de sistema"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "7fb7f69bbadf790ea3b6885f7e74464619b21dedb0a73f688909ee113a958e8c"
+    },
+    {
+      "id": "EP001-11-comentario-sin-autorizacion-401",
+      "modo": "fixture",
+      "ramas": [
+        "HU-004 escritura 401 persistente: excepción de sistema"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "c779d6783ab765672ce0bd789aac27d79fb1080429dfb8404f74042a2e7989b0"
+    },
+    {
+      "id": "EP001-12-solo-casos-completos",
+      "modo": "fixture",
+      "ramas": [
+        "HU-004 ninguna excepción"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "36c08b3124071be14f6593efe7108666d945cec7f0dc09f94a1ec6484e292e3a"
+    },
+    {
+      "id": "EP001-13-todos-incompletos",
+      "modo": "fixture",
+      "ramas": [
+        "HU-004 todos van a excepción 1"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "e93d6375ede41819183475cccaa0d1d4e3eda48281838a43f2057a33df9d1dd2"
+    },
+    {
+      "id": "EP001-14-sin-descartar-identificacion-ausente",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 filtro simple",
+        "HU-004 sin número de identificación → excepción 1 con comentario"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "431fa29712a417bf08aa1ead9f674eb933b0c97ca7c8b35a053ed8f50ce62efb"
+    },
+    {
+      "id": "EP001-15-lote-con-first-y-orderby",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 $first y $orderby=IDRADICADO desc"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "af164b69e4b82526d5a92b05ed69c09b91abcec23f9ba17964352daf097353d1"
+    },
+    {
+      "id": "EP001-16-solo-descartados",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 colección vacía por filtro compuesto con descartados"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "8477fda28192de1a1a00533e3b3da8d4d39390acd81ac1e407c8edbbbefeebec"
+    },
+    {
+      "id": "EP001-17-casos-aparecen-en-el-reintento",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 bandeja vacía, el reintento agendado encuentra casos y el bot los procesa (AC-04, AC-05)"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "e4677b0b4e3556cc2114f144b507fb3d5cc33413442612532a0db15a56dabaf5"
+    },
+    {
+      "id": "EP001-18-falla-durante-el-reintento",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002 bandeja vacía, la API deja de responder durante el reintento: se detiene y alerta"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "708eb81ec642a9d4aebd5bedb5db6631d57563632d391adc35852fbb84d6ab45"
+    }
+  ]
+}

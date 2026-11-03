@@ -1,7 +1,15 @@
 {
-  "head_at_run": "1af4425",
+  "procedencia": {
+    "commit": "51c6bd12f8417c33f70e2045b8ab4253547a2c7e",
+    "rama": "fix/tercera-ronda",
+    "cambios_sin_commit": [],
+    "fecha_hora": "2026-11-03T11:34:58-05:00",
+    "comando": "python banco/equivalencia_robot.py EP-001",
+    "robot_sha256": "dd44d0ce42f98fb502f2efa706df73c756e45b1e400a882dcaee863dfa59b8ca"
+  },
+  "head_at_run": "51c6bd1",
   "anchored_at": {
-    "sha": "1af4425",
+    "sha": "51c6bd1",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "escenarios": [

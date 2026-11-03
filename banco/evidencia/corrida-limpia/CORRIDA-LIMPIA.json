@@ -1,0 +1,292 @@
+{
+  "procedencia": {
+    "commit": "51c6bd12f8417c33f70e2045b8ab4253547a2c7e",
+    "rama": "fix/tercera-ronda",
+    "cambios_sin_commit": [],
+    "fecha_hora": "2026-11-03T11:32:22-05:00",
+    "comando": "python banco/corrida_limpia.py",
+    "robot_sha256": "dd44d0ce42f98fb502f2efa706df73c756e45b1e400a882dcaee863dfa59b8ca"
+  },
+  "escenario": "EP003-12-corrida-completa-trazabilidad",
+  "robot": "Robots/LabHabeasData.robot.json por el intérprete (navegador emulado), no Studio",
+  "base_nueva": true,
+  "corridas_sobre_la_misma_base": 2,
+  "archivo_movible_tras_cada_corrida": true,
+  "log_ejecucion": {
+    "columnas": [
+      "IdCorrida",
+      "Fecha",
+      "CasosProcesados",
+      "Descartados",
+      "Exitosos",
+      "NoExitosos",
+      "Parciales",
+      "Excepciones",
+      "Pasos",
+      "ComandosStudio"
+    ],
+    "filas": [
+      [
+        "C20261103113222",
+        "2026-11-03 11:32:24",
+        14,
+        1,
+        7,
+        4,
+        3,
+        5,
+        413,
+        null
+      ],
+      [
+        "C20261103113224",
+        "2026-11-03 11:32:26",
+        14,
+        1,
+        0,
+        12,
+        2,
+        12,
+        307,
+        null
+      ]
+    ]
+  },
+  "parametros": {
+    "filas": 73,
+    "hojas_de_configuracion": 72,
+    "faltan": []
+  },
+  "esquema_con_IdCorrida": {
+    "Insumo": true,
+    "Transacciones": true,
+    "Excepciones": true,
+    "Exclusion": true,
+    "Gestores": true,
+    "AuditoriaMaestras": true,
+    "LogEjecucion": true
+  },
+  "reporte": {
+    "encabezado": [
+      "Fecha",
+      "RadicadoZeus",
+      "RadicadoPadre",
+      "Resultado",
+      "Excepcion",
+      "Observacion",
+      "IdCorrida"
+    ],
+    "filas_por_corrida": {
+      "C20261103113222": 38,
+      "C20261103113224": 29
+    },
+    "ultima_fila_por_corrida": {
+      "C20261103113222": "FIN DE CORRIDA",
+      "C20261103113224": "FIN DE CORRIDA"
+    }
+  },
+  "logs_filas_por_corrida": {
+    "auditoria": {
+      "C20261103113222": 102,
+      "C20261103113224": 70
+    },
+    "errores": {
+      "C20261103113222": 0,
+      "C20261103113224": 0
+    }
+  },
+  "mezcla_entre_corridas": {
+    "Gestores": {
+      "filas_corrida1": 4,
+      "filas_corrida1_tras_la_segunda": 4,
+      "filas_corrida2": 12,
+      "filas_sin_corrida": 0
+    },
+    "Exclusion": {
+      "filas_corrida1": 10,
+      "filas_corrida1_tras_la_segunda": 10,
+      "filas_corrida2": 2,
+      "filas_sin_corrida": 0
+    },
+    "Excepciones": {
+      "filas_corrida1": 5,
+      "filas_corrida1_tras_la_segunda": 5,
+      "filas_corrida2": 12,
+      "filas_sin_corrida": 0
+    },
+    "Transacciones": {
+      "filas_corrida1": 75,
+      "filas_corrida1_tras_la_segunda": 75,
+      "filas_corrida2": 59,
+      "filas_sin_corrida": 0
+    },
+    "AuditoriaMaestras": {
+      "filas_corrida1": 9,
+      "filas_corrida1_tras_la_segunda": 9,
+      "filas_corrida2": 0,
+      "filas_sin_corrida": 0
+    }
+  },
+  "gestores": [
+    [
+      "C20261103113222",
+      "900010",
+      "2026-11-03 11:32:23",
+      "excepción 1: excepción de negocio 1: datos incompletos (TIPO DE IDENTIFICACION)"
+    ],
+    [
+      "C20261103113222",
+      "900009",
+      "2026-11-03 11:32:23",
+      "excepción 1: excepción de negocio 1: datos incompletos (NOMBRE DEL CLIENTE)"
+    ],
+    [
+      "C20261103113222",
+      "900004",
+      "2026-11-03 11:32:24",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (celular)"
+    ],
+    [
+      "C20261103113222",
+      "900002",
+      "2026-11-03 11:32:24",
+      "excepción 1: excepción de negocio 1: datos incompletos (SIN CANAL DE CONTACTO)"
+    ],
+    [
+      "C20261103113224",
+      "900016",
+      "2026-11-03 11:32:24",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (celular)"
+    ],
+    [
+      "C20261103113224",
+      "900015",
+      "2026-11-03 11:32:24",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (celular)"
+    ],
+    [
+      "C20261103113224",
+      "900014",
+      "2026-11-03 11:32:25",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (correo)"
+    ],
+    [
+      "C20261103113224",
+      "900013",
+      "2026-11-03 11:32:25",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (correo)"
+    ],
+    [
+      "C20261103113224",
+      "900010",
+      "2026-11-03 11:32:25",
+      "excepción 1: excepción de negocio 1: datos incompletos (TIPO DE IDENTIFICACION)"
+    ],
+    [
+      "C20261103113224",
+      "900009",
+      "2026-11-03 11:32:25",
+      "excepción 1: excepción de negocio 1: datos incompletos (NOMBRE DEL CLIENTE)"
+    ],
+    [
+      "C20261103113224",
+      "900008",
+      "2026-11-03 11:32:25",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (correo)"
+    ],
+    [
+      "C20261103113224",
+      "900007",
+      "2026-11-03 11:32:25",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (celular, correo)"
+    ],
+    [
+      "C20261103113224",
+      "900004",
+      "2026-11-03 11:32:25",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (celular)"
+    ],
+    [
+      "C20261103113224",
+      "900003",
+      "2026-11-03 11:32:25",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (correo)"
+    ],
+    [
+      "C20261103113224",
+      "900002",
+      "2026-11-03 11:32:26",
+      "excepción 1: excepción de negocio 1: datos incompletos (SIN CANAL DE CONTACTO)"
+    ],
+    [
+      "C20261103113224",
+      "900001",
+      "2026-11-03 11:32:26",
+      "excepción 4: excepción de negocio 4: todos los valores ya excluidos (celular, correo)"
+    ]
+  ],
+  "exclusion": [
+    [
+      "C20261103113222",
+      "900016",
+      "2026-11-03 11:32:22"
+    ],
+    [
+      "C20261103113222",
+      "900015",
+      "2026-11-03 11:32:23"
+    ],
+    [
+      "C20261103113222",
+      "900014",
+      "2026-11-03 11:32:23"
+    ],
+    [
+      "C20261103113222",
+      "900013",
+      "2026-11-03 11:32:23"
+    ],
+    [
+      "C20261103113222",
+      "900008",
+      "2026-11-03 11:32:23"
+    ],
+    [
+      "C20261103113222",
+      "900007",
+      "2026-11-03 11:32:23"
+    ],
+    [
+      "C20261103113222",
+      "900006",
+      "2026-11-03 11:32:24"
+    ],
+    [
+      "C20261103113222",
+      "900005",
+      "2026-11-03 11:32:24"
+    ],
+    [
+      "C20261103113222",
+      "900003",
+      "2026-11-03 11:32:24"
+    ],
+    [
+      "C20261103113222",
+      "900001",
+      "2026-11-03 11:32:24"
+    ],
+    [
+      "C20261103113224",
+      "900006",
+      "2026-11-03 11:32:25"
+    ],
+    [
+      "C20261103113224",
+      "900005",
+      "2026-11-03 11:32:25"
+    ]
+  ],
+  "fallos": [],
+  "verde": true
+}

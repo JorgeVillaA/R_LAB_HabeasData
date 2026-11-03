@@ -1,10 +1,19 @@
 {
-  "head_at_run": "0d81ffc",
+  "procedencia": {
+    "commit": "51c6bd12f8417c33f70e2045b8ab4253547a2c7e",
+    "rama": "fix/tercera-ronda",
+    "cambios_sin_commit": [],
+    "fecha_hora": "2026-11-03T11:38:58-05:00",
+    "comando": "python banco/banco_ep002.py EP-003",
+    "robot_sha256": "dd44d0ce42f98fb502f2efa706df73c756e45b1e400a882dcaee863dfa59b8ca"
+  },
+  "head_at_run": "51c6bd1",
   "anchored_at": {
-    "sha": "0d81ffc",
+    "sha": "51c6bd1",
     "robot": "Robots/LabHabeasData.robot.json"
   },
   "navegador": "Chrome (run_in_studio)",
+  "completa": true,
   "escenarios": [
     {
       "id": "EP003-01-sin-duplicado-registra-exclusion",
@@ -50,6 +59,48 @@
     },
     {
       "id": "EP003-09-nota-de-duplicado-rechazada",
+      "equivalente": true,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP003-10-insercion-de-exclusion-falla",
+      "equivalente": true,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP003-11-solo-telefono-fijo-solo-fila-de-exclusion",
+      "equivalente": true,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP003-12-corrida-completa-trazabilidad",
+      "equivalente": true,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP003-13-no-cedula-sin-nombre-cierra-parcial",
+      "equivalente": true,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP003-14-excepcion-3-deja-excepcion-y-gestor",
+      "equivalente": true,
+      "errores_capturados": 0,
+      "diferencias": {}
+    },
+    {
+      "id": "EP003-15-procuraduria-caida-excepcion-de-sistema",
+      "equivalente": true,
+      "errores_capturados": 6,
+      "diferencias": {}
+    },
+    {
+      "id": "EP003-16-nit-9-digitos-gestion-manual",
       "equivalente": true,
       "errores_capturados": 0,
       "diferencias": {}

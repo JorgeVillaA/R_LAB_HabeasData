@@ -1,165 +1,175 @@
-[
-  {
-    "id": "EP003-01-sin-duplicado-registra-exclusion",
-    "modo": "fixture",
-    "ramas": [
-      "HU-010 sin duplicado",
-      "HU-011 inserta Exclusion y una fila por valor",
-      "HU-011 cruza y elimina de la maestra"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "2be7399e541f1c0a28f3a730ad04c82a45f2fe850811db860cb3894150d0860a"
+{
+  "procedencia": {
+    "commit": "51c6bd12f8417c33f70e2045b8ab4253547a2c7e",
+    "rama": "fix/tercera-ronda",
+    "cambios_sin_commit": [],
+    "fecha_hora": "2026-11-03T11:32:21-05:00",
+    "comando": "python banco/correr_matriz.py EP-003",
+    "robot_sha256": "dd44d0ce42f98fb502f2efa706df73c756e45b1e400a882dcaee863dfa59b8ca"
   },
-  {
-    "id": "EP003-02-duplicado-total-excepcion-4",
-    "modo": "fixture",
-    "ramas": [
-      "HU-010 excepción de negocio 4: todos sus valores ya excluidos, no sigue a identidad"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "6a1c74cf9ec1903aedd9964291b372dc3c5f9f158d6a00a38ca694dea0fdfe4a"
-  },
-  {
-    "id": "EP003-03-duplicado-parcial-los-demas-continuan",
-    "modo": "fixture",
-    "ramas": [
-      "HU-010 varios valores: solo el duplicado genera la excepción 4",
-      "HU-011 registra solo los valores que continúan"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "2e24b95cf23a07b880b29c36b3f83eae8a53e7bbe86969e481583f295a527694"
-  },
-  {
-    "id": "EP003-04-repositorio-no-responde-en-un-caso",
-    "modo": "fixture",
-    "ramas": [
-      "HU-010 repositorio no responde (el primer radicado procesado, 900003): reintenta x3, excepción de sistema y continúa con el siguiente"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "ebe4ba4153106945013cc726b9a707600bf78a37ba21ac71e141dc85b045b0c4"
-  },
-  {
-    "id": "EP003-05-repositorio-inaccesible-para-todos-detiene",
-    "modo": "fixture",
-    "ramas": [
-      "HU-010 punto de control crítico: repositorio inaccesible de forma generalizada"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "010191ce3afbb21910963e16196dd53dbabbe0d25e848c41ff2a909d44cd79b4"
-  },
-  {
-    "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
-    "modo": "fixture",
-    "ramas": [
-      "HU-011 insertar falla de forma persistente (en un valor): excepción de sistema y NADA se elimina de las maestras"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "c52afc13d346a4ace6190e5f4a9d99097c9004584663c7f707b9b65751504aa5"
-  },
-  {
-    "id": "EP003-07-eliminacion-falla-conserva-la-fila-insertada",
-    "modo": "fixture",
-    "ramas": [
-      "HU-011 eliminar de la maestra falla: la fila ya insertada se conserva y el bot continúa"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "14159bee129f12edf8f28b2d21fe447f98949627444b52da8cecb1307390e6fb"
-  },
-  {
-    "id": "EP003-08-identidad-no-valida-no-registra",
-    "modo": "fixture",
-    "ramas": [
-      "HU-011 solo se registra con identidad coincidente: excepción de negocio 3 no toca el repositorio"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "377ff5804320d7cc4e7421551217fc8ac42a826a3f884c8fe3cfd6569759490c"
-  },
-  {
-    "id": "EP003-09-nota-de-duplicado-rechazada",
-    "modo": "fixture",
-    "ramas": [
-      "HU-010 la nota de excepción 4 no se registra en Zeus: excepción de sistema del caso, no sigue a identidad"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "a632268347a118316a6815298f8f8f500395a049707a81db40a73de9ef62c6af"
-  },
-  {
-    "id": "EP003-10-insercion-de-exclusion-falla",
-    "modo": "fixture",
-    "ramas": [
-      "HU-011 insertar la fila de Exclusion falla de forma persistente: nada en los canales ni en las maestras"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "7b7164e6b4e31d370dc3754c6cf282d749e1579d44fc8b86e434667f0a2f8696"
-  },
-  {
-    "id": "EP003-11-solo-telefono-fijo-solo-fila-de-exclusion",
-    "modo": "fixture",
-    "ramas": [
-      "HU-011 canal fijo: se registra la fila de Exclusion (sin tabla de canal) y el caso queda Procesado Parcialmente"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "04e1c4609415e6cb35d25afb864db6d63b6c7ab5f3a554e2cd949cee5a6528fd"
-  },
-  {
-    "id": "EP003-12-corrida-completa-trazabilidad",
-    "modo": "fixture",
-    "ramas": [
-      "HU-002..HU-011 con los 15 radicados sintéticos: Excepciones, Gestores, Parametros, LogEjecucion, descartado, parcial y auditoría de maestras"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "56fdca805fb8ffc0c2b33964ef0fabf4d80fd3f9af04dbac8ef0d27a3a67e437"
-  },
-  {
-    "id": "EP003-13-no-cedula-sin-nombre-cierra-parcial",
-    "modo": "fixture",
-    "ramas": [
-      "identidad sin nombre (documento no cédula): el caso no queda abierto, cierra en 5 Procesado Parcialmente"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "7370b89bde9429d743824ca5600f9ce1132f45ca9535508ad627b81a0b94b9d7"
-  },
-  {
-    "id": "EP003-14-excepcion-3-deja-excepcion-y-gestor",
-    "modo": "fixture",
-    "ramas": [
-      "identidad no coincide: excepción 3 en Excepciones, fila en Gestores y puntaje en Transacciones"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "377ff5804320d7cc4e7421551217fc8ac42a826a3f884c8fe3cfd6569759490c"
-  },
-  {
-    "id": "EP003-15-procuraduria-caida-excepcion-de-sistema",
-    "modo": "fixture",
-    "ramas": [
-      "falla de la Procuraduría: excepción de sistema y gestión manual, con su fila en Excepciones y Gestores"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "d277c59bde2449c918032343c08617e953442f838248a0e157106a2988e76e2c"
-  },
-  {
-    "id": "EP003-16-nit-9-digitos-gestion-manual",
-    "modo": "fixture",
-    "ramas": [
-      "NIT con 9 dígitos: gestión manual (Excepciones tipo gestion_manual y fila en Gestores)"
-    ],
-    "paso": true,
-    "fallos": [],
-    "huella": "d5cfb5535d6896790634da20c0bb826680349207a19b248168e4e87000915eae"
-  }
-]
+  "resultados": [
+    {
+      "id": "EP003-01-sin-duplicado-registra-exclusion",
+      "modo": "fixture",
+      "ramas": [
+        "HU-010 sin duplicado",
+        "HU-011 inserta Exclusion y una fila por valor",
+        "HU-011 cruza y elimina de la maestra"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "2be7399e541f1c0a28f3a730ad04c82a45f2fe850811db860cb3894150d0860a"
+    },
+    {
+      "id": "EP003-02-duplicado-total-excepcion-4",
+      "modo": "fixture",
+      "ramas": [
+        "HU-010 excepción de negocio 4: todos sus valores ya excluidos, no sigue a identidad"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "6a1c74cf9ec1903aedd9964291b372dc3c5f9f158d6a00a38ca694dea0fdfe4a"
+    },
+    {
+      "id": "EP003-03-duplicado-parcial-los-demas-continuan",
+      "modo": "fixture",
+      "ramas": [
+        "HU-010 varios valores: solo el duplicado genera la excepción 4",
+        "HU-011 registra solo los valores que continúan"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "2e24b95cf23a07b880b29c36b3f83eae8a53e7bbe86969e481583f295a527694"
+    },
+    {
+      "id": "EP003-04-repositorio-no-responde-en-un-caso",
+      "modo": "fixture",
+      "ramas": [
+        "HU-010 repositorio no responde (el primer radicado procesado, 900003): reintenta x3, excepción de sistema y continúa con el siguiente"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "ebe4ba4153106945013cc726b9a707600bf78a37ba21ac71e141dc85b045b0c4"
+    },
+    {
+      "id": "EP003-05-repositorio-inaccesible-para-todos-detiene",
+      "modo": "fixture",
+      "ramas": [
+        "HU-010 punto de control crítico: repositorio inaccesible de forma generalizada"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "010191ce3afbb21910963e16196dd53dbabbe0d25e848c41ff2a909d44cd79b4"
+    },
+    {
+      "id": "EP003-06-insercion-falla-no-elimina-de-la-maestra",
+      "modo": "fixture",
+      "ramas": [
+        "HU-011 insertar falla de forma persistente (en un valor): excepción de sistema y NADA se elimina de las maestras"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "c52afc13d346a4ace6190e5f4a9d99097c9004584663c7f707b9b65751504aa5"
+    },
+    {
+      "id": "EP003-07-eliminacion-falla-conserva-la-fila-insertada",
+      "modo": "fixture",
+      "ramas": [
+        "HU-011 eliminar de la maestra falla: la fila ya insertada se conserva y el bot continúa"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "14159bee129f12edf8f28b2d21fe447f98949627444b52da8cecb1307390e6fb"
+    },
+    {
+      "id": "EP003-08-identidad-no-valida-no-registra",
+      "modo": "fixture",
+      "ramas": [
+        "HU-011 solo se registra con identidad coincidente: excepción de negocio 3 no toca el repositorio"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "377ff5804320d7cc4e7421551217fc8ac42a826a3f884c8fe3cfd6569759490c"
+    },
+    {
+      "id": "EP003-09-nota-de-duplicado-rechazada",
+      "modo": "fixture",
+      "ramas": [
+        "HU-010 la nota de excepción 4 no se registra en Zeus: excepción de sistema del caso, no sigue a identidad"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "a632268347a118316a6815298f8f8f500395a049707a81db40a73de9ef62c6af"
+    },
+    {
+      "id": "EP003-10-insercion-de-exclusion-falla",
+      "modo": "fixture",
+      "ramas": [
+        "HU-011 insertar la fila de Exclusion falla de forma persistente: nada en los canales ni en las maestras"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "7b7164e6b4e31d370dc3754c6cf282d749e1579d44fc8b86e434667f0a2f8696"
+    },
+    {
+      "id": "EP003-11-solo-telefono-fijo-solo-fila-de-exclusion",
+      "modo": "fixture",
+      "ramas": [
+        "HU-011 canal fijo: se registra la fila de Exclusion (sin tabla de canal) y el caso queda Procesado Parcialmente"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "04e1c4609415e6cb35d25afb864db6d63b6c7ab5f3a554e2cd949cee5a6528fd"
+    },
+    {
+      "id": "EP003-12-corrida-completa-trazabilidad",
+      "modo": "fixture",
+      "ramas": [
+        "HU-002..HU-011 con los 15 radicados sintéticos: Excepciones, Gestores, Parametros, LogEjecucion, descartado, parcial y auditoría de maestras"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "7f5439860a7a7694443661ead8f9d3cd5ff85cfa855a5fea3a5672cb773101f6"
+    },
+    {
+      "id": "EP003-13-no-cedula-sin-nombre-cierra-parcial",
+      "modo": "fixture",
+      "ramas": [
+        "identidad sin nombre (documento no cédula): el caso no queda abierto, cierra en 5 Procesado Parcialmente"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "7370b89bde9429d743824ca5600f9ce1132f45ca9535508ad627b81a0b94b9d7"
+    },
+    {
+      "id": "EP003-14-excepcion-3-deja-excepcion-y-gestor",
+      "modo": "fixture",
+      "ramas": [
+        "identidad no coincide: excepción 3 en Excepciones, fila en Gestores y puntaje en Transacciones"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "377ff5804320d7cc4e7421551217fc8ac42a826a3f884c8fe3cfd6569759490c"
+    },
+    {
+      "id": "EP003-15-procuraduria-caida-excepcion-de-sistema",
+      "modo": "fixture",
+      "ramas": [
+        "falla de la Procuraduría: excepción de sistema y gestión manual, con su fila en Excepciones y Gestores"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "d277c59bde2449c918032343c08617e953442f838248a0e157106a2988e76e2c"
+    },
+    {
+      "id": "EP003-16-nit-9-digitos-gestion-manual",
+      "modo": "fixture",
+      "ramas": [
+        "NIT con 9 dígitos: gestión manual (Excepciones tipo gestion_manual y fila en Gestores)"
+      ],
+      "paso": true,
+      "fallos": [],
+      "huella": "d5cfb5535d6896790634da20c0bb826680349207a19b248168e4e87000915eae"
+    }
+  ]
+}
