@@ -86,9 +86,16 @@
       "excepciones_negocio_1": [],
       "excepciones_sistema": [],
       "motivo_sin_casos": "bandeja_vacia",
-      "reintento_minutos": 60,
+      "reintento_minutos": 0.01,
       "comentarios": [],
-      "descartados": []
+      "descartados": [],
+      "reintentos": 2
+    },
+    "proceso": {
+      "CADENCIA_REINTENTO_BANDEJA_VACIA": {
+        "MinutosEntreReintentos": 0.01,
+        "MaximoReintentosDiarios": 2
+      }
     }
   },
   {
@@ -107,8 +114,15 @@
       "excepciones_negocio_1": [],
       "excepciones_sistema": [],
       "motivo_sin_casos": "tipologia_ausente",
-      "reintento_minutos": 60,
-      "comentarios": []
+      "reintento_minutos": 0.01,
+      "comentarios": [],
+      "reintentos": 2
+    },
+    "proceso": {
+      "CADENCIA_REINTENTO_BANDEJA_VACIA": {
+        "MinutosEntreReintentos": 0.01,
+        "MaximoReintentosDiarios": 2
+      }
     }
   },
   {
@@ -430,11 +444,130 @@
       "excepciones_negocio_1": [],
       "excepciones_sistema": [],
       "motivo_sin_casos": "solo_descartados",
-      "reintento_minutos": 60,
+      "reintento_minutos": 0.01,
       "descartados": [
         "900011"
       ],
-      "comentarios": []
+      "comentarios": [],
+      "reintentos": 2
+    },
+    "proceso": {
+      "CADENCIA_REINTENTO_BANDEJA_VACIA": {
+        "MinutosEntreReintentos": 0.01,
+        "MaximoReintentosDiarios": 2
+      }
+    }
+  },
+  {
+    "id": "EP001-17-casos-aparecen-en-el-reintento",
+    "ramas": [
+      "HU-002 bandeja vacía, el reintento agendado encuentra casos y el bot los procesa (AC-04, AC-05)"
+    ],
+    "proceso": {
+      "CADENCIA_REINTENTO_BANDEJA_VACIA": {
+        "MinutosEntreReintentos": 0.01,
+        "MaximoReintentosDiarios": 2
+      }
+    },
+    "doble": {
+      "radicados": [],
+      "cambio_tras_consultas": {
+        "tras": 3,
+        "cambios": {
+          "radicados": "todos"
+        }
+      }
+    },
+    "espera": {
+      "estado": "ok",
+      "avanzan": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ],
+      "excepciones_negocio_1": [
+        "900002",
+        "900009",
+        "900010",
+        "900015"
+      ],
+      "excepciones_sistema": [],
+      "motivo_sin_casos": null,
+      "comentarios": [
+        "900002",
+        "900009",
+        "900010",
+        "900015"
+      ],
+      "casos": {
+        "900007": {
+          "correos": [
+            "sofia.a@ejemplo.invalid",
+            "sofia.b@ejemplo.invalid"
+          ]
+        },
+        "900008": {
+          "radicado_padre": "800001",
+          "radicado_para_plantillas": "800001"
+        },
+        "900005": {
+          "telefonos": [
+            {
+              "valor": "4441234",
+              "clase": "fijo"
+            }
+          ]
+        },
+        "900006": {
+          "telefonos": [
+            {
+              "valor": "2101234567",
+              "clase": "sin_clasificar"
+            }
+          ]
+        }
+      },
+      "descartados": [
+        "900011"
+      ],
+      "reintentos": 1
+    }
+  },
+  {
+    "id": "EP001-18-falla-durante-el-reintento",
+    "ramas": [
+      "HU-002 bandeja vacía, la API deja de responder durante el reintento: se detiene y alerta"
+    ],
+    "proceso": {
+      "CADENCIA_REINTENTO_BANDEJA_VACIA": {
+        "MinutosEntreReintentos": 0.01,
+        "MaximoReintentosDiarios": 2
+      }
+    },
+    "doble": {
+      "radicados": [],
+      "cambio_tras_consultas": {
+        "tras": 3,
+        "cambios": {
+          "denegar": true
+        }
+      }
+    },
+    "espera": {
+      "estado": "detenido",
+      "avanzan": [],
+      "excepciones_negocio_1": [],
+      "excepciones_sistema": [],
+      "motivo_sin_casos": "bandeja_vacia",
+      "comentarios": [],
+      "notificacion_asunto": "Detenido"
     }
   }
 ]

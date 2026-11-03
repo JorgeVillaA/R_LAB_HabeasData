@@ -1,0 +1,449 @@
+﻿@charset "utf-8";
+
+/* Estilos PGN*/
+
+.card-header {
+    text-align: center !important;
+    font-size: 18px !important;
+    color: #527194 !important;
+    font-weight: bold !important;
+    background-color: #FFFFFF !important;
+}
+
+.footerPGN {
+    bottom: 0;
+    width: 100%;
+    height: 80px; /* Height of the footer */
+    background: #e5e4e4;
+    align-content: center;
+    text-align: center;
+}
+
+
+@charset "utf-8";
+
+/* Estilos PGN*/
+
+body {
+    font: 14px Trebuchet MS,Lucida Sans Unicode,Arial,sans-serif;
+    margin: 0px;
+    padding: 0px;
+    background-color: #ffffff;
+    background-position: center center;
+    background-repeat: repeat-y;
+}
+
+.radioboton {
+    border: none;
+}
+
+.divContenedorPGN {
+    margin: 0 auto;
+    position: relative;
+    text-align: left;
+    width: 100%;
+    background-position: center top;
+    background-repeat: no-repeat;
+    min-height: 600px;
+}
+
+.divEncabezadoPGN {
+    position: relative;
+    width: 1024px;
+    height: 150px;
+}
+
+.titulo_principal {
+    font-size: 20px;
+    font-weight: bold;
+    color: rgb(0,35,149);
+    position: absolute;
+    left: 50px;
+    top: 22px;
+}
+
+.titulo_principal_rep {
+    font-size: 18px;
+    color: rgb(0,35,149);
+    position: absolute;
+    left: 50px;
+    top: 50px;
+}
+
+.divContenidoPGN {
+    margin: 5px 50px 5px 50px;
+}
+
+.titulo0 {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    font-size: large;
+    font-weight: bold;
+    color: #004891;
+    text-decoration: none;
+    width: auto;
+    text-align: center;
+}
+
+.titulo1 {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    font-size: large;
+    font-weight: bold;
+    color: #004891;
+    text-decoration: none;
+    width: auto;
+    padding-right: 10px;
+    margin-right: 10px;
+    margin-left: 50px;
+    text-align: left;
+}
+
+.titulo2 {
+    font-family: Trebuchet MS,Lucida Sans Unicode,Arial,sans-serif;    
+    color: #000000;
+    text-decoration: none;
+    padding-left: 10px;
+    margin-left: 50px;
+}
+
+.divPiePGN {
+    left: 0;
+    margin-left: 50px;
+    margin-right: 50px;
+    padding-bottom: 0;
+    position: absolute;
+    text-align: left;
+    width: 90%;
+    font-size: 12px;
+}
+
+.textopeq {
+    font-weight: normal;
+    color: #333333;
+    text-decoration: none;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.celda_fondo {
+    font-weight: normal;
+    border-collapse: collapse;
+    border-spacing: 0;
+    padding: 5px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.celda_fondo_lbl {
+    font-weight: normal;
+    border-collapse: collapse;
+    border-spacing: 0;
+    padding: 5px;
+    text-align: left;
+    margin: 0 auto;
+}
+
+.divNotaPGN {
+    width: auto;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: 10px;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+/* Fin estilos PGN*/
+
+.divPrincipal {
+    text-align: center;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    color: #3B3B3B;
+    width: 800px;
+    margin: 0 auto;
+}
+
+.divBanner {
+    background-position: center;
+    width: 100%;
+    height: 80px;
+    background-color: aliceblue;
+    background-image: url('../img/cabezote.jpg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+
+.divPie {
+    width: 100%;
+    height: 95px;
+}
+
+.divNota {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    width: 100%;
+    height: 50px;
+}
+
+.pParrafoInicial {
+    text-align: center;
+    margin: 0 auto;
+    width: 78%;
+    padding-bottom: 20px;
+}
+
+/*Estilo para TextBox*/
+.TextBox {
+    border-width: 2px;
+    border-color: #30608F;
+    color: #000000;
+    text-align: left;
+}
+
+/*Estilo para DropDomwList*/
+.ComboBox {
+    border-width: 2px;
+    border-color: #30608F;
+    color: #000000;
+    text-align: left;
+}
+
+/*Estilo para los botones*/
+.Botones {
+    color: #30608F;
+    background: #FFFFFF;
+    font-weight: bold;
+    border: 2px solid #30608F;
+    font-size: 16px;
+    text-align: center;
+    width: 120px;
+    height: 25px;
+}
+
+    /*Estilo para botton que contendra inicio tramite*/
+    .Botones:hover {
+        color: #FFFFFF;
+        border: 2px solid #FFFFFF;
+        background: #30608F;
+        font-weight: bold;
+        height: 26px;
+    }
+
+.divSecundario {
+    text-align: center;
+    margin: 0 auto;
+    width: 90%;
+}
+
+span {
+    padding-left: 5px;
+}
+
+.SeccionAnt {
+    border-color: #CCCCCC;
+    border-style: solid;
+    border-width: 1px;
+    width: 100%;
+    padding: 15px 15px 15px 15px;
+    text-align: center;
+    margin: 0 auto 20px auto;
+}
+
+.SessionNumSiri {
+    border-color: #CCCCCC;
+    border-style: solid;
+    border-width: 1px;
+    width: 100%;
+    margin: 0 auto 20px auto;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.divAntecedentes {
+    text-align: center;
+}
+
+.datosConsultado {
+    font-size: 16px;
+    text-align: center;
+    font-weight: normal;
+    color: #000000;
+}
+
+    .datosConsultado p {
+        font-size: 18px;
+        text-align: center;
+        font-weight: normal;
+        color: #000000;
+    }
+
+h2 {
+    font-size: 18px;
+    text-align: center;
+    font-weight: bold;
+    color: #000000;
+    margin-top: 10px;
+    margin-right: 0px;
+    margin-bottom: 10px;
+    margin-left: 0px;
+}
+
+h3 {
+    font-size: 16px;
+    text-align: center;
+    font-weight: normal;
+    color: #30608F;
+    margin: 0px;
+    margin-top: 10px;
+    margin-right: 0px;
+    margin-bottom: 10px;
+    margin-left: 0px;
+}
+
+/* Estilo para las tablas*/
+.tablas caption {
+    font-size: 20px;
+    font-weight: normal;
+    background-repeat: no-repeat;
+    background-position: 130px center;
+    padding-top: 20px;
+    padding-left: 20px;
+    height: 50px;
+    margin: 0 auto;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 90%;
+    -webkit-box-shadow: 0px 2px 1px 5px rgba(242, 242, 242, 0.1);
+    box-shadow: 0px 2px 1px 5px rgba(242, 242, 242, 0.1);
+    text-align: center;
+    margin: 0 auto;
+}
+
+.tablas {
+    border: 1px solid #CCCCCC;
+}
+
+    .tablas td {
+        border-left: 1px solid #CCCCCC;
+        border-top: 1px solid #CCCCCC;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .tablas th, .tablas th:hover {
+        border-left: 1px solid #0094ff;
+        border-bottom: 1px solid #828282;
+        padding: 10px;
+        background-color: #30608F !important;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#0094ff), to(#404040)) !important;
+        background-image: -webkit-linear-gradient(top, #0094ff, #30608F) !important;
+        background-image: -moz-linear-gradient(top, #0094ff, #30608F) !important;
+        background-image: -ms-linear-gradient(top, #0094ff, #30608F) !important;
+        background-image: -o-linear-gradient(top, #0094ff, #30608F) !important;
+        background-image: linear-gradient(top, #0094ff, #30608F) !important;
+        color: #ffffff !important;
+        font-weight: normal;
+    }
+
+    .tablas tbody tr:nth-child(even) {
+        background: #FFFFFF !important;
+        color: #000000;
+    }
+
+    .tablas tr:hover * {
+        background: #eeeeee;
+        color: #000;
+    }
+
+    .tablas tr {
+        background: #FFFFFF;
+        color: #000000;
+    }
+
+/* Estilo para las tablas*/
+
+
+/* Opcion para discapacitados */
+.CheckBox {
+    width: 40px;
+    height: 55px;
+    background: #ffffff;
+    position: relative;
+    display: inline-block;
+    /*-webkit-border-radius: 50px;
+    -moz-border-radius: 50px;
+    border-radius: 50px;
+   
+    -webkit-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.5), 0px 1px 0px rgba(255,255,255,0.2);
+    -moz-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.5), 0px 1px 0px rgba(255,255,255,0.2);
+    box-shadow: inset 0px 1px 1px rgba(0,0,0,0.5), 0px 1px 0px rgba(255,255,255,0.2);*/
+}
+
+    .CheckBox:after {
+        content: 'NO';
+        font: 12px Arial, sans-serif;
+        padding-left: 15px;
+        padding-top: 5px;
+        color: #ffffff;
+        position: absolute;
+        right: 15px;
+        z-index: 0;
+        font-weight: bold;
+        background-image: url(../img/DiscapacidadOn.png);
+        background-size: 50px;
+        background-repeat: no-repeat;
+        width: 50px;
+        height: 50px;
+    }
+
+    .CheckBox:before {
+        content: 'SI';
+        font: 12px Arial, sans-serif;
+        padding-left: 20px;
+        padding-top: 5px;
+        color: rgb(0,35,149);
+        position: absolute;
+        left: 20px;
+        z-index: 0;
+        font-weight: bold;
+        background-image: url(../img/DiscapacidadOff.png);
+        background-size: 50px;
+        background-repeat: no-repeat;
+        width: 50px;
+        height: 50px;
+    }
+
+    .CheckBox label {
+        display: block;
+        width: 60px;
+        height: 50px;
+        /*-webkit-border-radius: 50px;
+        -moz-border-radius: 50px;
+        border-radius: 50px;*/
+        -webkit-transition: all .4s ease;
+        -moz-transition: all .4s ease;
+        -o-transition: all .4s ease;
+        -ms-transition: all .4s ease;
+        transition: all .4s ease;
+        cursor: pointer;
+        position: absolute;
+        top: 0px;
+        right: 20px;
+        z-index: 1;
+        -webkit-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.3);
+        -moz-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.3);
+        box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.3);
+        background: #fcfff4;
+        background: -webkit-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+        background: -moz-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+        background: -o-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+        background: -ms-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+        background: linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfff4', endColorstr='#b3bead',GradientType=0 );
+    }
+
+    .CheckBox input[type=checkbox]:checked + label {
+        left: 13px;
+    }

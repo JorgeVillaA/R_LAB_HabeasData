@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Consulta de Antecedentes - Procuraduría General de la Nación</title>
+<link href="css/Certificado.css" rel="stylesheet">
+<link href="css/jquery.realperson.css" rel="stylesheet">
+<link href="css/clon.css" rel="stylesheet">
+</head>
+<body>
+<form name="form1" method="post" action="consulta-de-antecedentes.aspx" onsubmit="javascript:return WebForm_OnSubmit();" id="form1">
+<div>
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKLTU0ODE4NDcwNGQYAQUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFgEFDEltYWdlQnV0dG9uMT2swL2YW6DzSqt8Ol/g2sn34pXXrJWBUdTElqN3Fzfz">
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="7E1D06DD">
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAA6KZTnwX9Z2Ade5v1oA06YJlIvO7ZUbC7ASXIFkzr3hhvjHxSHJFh7SaPJnCR17X+tIzJuBLp+gofrBkARS+g1hzd+4Rz0at1FkmyS31yoYKXGNaDY4KGZo9GMEsq3h2lH3vYMFAv45bZI2yLn9zzOZJNyFIk46MIl0e6JQRtArqvZmkc4EpaLXj/p1P9qoMz1xJ1ie83cG7qx3jG4pyrhmy0/9Rj0xfi4EAsn9vWk5DumQAq8eUWZ5ZSknq1PiLioxoSR9IuDXR0JpoBRXqKKL60z594LnSzU4S6PQAbT3rj10YAu8n2eZEUDUrKT4e5L15ThMPxl7dCqSIHKkScP0">
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+function WebForm_OnSubmit() {
+if (typeof(ValidatorOnSubmit) == "function" && ValidatorOnSubmit() == false) return false;
+return true;
+}
+//]]>
+</script>
+
+<div class="divContenedorPGN">
+    <div class="divBanner"></div>
+    <div class="divContenidoPGN">
+        <p class="titulo1">Consulta de Antecedentes</p>
+        <p class="titulo2">Procuraduría General de la Nación</p>
+        <br>
+
+        <!-- Paso 1: términos de uso -->
+        <div id="pnlTerminos">
+            <h2 style="text-align: left; margin-left: 50px;">Términos de uso</h2>
+            <div class="divNotaPGN">
+                <p style="text-align: justify;">
+                    La consulta de antecedentes es un servicio de consulta de información pública para que el ciudadano
+                    pueda verificar su situación frente a los registros de la Procuraduría General de la Nación.
+                </p>
+                <p style="text-align: justify;">
+                    El uso de la información suministrada está limitado a fines personales. Cualquier uso para una
+                    finalidad diferente, incluida la obtención de un beneficio económico o la consulta de información
+                    de un tercero sin su autorización, se considera irregular.
+                </p>
+                <p style="text-align: justify;">
+                    La consulta en línea cuenta con mecanismos de seguridad para controlar el acceso y el uso de la
+                    información contenida, y el portal puede bloquear el acceso ante un uso que considere irregular.
+                </p>
+                <p style="text-align: justify;">
+                    Al continuar usted declara que acepta estos términos de uso y que la información que consulta es
+                    de su propio interés.
+                </p>
+            </div>
+            <br>
+            <table style="width: auto; margin-left: 50px; text-align: left;">
+                <tr>
+                    <td class="celda_fondo_lbl">
+                        <input type="radio" id="rbAcepto" name="rblAcepto" value="1" class="radioboton">
+                        <label for="rbAcepto">Acepto</label>
+                    </td>
+                    <td class="celda_fondo_lbl">
+                        <input type="radio" id="rbNoAcepto" name="rblAcepto" value="0" class="radioboton" checked="checked">
+                        <label for="rbNoAcepto">No acepto</label>
+                    </td>
+                </tr>
+            </table>
+            <br>
+            <table style="width: auto; margin-left: 50px; text-align: left;">
+                <tr>
+                    <td colspan="2" align="center">
+                        <input type="submit" name="continuarBtn" value="Continuar" id="continuarBtn" class="Botones" disabled="disabled">
+                        <span id="lblMensajeTerminos" style="color:Red;"></span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Paso 2: formulario de consulta -->
+        <div id="pnlConsulta" style="display: none;">
+            <table style="text-align: left; vertical-align: top;">
+                <tbody>
+                    <tr>
+                        <td class="celda_fondo_lbl">Nombre:</td>
+                        <td class="celda_fondo" colspan="4">
+                            <input name="txtNombre" type="text" id="txtNombre" class="TextBox" style="width:100%;"></td>
+                        <td>
+                            <span id="RequiredFieldValidator1" style="color:Red;visibility:hidden;">*</span></td>
+                    </tr>
+                    <tr>
+                        <td class="celda_fondo_lbl">Tipo de Identificación</td>
+                        <td class="celda_fondo_lbl">
+                            <select name="ddlTipoID" id="ddlTipoID" class="ComboBox" style="width:200px;">
+	<option selected="selected" value="-1">Seleccione...</option>
+	<option value="1">Cédula de ciudadanía</option>
+	<option value="2">Nit</option>
+	<option value="3">Pasaporte</option>
+	<option value="4">Tarjeta de identidad</option>
+	<option value="5">Cédula extranjeria</option>
+
+</select>
+                        </td>
+                        <td>
+                            <span id="CompareValidator3" style="color:Red;visibility:hidden;">*</span>
+                        </td>
+                        <td class="celda_fondo_lbl">Número Identificación</td>
+                        <td class="celda_fondo" style="text-align: right;">
+                            <input name="txtNumID" type="text" maxlength="15" id="txtNumID" class="TextBox" style="width:200px;">
+                        </td>
+                        <td>
+                            <span id="RequiredFieldValidator2" style="color:Red;visibility:hidden;">*</span>
+                            <span id="CustomValidator2" style="color:Red;visibility:hidden;">*</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="celda_fondo_lbl">Correo Eletronico:</td>
+                        <td class="celda_fondo" colspan="4">
+                            <input name="txtCorreoEle" type="text" id="txtCorreoEle" class="TextBox" style="width:100%;"></td>
+                        <td>
+                            <span id="RegularExpressionValidator1" style="color:Red;visibility:hidden;">*</span>
+                            <span id="RequiredFieldValidator3" style="color:Red;visibility:hidden;">*</span></td>
+                    </tr>
+                    <tr>
+                        <td class="celda_fondo_lbl">Observaciones:</td>
+                        <td class="celda_fondo" colspan="4">
+                            <textarea name="txtObservaciones" rows="2" cols="20" id="txtObservaciones" class="TextBox" style="height:60px;width:100%;"></textarea></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td id="tdPregunta" class="celda_fondo" colspan="3">
+                            <span id="lblPregunta"></span><input type="image" name="ImageButton1" id="ImageButton1" alt="Refrescar pregunta" src="Media/Image/refresh.png" onclick="javascript:return false;" style="width:24px;border-width:0px;padding-left: 10px;">
+                        </td>
+                        <td class="celda_fondo" colspan="2">
+                            <input name="txtRespuestaPregunta" type="text" id="txtRespuestaPregunta" class="TextBox" style="width:160px;margin-left: -10px;">
+
+                        </td>
+                        <td>
+                            <span id="RequiredFieldValidator4" style="color:Red;visibility:hidden;">*</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" align="center">
+                            <input type="submit" name="btnExportar" value="Consultar" id="btnExportar" class="Botones">
+                            <div id="ValidationSummary1" style="color:Red;display:none;">
+
+</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Resultado en línea, en la misma página -->
+            <div id="divResultado">
+                <div id="lblMensaje" style="color:Red; text-align:center;"></div>
+                <div id="divDatosCiudadano" style="display:none;">
+                    <h2>Datos del ciudadano</h2>
+                    <div class="datosConsultado">
+                        <p>Nombre: <span id="lblNombre"></span></p>
+                        <p>Estado: <span id="lblEstado"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <br>
+    <div class="divPiePGN">
+        <br>
+        <span id="Lblvr">Clon local de laboratorio (R_LAB_HabeasData): datos sintéticos, sin validez legal.</span>
+    </div>
+</div>
+
+</form>
+<script src="js/clon.js"></script>
+</body>
+</html>

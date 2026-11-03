@@ -42,6 +42,18 @@ class Estado:
         self.falla_comentario = None
         self.comentarios = []
         self.contadores = {"tokens": 0, "consultas": 0, "comentarios": 0}
+        self.programado = None  # cambio del doble que ocurre tras N consultas (p. ej. casos que llegan mientras el bot espera)
+
+    def programar(self, tras, cambios):
+        """Aplica `cambios` justo antes de atender la consulta N+1; `reiniciar` restaura el estado de origen y lo vuelve a armar."""
+        self.programado = {"tras": int(tras), "cambios": dict(cambios), "aplicado": False,
+                           "origen": {"radicados": list(self.radicados), "denegar": self.denegar}}
+
+    def aplicar_programado_si_toca(self):
+        p = self.programado
+        if p and not p["aplicado"] and self.contadores["consultas"] + 1 > p["tras"]:
+            p["aplicado"] = True
+            self._aplicar(p["cambios"])
 
     def emitir_token(self):
         token = secrets.token_hex(16)
@@ -54,6 +66,11 @@ class Estado:
         return vence is not None and self.reloj() < vence
 
     def configurar(self, cambios):
+        if "cambio_tras_consultas" in cambios:
+            self.programar(cambios["cambio_tras_consultas"]["tras"], cambios["cambio_tras_consultas"]["cambios"])
+        self._aplicar(cambios)
+
+    def _aplicar(self, cambios):
         if "token_ttl" in cambios:
             self.token_ttl = int(cambios["token_ttl"])
         if cambios.get("invalidar_tokens"):
@@ -67,6 +84,9 @@ class Estado:
         if "radicados" in cambios:
             self.radicados = list(cambios["radicados"])
         if cambios.get("reiniciar"):
+            if self.programado:
+                self.programado["aplicado"] = False
+                self._aplicar(self.programado["origen"])
             self.comentarios.clear()
             self.contadores.update({"tokens": 0, "consultas": 0, "comentarios": 0})
 
@@ -159,6 +179,8 @@ class Manejador(BaseHTTPRequestHandler):
                          "scope": "email profile custom-attributes"})
 
     def _consulta(self, consulta):
+        with self.estado.bloqueo:
+            self.estado.aplicar_programado_si_toca()
         if not self._autorizado():
             return
         parametros = dict(parse_qsl(consulta, keep_blank_values=True))

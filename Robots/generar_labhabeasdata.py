@@ -8,7 +8,12 @@ las decisiones, el bucle por radicado y los contadores viven en bloques visibles
 Uso:  python Robots/generar_labhabeasdata.py   (escribe el JSON junto a este archivo)
 """
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from bloques_ep002 import construir as construir_ep002  # noqa: E402
+from bloques_ep003 import construir as construir_ep003  # noqa: E402
 
 DESTINO = Path(__file__).resolve().parent / "LabHabeasData.robot.json"
 P = '{glbDicParametros}'
@@ -30,7 +35,7 @@ def py(descripcion, *lineas):
 
 
 def paso(descripcion, variable, llamada):
-    return py(descripcion, "from habeasdata import pasos", f"SetVar('{variable}', {llamada})")
+    return py(descripcion, "from habeasdata import pasos", "pasos.asegurar(GetVar('glbStrRutaRaiz'))", f"SetVar('{variable}', {llamada})")
 
 
 def sv(descripcion, variable, expresion):
@@ -78,6 +83,27 @@ INICIALIZAR = grupo("HU002HU003HU004 - Inicializar el Asistente", [
        "SetVar('glbDicInicio', pasos.iniciar(raiz))"),
     paso("Lee los parámetros de negocio de la configuración (tipología, campo, literal de ausencia, lote, orden)",
          "glbDicParametros", "pasos.parametros()"),
+    sv("Radicados con identidad validada (HU-008)", "glbArrValidadas", "[]"),
+    sv("Radicados en excepción de negocio 3 (HU-008)", "glbArrExcepcionesNegocioTres", "[]"),
+    sv("Radicados en revisión humana (HU-006)", "glbArrRevisionHumana", "[]"),
+    sv("Radicados con respuesta sin nombre (HU-007)", "glbArrSinNombre", "[]"),
+    sv("Radicados derivados a gestión manual (HU-006, HU-007, HU-026a)", "glbArrGestionManual", "[]"),
+    sv("Radicados en excepción de sistema de identidad", "glbArrExcepcionesSistemaIdentidad", "[]"),
+    sv("Códigos de error de identidad por radicado", "glbDicCodigos", "{}"),
+    sv("Radicados que siguen a la validación de identidad (tras HU-004 y HU-010)", "glbArrSiguenIdentidad", "[]"),
+    sv("Radicados en excepción de negocio 4 (HU-010)", "glbArrExcepcionesNegocioCuatro", "[]"),
+    sv("Radicados en excepción de sistema del repositorio (HU-010)", "glbArrExcepcionesSistemaRepositorio", "[]"),
+    sv("Radicados que no pudieron consultar el repositorio (HU-010)", "glbArrRepositorioCaido", "[]"),
+    sv("Radicados con la exclusión registrada (HU-011)", "glbArrExclusionRegistrada", "[]"),
+    sv("Radicados en excepción de sistema de la exclusión (HU-011)", "glbArrExcepcionesSistemaExclusion", "[]"),
+    paso("Lee si el repositorio local está habilitado y lo abre (Repositorio.Habilitado)", "glbDicRepositorio", "pasos.repositorio()"),
+    sv("Chrome aún no está abierto", "glbBlnChromeAbierto", "False"),
+    paso("Lee el modo, las URL de los portales y los reintentos del captcha; en modo real exige autorización y ventana operativa",
+         "glbDicPortales", "pasos.portales()"),
+    si("Los portales no se pueden usar (falta autorización o ventana operativa)", '{glbDicPortales}["ok"] == False',
+       detener("{glbDicPortales}")),
+    sv("URL del portal de la Policía", "glbStrUrlPolicia", "{glbDicPortales}['url_policia']"),
+    sv("URL del portal de la Procuraduría", "glbStrUrlProcuraduria", "{glbDicPortales}['url_procuraduria']"),
 ])
 
 HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
@@ -121,6 +147,17 @@ HU002 = grupo("HU002 - Filtrar radicados de Exclusión de Datos", [
             ]),
         ], detener("{glbDicSeleccion}")),
     ], detener("{glbDicAutenticacion}")),
+    si("Sigue sin casos: agenda el reintento (espera la cadencia y vuelve a consultar)",
+       "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) == 0 and {glbDicEstado}['motivo_sin_casos'] is not None", [
+        paso("Espera MinutosEntreReintentos y reconsulta, hasta MaximoReintentosDiarios o hasta que aparezcan casos "
+             "(CADENCIA_REINTENTO_BANDEJA_VACIA)", "glbDicReintento", "pasos.reintentar_bandeja()"),
+        si("Hubo reintentos y la consulta respondió", '{glbDicReintento}["ok"] == True and {glbDicReintento}["cambia"] == True', [
+            sv("Guarda los radicados seleccionados en el reintento", "glbArrIdsRadicados", '{glbDicReintento}["ids"]'),
+            sv("Guarda los descartados del último intento", "glbArrIdsDescartados", '{glbDicReintento}["descartados"]'),
+            sv("Motivo con el que terminó el último intento", "glbDicEstado",
+               "dict({glbDicEstado}, motivo_sin_casos={glbDicReintento}['motivo'])")]),
+        si("El reintento se detuvo por una falla crítica", '{glbDicReintento}["ok"] == False', detener("{glbDicReintento}")),
+    ]),
 ])
 
 HU003 = grupo("HU003 - Leer datos paramétricos", [
@@ -133,6 +170,7 @@ HU003 = grupo("HU003 - Leer datos paramétricos", [
     ], [
         py("Registra la excepción de sistema del radicado (log de errores y reporte)",
            "from habeasdata import pasos",
+           "pasos.asegurar(GetVar('glbStrRutaRaiz'))",
            "pasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicLectura'))['mensaje'])"),
         sv("Anota el radicado en excepciones de sistema", "glbArrExcepcionesSistema", anexar("glbArrExcepcionesSistema", "'{locStrIdRadicado}'")),
     ]),
@@ -157,8 +195,9 @@ HU004 = grupo("HU004 - Validar campos obligatorios", [
     motivo_si("No hay ningún canal de contacto (ni correo ni teléfono)",
               'not {locDicCaso}["canal_correo"] and not {locDicCaso}["canal_telefono"]', "SIN CANAL DE CONTACTO"),
     si("El caso está completo", LEIDO + " and len({locArrMotivos}) == 0", [
-        paso("Registra el avance a la validación de deuda en el reporte", "locDicResultado", "pasos.registrar_avance(GetVar('locDicCaso'))"),
+        paso("Registra el avance (campos completos) en el reporte", "locDicResultado", "pasos.registrar_avance(GetVar('locDicCaso'))"),
         sv("Anota el radicado en los que avanzan", "glbArrAvanzan", anexar("glbArrAvanzan", "'{locStrIdRadicado}'")),
+        sv("Anota el radicado en los que siguen a identidad", "glbArrSiguenIdentidad", anexar("glbArrSiguenIdentidad", "'{locStrIdRadicado}'")),
     ]),
     si("El caso está incompleto: excepción de negocio 1", LEIDO + " and len({locArrMotivos}) > 0", [
         paso("Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle", "locDicComentario",
@@ -171,6 +210,7 @@ HU004 = grupo("HU004 - Validar campos obligatorios", [
         ], [
             py("Registra la excepción de sistema (no se pudo escribir el comentario)",
                "from habeasdata import pasos",
+               "pasos.asegurar(GetVar('glbStrRutaRaiz'))",
                "pasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"),
             sv("Anota el radicado en excepciones de sistema", "glbArrExcepcionesSistema",
                anexar("glbArrExcepcionesSistema", "'{locStrIdRadicado}'")),
@@ -178,12 +218,17 @@ HU004 = grupo("HU004 - Validar campos obligatorios", [
     ]),
 ])
 
+HU010, HU011 = construir_ep003({"paso": paso, "sv": sv, "si": si, "grupo": grupo, "anexar": anexar})
+
 ITERACION = si("Hay radicados que procesar", "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) > 0", [
     para("Iteración por radicado de exclusión", "{glbArrIdsRadicados}", "locStrIdRadicado", [
         paso("Deja constancia del inicio del radicado en el log de auditoría", "locDicEvento",
              "pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado'))"),
         HU003,
         HU004,
+        HU010,
+        *construir_ep002({"paso": paso, "sv": sv, "si": si, "grupo": grupo, "para": para, "anexar": anexar}),
+        HU011,
         paso("Deja constancia del fin del radicado en el log de auditoría", "locDicEvento",
              "pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado'))"),
     ]),
@@ -197,6 +242,7 @@ CIERRE = grupo("HU002HU003HU004 - Cierre y registro de ejecución", [
     py("Cierra la ejecución y deja el resumen sin PII (en modo real los datos personales se enmascaran)",
        "import json",
        "from habeasdata import pasos",
+       "pasos.asegurar(GetVar('glbStrRutaRaiz'))",
        "o = pasos.objeto",
        "detencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}",
        "resumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],",
@@ -213,7 +259,35 @@ CIERRE = grupo("HU002HU003HU004 - Cierre y registro de ejecución", [
 
 CONTROL = {"father": "trycatch", "description": "Control de ejecución", "children": [
     INICIALIZAR,
-    {"father": "trycatch", "description": "Proceso principal", "children": [HU002, ITERACION], "else": [
+    {"father": "trycatch", "description": "Proceso principal", "children": [
+        HU002,
+        si("La identidad está habilitada y la selección terminó bien: deja constancia de su inicio",
+           "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del inicio de la validación de identidad en el log de auditoría", "locDicEvento",
+                 "pasos.evento('Inicio de la validación de identidad EP-002 (modo ' + pasos.objeto(GetVar('glbDicPortales'))['modo'] + ')', 'EP-002')")]),
+        si("El repositorio está habilitado y la selección terminó bien: deja constancia del inicio de la búsqueda de duplicados",
+           "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del inicio de la búsqueda de duplicados (EP-003)", "locDicEvento",
+                 "pasos.evento('Inicio de la búsqueda de duplicados EP-003', 'EP-003')")]),
+        ITERACION,
+        si("El repositorio está habilitado y la selección terminó bien: deja constancia del fin de la búsqueda y del registro",
+           "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del fin de la búsqueda de duplicados (EP-003)", "locDicEvento",
+                 "pasos.evento('Fin de la búsqueda de duplicados EP-003', 'EP-003')"),
+            paso("Deja constancia del inicio del registro de exclusión (EP-003)", "locDicEvento",
+                 "pasos.evento('Inicio del registro de exclusión EP-003', 'EP-003')"),
+            paso("Deja constancia del fin del registro de exclusión (EP-003)", "locDicEvento",
+                 "pasos.evento('Fin del registro de exclusión EP-003', 'EP-003')")]),
+        si("Ningún caso pudo consultar el repositorio: punto de control crítico, se detiene la ejecución",
+           "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok' and len({glbArrAvanzan}) > 0 "
+           "and len({glbArrRepositorioCaido}) == len({glbArrAvanzan})",
+           [sv("Estado de la ejecución: detenido, repositorio inaccesible para todos los casos", "glbDicEstado",
+               "dict({glbDicEstado}, estado='detenido', motivo_detencion='repositorio inaccesible para todos los casos')")]),
+        si("La identidad está habilitada y la selección terminó bien: deja constancia de su fin",
+           "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+           [paso("Deja constancia del fin de la validación de identidad en el log de auditoría", "locDicEvento",
+                 "pasos.evento('Fin de la validación de identidad EP-002', 'EP-002')")]),
+    ], "else": [
         sv("Marca fallo de sistema en el proceso principal", "glbBlnEstadoSistema", "False"),
         sv("Estado de la ejecución: detenido por excepción de sistema", "glbDicEstado", "dict({glbDicEstado}, estado='detenido', motivo_detencion='Excepción de sistema en el proceso principal')"),
     ]},
@@ -228,17 +302,28 @@ VARIABLES = [("glbBlnEstadoSistema", "True"), ("glbBlnEstadoProceso", "True"), (
              ("glbDicEstado", ""),
              ("glbDicInicio", ""), ("glbDicParametros", ""), ("glbDicAutenticacion", ""), ("glbDicSeleccion", ""),
              ("glbDicDescartados", ""), ("glbDicRegistroDescartados", ""), ("glbDicGeneral", ""), ("glbDicSinCasos", ""),
-             ("glbDicDetencion", ""), ("glbStrAsuntoAviso", ""), 
+             ("glbDicDetencion", ""), ("glbDicReintento", ""), ("glbDicRepositorio", ""),
+             ("glbArrSiguenIdentidad", ""), ("glbArrExcepcionesNegocioCuatro", ""), ("glbArrExcepcionesSistemaRepositorio", ""),
+             ("glbArrRepositorioCaido", ""), ("glbArrExclusionRegistrada", ""), ("glbArrExcepcionesSistemaExclusion", ""),
+             ("locDicDuplicado", ""), ("locDicComentarioDuplicado", ""), ("locDicExclusion", ""), ("glbStrAsuntoAviso", ""), 
              ("glbArrIdsRadicados", ""), ("glbArrIdsDescartados", ""), ("glbArrAvanzan", ""),
              ("glbArrExcepcionesNegocioUno", ""), ("glbArrExcepcionesSistema", ""),
+             ("glbArrValidadas", ""), ("glbArrExcepcionesNegocioTres", ""), ("glbArrRevisionHumana", ""), ("glbArrSinNombre", ""),
+             ("glbArrGestionManual", ""), ("glbArrExcepcionesSistemaIdentidad", ""), ("glbDicCodigos", ""), ("glbBlnChromeAbierto", "False"),
+             ("glbDicPortales", ""), ("glbStrUrlPolicia", ""), ("glbStrUrlProcuraduria", ""),
+             ("locDicDocumento", ""), ("locDicIdentidad", ""), ("locDicPagina", ""), ("locDicPaginaProc", ""), ("locStrTexto", ""),
+             ("locStrDocumento", ""), ("locStrNombre", ""), ("locStrCodigoTipo", ""), ("locStrPregunta", ""), ("locStrRespuesta", ""),
+             ("locDicCaptcha", ""), ("locArrIntentos", ""), ("locIntIntento", ""), ("locDicVeredicto", ""),
+             ("locDicComentarioIdentidad", ""),
              ("locStrIdRadicado", ""), ("locDicConsulta", ""), ("locStrFiltroDescartados", ""),
              ("locDicLectura", ""), ("locDicPreparado", ""), ("locDicCaso", ""), ("locDicComentario", ""),
              ("locDicResultado", ""), ("locDicEvento", ""), ("locArrMotivos", "")]
 
 ROBOT = {
     "name": "LabHabeasData",
-    "description": ("Tarea principal EP-001: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos y "
-                    "HU-004 validar campos obligatorios, contra la API de Zeus (QA) o su fixture offline. "
+    "description": ("Tarea principal EP-001, EP-002 y EP-003: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos, "
+                    "HU-004 validar campos obligatorios, HU-006/HU-007/HU-026a identidad en Policía y Procuraduría (Chrome) y HU-008 "
+                    "comparar nombres, HU-010 buscar duplicados y HU-011 registrar la exclusión en el repositorio local, contra la API de Zeus (QA) y los portales (reales o clones). "
                     "Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0"),
     "vars": [{"name": nombre, "data": dato} for nombre, dato in VARIABLES],
     "commands": [CONTROL, {"father": "log_message", "option": "info", "command": "{glbStrObservaciones}",

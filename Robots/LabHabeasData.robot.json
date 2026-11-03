@@ -1,6 +1,6 @@
 {
  "name": "LabHabeasData",
- "description": "Tarea principal EP-001: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos y HU-004 validar campos obligatorios, contra la API de Zeus (QA) o su fixture offline. Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
+ "description": "Tarea principal EP-001, EP-002 y EP-003: HU-002 filtrar radicados de Exclusión de Datos, HU-003 leer datos paramétricos, HU-004 validar campos obligatorios, HU-006/HU-007/HU-026a identidad en Policía y Procuraduría (Chrome) y HU-008 comparar nombres, HU-010 buscar duplicados y HU-011 registrar la exclusión en el repositorio local, contra la API de Zeus (QA) y los portales (reales o clones). Desarrollador: Trycore Lab. Fecha: 2026-10-29. Version V1.0.0",
  "vars": [
   {
    "name": "glbBlnEstadoSistema",
@@ -71,6 +71,50 @@
    "data": ""
   },
   {
+   "name": "glbDicReintento",
+   "data": ""
+  },
+  {
+   "name": "glbDicRepositorio",
+   "data": ""
+  },
+  {
+   "name": "glbArrSiguenIdentidad",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesNegocioCuatro",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesSistemaRepositorio",
+   "data": ""
+  },
+  {
+   "name": "glbArrRepositorioCaido",
+   "data": ""
+  },
+  {
+   "name": "glbArrExclusionRegistrada",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesSistemaExclusion",
+   "data": ""
+  },
+  {
+   "name": "locDicDuplicado",
+   "data": ""
+  },
+  {
+   "name": "locDicComentarioDuplicado",
+   "data": ""
+  },
+  {
+   "name": "locDicExclusion",
+   "data": ""
+  },
+  {
    "name": "glbStrAsuntoAviso",
    "data": ""
   },
@@ -92,6 +136,110 @@
   },
   {
    "name": "glbArrExcepcionesSistema",
+   "data": ""
+  },
+  {
+   "name": "glbArrValidadas",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesNegocioTres",
+   "data": ""
+  },
+  {
+   "name": "glbArrRevisionHumana",
+   "data": ""
+  },
+  {
+   "name": "glbArrSinNombre",
+   "data": ""
+  },
+  {
+   "name": "glbArrGestionManual",
+   "data": ""
+  },
+  {
+   "name": "glbArrExcepcionesSistemaIdentidad",
+   "data": ""
+  },
+  {
+   "name": "glbDicCodigos",
+   "data": ""
+  },
+  {
+   "name": "glbBlnChromeAbierto",
+   "data": "False"
+  },
+  {
+   "name": "glbDicPortales",
+   "data": ""
+  },
+  {
+   "name": "glbStrUrlPolicia",
+   "data": ""
+  },
+  {
+   "name": "glbStrUrlProcuraduria",
+   "data": ""
+  },
+  {
+   "name": "locDicDocumento",
+   "data": ""
+  },
+  {
+   "name": "locDicIdentidad",
+   "data": ""
+  },
+  {
+   "name": "locDicPagina",
+   "data": ""
+  },
+  {
+   "name": "locDicPaginaProc",
+   "data": ""
+  },
+  {
+   "name": "locStrTexto",
+   "data": ""
+  },
+  {
+   "name": "locStrDocumento",
+   "data": ""
+  },
+  {
+   "name": "locStrNombre",
+   "data": ""
+  },
+  {
+   "name": "locStrCodigoTipo",
+   "data": ""
+  },
+  {
+   "name": "locStrPregunta",
+   "data": ""
+  },
+  {
+   "name": "locStrRespuesta",
+   "data": ""
+  },
+  {
+   "name": "locDicCaptcha",
+   "data": ""
+  },
+  {
+   "name": "locArrIntentos",
+   "data": ""
+  },
+  {
+   "name": "locIntIntento",
+   "data": ""
+  },
+  {
+   "name": "locDicVeredicto",
+   "data": ""
+  },
+  {
+   "name": "locDicComentarioIdentidad",
    "data": ""
   },
   {
@@ -188,7 +336,127 @@
       {
        "father": "execScriptPython",
        "description": "Lee los parámetros de negocio de la configuración (tipología, campo, literal de ausencia, lote, orden)",
-       "command": "from habeasdata import pasos\nSetVar('glbDicParametros', pasos.parametros())"
+       "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicParametros', pasos.parametros())"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrValidadas",
+       "command": "[]",
+       "description": "Radicados con identidad validada (HU-008)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesNegocioTres",
+       "command": "[]",
+       "description": "Radicados en excepción de negocio 3 (HU-008)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrRevisionHumana",
+       "command": "[]",
+       "description": "Radicados en revisión humana (HU-006)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrSinNombre",
+       "command": "[]",
+       "description": "Radicados con respuesta sin nombre (HU-007)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrGestionManual",
+       "command": "[]",
+       "description": "Radicados derivados a gestión manual (HU-006, HU-007, HU-026a)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesSistemaIdentidad",
+       "command": "[]",
+       "description": "Radicados en excepción de sistema de identidad"
+      },
+      {
+       "father": "setVar",
+       "var": "glbDicCodigos",
+       "command": "{}",
+       "description": "Códigos de error de identidad por radicado"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrSiguenIdentidad",
+       "command": "[]",
+       "description": "Radicados que siguen a la validación de identidad (tras HU-004 y HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesNegocioCuatro",
+       "command": "[]",
+       "description": "Radicados en excepción de negocio 4 (HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesSistemaRepositorio",
+       "command": "[]",
+       "description": "Radicados en excepción de sistema del repositorio (HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrRepositorioCaido",
+       "command": "[]",
+       "description": "Radicados que no pudieron consultar el repositorio (HU-010)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExclusionRegistrada",
+       "command": "[]",
+       "description": "Radicados con la exclusión registrada (HU-011)"
+      },
+      {
+       "father": "setVar",
+       "var": "glbArrExcepcionesSistemaExclusion",
+       "command": "[]",
+       "description": "Radicados en excepción de sistema de la exclusión (HU-011)"
+      },
+      {
+       "father": "execScriptPython",
+       "description": "Lee si el repositorio local está habilitado y lo abre (Repositorio.Habilitado)",
+       "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicRepositorio', pasos.repositorio())"
+      },
+      {
+       "father": "setVar",
+       "var": "glbBlnChromeAbierto",
+       "command": "False",
+       "description": "Chrome aún no está abierto"
+      },
+      {
+       "father": "execScriptPython",
+       "description": "Lee el modo, las URL de los portales y los reintentos del captcha; en modo real exige autorización y ventana operativa",
+       "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicPortales', pasos.portales())"
+      },
+      {
+       "father": "evaluateIf",
+       "description": "Los portales no se pueden usar (falta autorización o ventana operativa)",
+       "command": "{glbDicPortales}[\"ok\"] == False",
+       "children": [
+        {
+         "father": "setVar",
+         "var": "glbDicEstado",
+         "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion={glbDicPortales}[\"mensaje\"])",
+         "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "setVar",
+       "var": "glbStrUrlPolicia",
+       "command": "{glbDicPortales}['url_policia']",
+       "description": "URL del portal de la Policía"
+      },
+      {
+       "father": "setVar",
+       "var": "glbStrUrlProcuraduria",
+       "command": "{glbDicPortales}['url_procuraduria']",
+       "description": "URL del portal de la Procuraduría"
       }
      ]
     },
@@ -203,7 +471,7 @@
         {
          "father": "execScriptPython",
          "description": "Solicita el token OAuth (client_credentials, vigencia 300 s); el secreto sale del Administrador de credenciales",
-         "command": "from habeasdata import pasos\nSetVar('glbDicAutenticacion', pasos.solicitar_token())"
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicAutenticacion', pasos.solicitar_token())"
         },
         {
          "father": "evaluateIf",
@@ -233,7 +501,7 @@
           {
            "father": "execScriptPython",
            "description": "Consulta los radicados de exclusión (GET OData con $filter, $select, $first y $orderby)",
-           "command": "from habeasdata import pasos\nSetVar('glbDicSeleccion', pasos.consultar_seleccion(GetVar('locDicConsulta')))"
+           "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicSeleccion', pasos.consultar_seleccion(GetVar('locDicConsulta')))"
           },
           {
            "father": "evaluateIf",
@@ -249,7 +517,7 @@
             {
              "father": "execScriptPython",
              "description": "Deja constancia en el log de auditoría de los radicados identificados",
-             "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento(str(len(pasos.objeto(GetVar('glbArrIdsRadicados')))) + ' radicados de exclusión identificados'))"
+             "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento(str(len(pasos.objeto(GetVar('glbArrIdsRadicados')))) + ' radicados de exclusión identificados'))"
             },
             {
              "father": "evaluateIf",
@@ -265,7 +533,7 @@
               {
                "father": "execScriptPython",
                "description": "Consulta los radicados descartados para no perderlos en silencio",
-               "command": "from habeasdata import pasos\nSetVar('glbDicDescartados', pasos.consultar_odata(GetVar('locStrFiltroDescartados'), 'IDRADICADO'))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicDescartados', pasos.consultar_odata(GetVar('locStrFiltroDescartados'), 'IDRADICADO'))"
               },
               {
                "father": "evaluateIf",
@@ -281,7 +549,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Deja los descartados en el log de auditoría y en el reporte",
-                 "command": "from habeasdata import pasos\nSetVar('glbDicRegistroDescartados', pasos.registrar_descartados(GetVar('glbArrIdsDescartados')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicRegistroDescartados', pasos.registrar_descartados(GetVar('glbArrIdsDescartados')))"
                 }
                ],
                "else": [
@@ -304,7 +572,7 @@
               {
                "father": "execScriptPython",
                "description": "Consulta el total de radicados (consulta general, sin $filter)",
-               "command": "from habeasdata import pasos\nSetVar('glbDicGeneral', pasos.consultar_odata('', 'IDRADICADO'))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicGeneral', pasos.consultar_odata('', 'IDRADICADO'))"
               },
               {
                "father": "evaluateIf",
@@ -356,7 +624,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Registra «0 casos» y la cadencia del reintento (CADENCIA_REINTENTO_BANDEJA_VACIA)",
-                 "command": "from habeasdata import pasos\nSetVar('glbDicSinCasos', pasos.registrar_sin_casos(pasos.objeto(GetVar('glbDicEstado'))['motivo_sin_casos'], pasos.objeto(GetVar('glbDicEstado'))['total_radicados']))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicSinCasos', pasos.registrar_sin_casos(pasos.objeto(GetVar('glbDicEstado'))['motivo_sin_casos'], pasos.objeto(GetVar('glbDicEstado'))['total_radicados']))"
                 }
                ],
                "else": [
@@ -390,8 +658,87 @@
            "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
           }
          ]
+        },
+        {
+         "father": "evaluateIf",
+         "description": "Sigue sin casos: agenda el reintento (espera la cadencia y vuelve a consultar)",
+         "command": "{glbDicEstado}['estado'] == 'ok' and len({glbArrIdsRadicados}) == 0 and {glbDicEstado}['motivo_sin_casos'] is not None",
+         "children": [
+          {
+           "father": "execScriptPython",
+           "description": "Espera MinutosEntreReintentos y reconsulta, hasta MaximoReintentosDiarios o hasta que aparezcan casos (CADENCIA_REINTENTO_BANDEJA_VACIA)",
+           "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicReintento', pasos.reintentar_bandeja())"
+          },
+          {
+           "father": "evaluateIf",
+           "description": "Hubo reintentos y la consulta respondió",
+           "command": "{glbDicReintento}[\"ok\"] == True and {glbDicReintento}[\"cambia\"] == True",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "glbArrIdsRadicados",
+             "command": "{glbDicReintento}[\"ids\"]",
+             "description": "Guarda los radicados seleccionados en el reintento"
+            },
+            {
+             "father": "setVar",
+             "var": "glbArrIdsDescartados",
+             "command": "{glbDicReintento}[\"descartados\"]",
+             "description": "Guarda los descartados del último intento"
+            },
+            {
+             "father": "setVar",
+             "var": "glbDicEstado",
+             "command": "dict({glbDicEstado}, motivo_sin_casos={glbDicReintento}['motivo'])",
+             "description": "Motivo con el que terminó el último intento"
+            }
+           ],
+           "else": []
+          },
+          {
+           "father": "evaluateIf",
+           "description": "El reintento se detuvo por una falla crítica",
+           "command": "{glbDicReintento}[\"ok\"] == False",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "glbDicEstado",
+             "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion={glbDicReintento}[\"mensaje\"])",
+             "description": "Marca la ejecución como detenida y guarda el motivo del paso que falló"
+            }
+           ],
+           "else": []
+          }
+         ],
+         "else": []
         }
        ]
+      },
+      {
+       "father": "evaluateIf",
+       "description": "La identidad está habilitada y la selección terminó bien: deja constancia de su inicio",
+       "command": "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del inicio de la validación de identidad en el log de auditoría",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio de la validación de identidad EP-002 (modo ' + pasos.objeto(GetVar('glbDicPortales'))['modo'] + ')', 'EP-002'))"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
+       "description": "El repositorio está habilitado y la selección terminó bien: deja constancia del inicio de la búsqueda de duplicados",
+       "command": "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del inicio de la búsqueda de duplicados (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio de la búsqueda de duplicados EP-003', 'EP-003'))"
+        }
+       ],
+       "else": []
       },
       {
        "father": "evaluateIf",
@@ -407,7 +754,7 @@
           {
            "father": "execScriptPython",
            "description": "Deja constancia del inicio del radicado en el log de auditoría",
-           "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado')))"
+           "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio del radicado ' + GetVar('locStrIdRadicado')))"
           },
           {
            "father": "group",
@@ -416,7 +763,7 @@
             {
              "father": "execScriptPython",
              "description": "Lee el radicado por IDRADICADO (GET individual)",
-             "command": "from habeasdata import pasos\nSetVar('locDicLectura', pasos.leer_radicado(GetVar('locStrIdRadicado')))"
+             "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicLectura', pasos.leer_radicado(GetVar('locStrIdRadicado')))"
             },
             {
              "father": "evaluateIf",
@@ -426,19 +773,19 @@
               {
                "father": "execScriptPython",
                "description": "Limpia «No aporta» y vacíos (= ausente) y separa los valores de cada canal por «/»",
-               "command": "from habeasdata import pasos\nSetVar('locDicPreparado', pasos.preparar_campos(GetVar('locDicLectura')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPreparado', pasos.preparar_campos(GetVar('locDicLectura')))"
               },
               {
                "father": "execScriptPython",
                "description": "Clasifica cada teléfono por dígitos: celular, fijo o sin clasificar",
-               "command": "from habeasdata import pasos\nSetVar('locDicCaso', pasos.clasificar_telefonos(GetVar('locDicPreparado')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicCaso', pasos.clasificar_telefonos(GetVar('locDicPreparado')))"
               }
              ],
              "else": [
               {
                "father": "execScriptPython",
                "description": "Registra la excepción de sistema del radicado (log de errores y reporte)",
-               "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicLectura'))['mensaje'])"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicLectura'))['mensaje'])"
               },
               {
                "father": "setVar",
@@ -523,14 +870,20 @@
              "children": [
               {
                "father": "execScriptPython",
-               "description": "Registra el avance a la validación de deuda en el reporte",
-               "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
+               "description": "Registra el avance (campos completos) en el reporte",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicResultado', pasos.registrar_avance(GetVar('locDicCaso')))"
               },
               {
                "father": "setVar",
                "var": "glbArrAvanzan",
                "command": "{glbArrAvanzan} + ['{locStrIdRadicado}']",
                "description": "Anota el radicado en los que avanzan"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "{glbArrSiguenIdentidad} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en los que siguen a identidad"
               }
              ],
              "else": []
@@ -543,7 +896,7 @@
               {
                "father": "execScriptPython",
                "description": "Escribe el comentario de la excepción de negocio 1 en Gestión → Detalle",
-               "command": "from habeasdata import pasos\nSetVar('locDicComentario', pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicComentario', pasos.comentar_excepcion_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
               },
               {
                "father": "evaluateIf",
@@ -553,7 +906,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Registra la excepción de negocio 1 en el reporte",
-                 "command": "from habeasdata import pasos\nSetVar('locDicResultado', pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicResultado', pasos.registrar_excepcion_negocio_1(GetVar('locDicCaso'), GetVar('locArrMotivos')))"
                 },
                 {
                  "father": "setVar",
@@ -566,7 +919,7 @@
                 {
                  "father": "execScriptPython",
                  "description": "Registra la excepción de sistema (no se pudo escribir el comentario)",
-                 "command": "from habeasdata import pasos\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\npasos.registrar_excepcion_sistema(GetVar('locStrIdRadicado'), pasos.objeto(GetVar('locDicComentario'))['mensaje'])"
                 },
                 {
                  "father": "setVar",
@@ -582,11 +935,1504 @@
            ]
           },
           {
+           "father": "group",
+           "description": "HU010 - Buscar duplicados de exclusión (repositorio local)",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locDicDuplicado",
+             "command": "{'ok': True, 'duplicados': [], 'continua': True}",
+             "description": "Resultado de duplicados del radicado (vacío al empezar)"
+            },
+            {
+             "father": "setVar",
+             "var": "locDicComentarioDuplicado",
+             "command": "{'ok': True}",
+             "description": "Resultado del comentario de duplicado (vacío al empezar)"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El radicado avanzó (HU-004): busca cada valor de cada canal por separado (maestra y exclusión con llave compuesta)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Busca duplicados: identificación + celular en Celulares, identificación + correo en Correos",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicDuplicado', pasos.buscar_duplicados(GetVar('locDicCaso')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El repositorio no respondió tras 3 intentos: excepción de sistema del caso (el bot continúa)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == False",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la excepción de sistema del repositorio",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_sistema(GetVar('locDicCaso'), pasos.objeto(GetVar('locDicDuplicado'))['mensaje'], 'repositorio'))"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistemaRepositorio",
+               "command": "{glbArrExcepcionesSistemaRepositorio} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema del repositorio"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrRepositorioCaido",
+               "command": "{glbArrRepositorioCaido} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en los que no pudieron consultar el repositorio"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "[x for x in {glbArrSiguenIdentidad} if x != '{locStrIdRadicado}']",
+               "description": "El radicado no sigue a identidad"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Hay valores duplicados: escribe la nota de excepción de negocio 4 en Gestión → Detalle",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Comentario de la excepción de negocio 4 (revisión de Cartera)",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicComentarioDuplicado', pasos.comentar_duplicado(GetVar('locDicCaso'), GetVar('locDicDuplicado')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La nota no se pudo registrar: excepción de sistema del caso",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0 and {locDicComentarioDuplicado}['ok'] == False",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la excepción de sistema (nota de duplicado rechazada)",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_sistema(GetVar('locDicCaso'), pasos.objeto(GetVar('locDicComentarioDuplicado'))['mensaje'], 'comentario'))"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistemaRepositorio",
+               "command": "{glbArrExcepcionesSistemaRepositorio} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema del repositorio"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "[x for x in {glbArrSiguenIdentidad} if x != '{locStrIdRadicado}']",
+               "description": "El radicado no sigue a identidad"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La nota quedó registrada: excepción de negocio 4 (solo los valores duplicados)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0 and {locDicComentarioDuplicado}['ok'] == True",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la excepción de negocio 4 en el reporte y en Transacciones",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_excepcion_4(GetVar('locDicCaso'), GetVar('locDicDuplicado')))"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesNegocioCuatro",
+               "command": "{glbArrExcepcionesNegocioCuatro} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de negocio 4"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Ningún valor es duplicado: sigue a la validación de identidad",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) == 0",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra «sin duplicado» en Transacciones",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_duplicado_sin_excepcion(GetVar('locDicCaso')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Todos sus valores ya estaban excluidos: no sigue a identidad",
+             "command": "{glbDicRepositorio}['habilitado'] == True and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicDuplicado}['ok'] == True and len({locDicDuplicado}['duplicados']) > 0 and {locDicComentarioDuplicado}['ok'] == True and {locDicDuplicado}['continua'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrSiguenIdentidad",
+               "command": "[x for x in {glbArrSiguenIdentidad} if x != '{locStrIdRadicado}']",
+               "description": "El radicado no sigue a identidad"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "group",
+           "description": "HU006 - Consultar la Policía Nacional (Chrome)",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locDicIdentidad",
+             "command": "{'etapa': 'inicio', 'via': None, 'puntaje': None, 'motivo': None, 'codigo': None, 'nombre_portal': None, 'abierta_policia': False, 'abierta_procuraduria': False}",
+             "description": "Estado de la identidad del radicado (empieza en «inicio»)"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El radicado avanzó (HU-004) y la identidad está habilitada: prepara los datos del caso",
+             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Deja constancia del inicio de la identidad del radicado en el log de auditoría",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio de la identidad del radicado ' + GetVar('locStrIdRadicado'), 'EP-002'))"
+              },
+              {
+               "father": "execScriptPython",
+               "description": "Clasifica el documento: cédula, NIT de 10 dígitos y código del tipo en la Procuraduría",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicDocumento', pasos.clasificar_documento(GetVar('locDicCaso')))"
+              },
+              {
+               "father": "setVar",
+               "var": "locStrDocumento",
+               "command": "{locDicDocumento}['numero']",
+               "description": "Número de documento a consultar"
+              },
+              {
+               "father": "setVar",
+               "var": "locStrNombre",
+               "command": "{locDicDocumento}['nombre']",
+               "description": "Nombre del caso en Zeus (la pregunta del captcha puede requerirlo)"
+              },
+              {
+               "father": "setVar",
+               "var": "locStrCodigoTipo",
+               "command": "str({locDicDocumento}['codigo_tipo'])",
+               "description": "Código del tipo de documento en el desplegable de la Procuraduría"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Avanzó a identidad y el documento es cédula de ciudadanía: empieza por la Policía",
+             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrSiguenIdentidad} and {locDicDocumento}['cedula'] == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='policia')",
+               "description": "Etapa: consulta en la Policía"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Avanzó a identidad y el documento no es cédula: va directo a la Procuraduría",
+             "command": "{glbDicPortales}['habilitada'] == True and '{locStrIdRadicado}' in {glbArrSiguenIdentidad} and {locDicDocumento}['cedula'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='procuraduria')",
+               "description": "Etapa: consulta en la Procuraduría"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Hay que usar un portal y Chrome aún no está abierto",
+             "command": "({locDicIdentidad}['etapa'] == 'policia' or {locDicIdentidad}['etapa'] == 'procuraduria') and {glbBlnChromeAbierto} == False",
+             "children": [
+              {
+               "father": "openbrowser",
+               "option": "chrome",
+               "command": "{\"url\": \"\", \"id_driver\": \"\", \"profile\": \"\"}",
+               "extra": {
+                "default": "chrome"
+               },
+               "description": "Abre Chrome (el robot corre en Chrome)"
+              },
+              {
+               "father": "setVar",
+               "var": "glbBlnChromeAbierto",
+               "command": "True",
+               "description": "Chrome quedó abierto"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "trycatch",
+             "description": "Policía: abre el portal y acepta los términos (intento 1 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Policía (intento 1)",
+               "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlPolicia}",
+                 "description": "Abre el portal de la Policía"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='aceptaOption:0']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos de uso",
+                 "command": {
+                  "data": "//input[@id='aceptaOption:0']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//button[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera el formulario de consulta",
+                 "command": {
+                  "object": "//input[@id='cedulaInput']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "textObject",
+                 "description": "Lee el texto de la página (aviso de cuota, si lo hay)",
+                 "command": "//body",
+                 "option": "xpath",
+                 "getvar": "locStrTexto"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Lee el texto de la página de la Policía",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_policia=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": [
+              {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 2",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(1))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Policía: abre el portal y acepta los términos (intento 2 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Policía (intento 2)",
+               "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlPolicia}",
+                 "description": "Abre el portal de la Policía"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='aceptaOption:0']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos de uso",
+                 "command": {
+                  "data": "//input[@id='aceptaOption:0']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//button[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera el formulario de consulta",
+                 "command": {
+                  "object": "//input[@id='cedulaInput']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "textObject",
+                 "description": "Lee el texto de la página (aviso de cuota, si lo hay)",
+                 "command": "//body",
+                 "option": "xpath",
+                 "getvar": "locStrTexto"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Lee el texto de la página de la Policía",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_policia=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": [
+              {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 3",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(2))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Policía: abre el portal y acepta los términos (intento 3 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Policía (intento 3)",
+               "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlPolicia}",
+                 "description": "Abre el portal de la Policía"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='aceptaOption:0']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos de uso",
+                 "command": {
+                  "data": "//input[@id='aceptaOption:0']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//button[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera el formulario de consulta",
+                 "command": {
+                  "object": "//input[@id='cedulaInput']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "textObject",
+                 "description": "Lee el texto de la página (aviso de cuota, si lo hay)",
+                 "command": "//body",
+                 "option": "xpath",
+                 "getvar": "locStrTexto"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Lee el texto de la página de la Policía",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_policia=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La Policía no abrió tras 3 intentos: se consulta la Procuraduría",
+             "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicIdentidad}['abierta_policia'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='procuraduria', motivo='Policía caída o con estructura inesperada')",
+               "description": "Policía caída o con estructura inesperada: se consulta la Procuraduría"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Cuota agotada del reCAPTCHA de la Policía: el bot no lo evade, queda en revisión humana",
+             "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicPagina}['cuota'] == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='revision_humana', via='policia', motivo='cuota agotada del reCAPTCHA de la Policía')",
+               "description": "Etapa: revisión humana (cuota agotada)"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Modo real: el reCAPTCHA v2 lo resuelve una persona; el bot se detiene",
+             "command": "{locDicIdentidad}['etapa'] == 'policia' and {glbDicPortales}['modo'] == 'real'",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='revision_humana', via='policia', motivo='reCAPTCHA v2 de la Policía: lo resuelve una persona (no se automatiza su evasión)')",
+               "description": "Etapa: revisión humana (reCAPTCHA)"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Modo fixture: el clon entrega el captcha ya resuelto (el lab no ejercita la resolución)",
+             "command": "{locDicIdentidad}['etapa'] == 'policia' and {glbDicPortales}['modo'] == 'fixture'",
+             "children": [
+              {
+               "father": "click_web",
+               "description": "Marca la casilla del clon «No soy un robot»",
+               "command": {
+                "data": "//*[@id='recaptchaCheckbox']",
+                "data_type": "xpath",
+                "before": "0",
+                "wait_time": "10",
+                "after": "0",
+                "move": "False"
+               }
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "trycatch",
+             "description": "Policía: consulta la cédula",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Policía",
+               "command": "{locDicIdentidad}['etapa'] == 'policia'",
+               "children": [
+                {
+                 "father": "sendkey_web",
+                 "description": "Escribe el número de cédula",
+                 "command": {
+                  "data": "//input[@id='cedulaInput']",
+                  "data_type": "xpath",
+                  "wait_time": "10",
+                  "text": "{locStrDocumento}",
+                  "special": ""
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Consultar»",
+                 "command": {
+                  "data": "//button[@id='j_idt17']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la respuesta de la Policía",
+                 "command": {
+                  "object": "//*[@id='nombreResultado' or @id='msgResultado' or @id='retoImagenes' or @id='msgCaptcha']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "textObject",
+                 "description": "Lee el texto del resultado",
+                 "command": "//body",
+                 "option": "xpath",
+                 "getvar": "locStrTexto"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Lee el texto del resultado de la Policía",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPagina', pasos.leer_pagina_policia(GetVar('locStrTexto')))"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='procuraduria', motivo='Policía caída durante la consulta')",
+               "description": "Policía caída durante la consulta: se consulta la Procuraduría"
+              }
+             ]
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El reCAPTCHA escaló a un reto de imágenes: lo resuelve una persona",
+             "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicPagina}['reto'] == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='revision_humana', via='policia', motivo='reto de imágenes del reCAPTCHA: lo resuelve una persona')",
+               "description": "Etapa: revisión humana (reto de imágenes)"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La Policía devolvió el nombre oficial (apellidos y luego nombres)",
+             "command": "{locDicIdentidad}['etapa'] == 'policia' and {locDicPagina}['nombre'] is not None",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='comparar', via='policia', nombre_portal={locDicPagina}['nombre'])",
+               "description": "Etapa: comparar nombres (HU-008)"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La Policía no devolvió resultado: se consulta la Procuraduría",
+             "command": "{locDicIdentidad}['etapa'] == 'policia'",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='procuraduria', via='policia_sin_resultado')",
+               "description": "Etapa: consulta en la Procuraduría"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "group",
+           "description": "HU007 - Consultar la Procuraduría (Chrome)",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locDicPaginaProc",
+             "command": "{'nombre': None, 'sin_nombre': False}",
+             "description": "Página de la Procuraduría (aún sin leer)"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "NIT con cantidad de dígitos distinta de 10: gestión manual, no se consulta",
+             "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicDocumento}['nit'] == True and {locDicDocumento}['nit_valido'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='gestion_manual', motivo='NIT con cantidad de dígitos distinta de 10: no se consulta')",
+               "description": "Etapa: gestión manual (NIT inválido)"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Tipo de documento sin consulta en la Procuraduría: gestión manual",
+             "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicDocumento}['codigo_tipo'] is None",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='gestion_manual', motivo='tipo de documento sin consulta en la Procuraduría')",
+               "description": "Etapa: gestión manual (tipo sin consulta)"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "trycatch",
+             "description": "Procuraduría: abre el portal y acepta los términos (intento 1 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Procuraduría (intento 1)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlProcuraduria}",
+                 "description": "Abre el portal de la Procuraduría"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='rbAcepto']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos",
+                 "command": {
+                  "data": "//input[@id='rbAcepto']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//input[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la pregunta del captcha",
+                 "command": {
+                  "object": "//*[@id='lblPregunta']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_procuraduria=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": [
+              {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 2",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(1))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Procuraduría: abre el portal y acepta los términos (intento 2 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Procuraduría (intento 2)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlProcuraduria}",
+                 "description": "Abre el portal de la Procuraduría"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='rbAcepto']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos",
+                 "command": {
+                  "data": "//input[@id='rbAcepto']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//input[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la pregunta del captcha",
+                 "command": {
+                  "object": "//*[@id='lblPregunta']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_procuraduria=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": [
+              {
+               "father": "execScriptPython",
+               "description": "Espera el backoff antes del intento 3",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.esperar_reintento_portal(2))"
+              }
+             ]
+            },
+            {
+             "father": "trycatch",
+             "description": "Procuraduría: abre el portal y acepta los términos (intento 3 de 3)",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Consulta en la Procuraduría (intento 3)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
+               "children": [
+                {
+                 "father": "openUrl",
+                 "command": "{glbStrUrlProcuraduria}",
+                 "description": "Abre el portal de la Procuraduría"
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la página de términos",
+                 "command": {
+                  "object": "//input[@id='rbAcepto']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Marca «Acepto» los términos",
+                 "command": {
+                  "data": "//input[@id='rbAcepto']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Continuar»",
+                 "command": {
+                  "data": "//input[@id='continuarBtn']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la pregunta del captcha",
+                 "command": {
+                  "object": "//*[@id='lblPregunta']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, abierta_procuraduria=True)",
+                 "description": "El portal abrió bien: no hace falta reintentar"
+                }
+               ],
+               "else": []
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "La Procuraduría no abrió tras 3 intentos: excepción de sistema",
+             "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicIdentidad}['abierta_procuraduria'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='excepcion_sistema', via='procuraduria', codigo='PORTAL_NO_DISPONIBLE', motivo='Procuraduría caída, bloqueada (WAF) o con estructura inesperada')",
+               "description": "Procuraduría caída, bloqueada o con estructura inesperada: excepción de sistema"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "group",
+           "description": "HU026a - Resolver el captcha de pregunta (servicio de captchas)",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locArrIntentos",
+             "command": "list(range(1, {glbDicPortales}['max_captcha'] + 1))",
+             "description": "Intentos permitidos (CAPTCHA_MAX_REINTENTOS)"
+            },
+            {
+             "father": "for",
+             "description": "Intento de resolver el captcha",
+             "command": "{\"iterable\": \"{locArrIntentos}\", \"count\": 0}",
+             "var": "locIntIntento",
+             "children": [
+              {
+               "father": "evaluateIf",
+               "description": "Lee la pregunta y la envía al servicio de captchas (el bot no calcula la respuesta)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria'",
+               "children": [
+                {
+                 "father": "textObject",
+                 "description": "Lee la pregunta del captcha",
+                 "command": "//*[@id='lblPregunta']",
+                 "option": "xpath",
+                 "getvar": "locStrPregunta"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Envía pregunta, documento y nombre al servicio de captchas",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicCaptcha', pasos.resolver_captcha(GetVar('locStrPregunta'), GetVar('locStrDocumento'), GetVar('locStrNombre')))"
+                },
+                {
+                 "father": "setVar",
+                 "var": "locStrRespuesta",
+                 "command": "str({locDicCaptcha}['respuesta'])",
+                 "description": "Respuesta que retornó el servicio"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "El servicio respondió: diligencia el formulario y consulta",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicCaptcha}['ok'] == True",
+               "children": [
+                {
+                 "father": "sendkey_web",
+                 "description": "Escribe el nombre",
+                 "command": {
+                  "data": "//input[@id='txtNombre']",
+                  "data_type": "xpath",
+                  "wait_time": "10",
+                  "text": "{locStrNombre}",
+                  "special": ""
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Elige el tipo de documento en el desplegable",
+                 "command": {
+                  "data": "//select[@id='ddlTipoID']/option[@value='{locStrCodigoTipo}']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "sendkey_web",
+                 "description": "Escribe el número de documento",
+                 "command": {
+                  "data": "//input[@id='txtNumID']",
+                  "data_type": "xpath",
+                  "wait_time": "10",
+                  "text": "{locStrDocumento}",
+                  "special": ""
+                 }
+                },
+                {
+                 "father": "sendkey_web",
+                 "description": "Escribe la respuesta del captcha",
+                 "command": {
+                  "data": "//input[@id='txtRespuestaPregunta']",
+                  "data_type": "xpath",
+                  "wait_time": "10",
+                  "text": "{locStrRespuesta}",
+                  "special": ""
+                 }
+                },
+                {
+                 "father": "click_web",
+                 "description": "Pulsa «Consultar»",
+                 "command": {
+                  "data": "//input[@id='btnExportar']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                },
+                {
+                 "father": "waitforobject",
+                 "description": "Espera la respuesta de la Procuraduría",
+                 "command": {
+                  "object": "//*[@id='divDatosCiudadano' or @id='lblMensaje']",
+                  "option": "xpath",
+                  "wait_time": "15",
+                  "wait_for": "visible",
+                  "before": 0,
+                  "after": 0
+                 }
+                },
+                {
+                 "father": "textObject",
+                 "description": "Lee el texto del resultado",
+                 "command": "//body",
+                 "option": "xpath",
+                 "getvar": "locStrTexto"
+                },
+                {
+                 "father": "execScriptPython",
+                 "description": "Lee el bloque «Datos del ciudadano»",
+                 "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicPaginaProc', pasos.leer_pagina_procuraduria(GetVar('locStrTexto')))"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "El servicio no puede resolver esta pregunta: pide otra con el botón de refresco (cuenta como intento)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicCaptcha}['ok'] == False and {locDicCaptcha}['codigo'] != 'CAPTCHA_SERVICIO_NO_DISPONIBLE'",
+               "children": [
+                {
+                 "father": "click_web",
+                 "description": "Pulsa el botón de refresco de la pregunta",
+                 "command": {
+                  "data": "//input[@id='ImageButton1']",
+                  "data_type": "xpath",
+                  "before": "0",
+                  "wait_time": "10",
+                  "after": "0",
+                  "move": "False"
+                 }
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "Servicio de captchas no disponible tras los reintentos: excepción de sistema",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicCaptcha}['ok'] == False and {locDicCaptcha}['codigo'] == 'CAPTCHA_SERVICIO_NO_DISPONIBLE'",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, etapa='excepcion_sistema', via='procuraduria', codigo='CAPTCHA_SERVICIO_NO_DISPONIBLE', motivo='el servicio de captchas no respondió')",
+                 "description": "Etapa: excepción de sistema (servicio de captchas)"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "La Procuraduría devolvió el nombre (bloque «Datos del ciudadano»)",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicPaginaProc}['nombre'] is not None",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, etapa='comparar', via='procuraduria', nombre_portal={locDicPaginaProc}['nombre'])",
+                 "description": "Etapa: comparar nombres (HU-008)"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "Respuesta sin nombre y el documento es cédula: ni Policía ni Procuraduría dieron resultado, gestión manual",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicPaginaProc}['sin_nombre'] == True and {locDicDocumento}['cedula'] == True",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, etapa='gestion_manual', via='procuraduria', motivo='sin resultado en Policía ni Procuraduría')",
+                 "description": "Etapa: gestión manual (sin resultado)"
+                }
+               ],
+               "else": []
+              },
+              {
+               "father": "evaluateIf",
+               "description": "Respuesta sin nombre para un documento no cédula: se registra y continúa",
+               "command": "{locDicIdentidad}['etapa'] == 'procuraduria' and {locDicPaginaProc}['sin_nombre'] == True and {locDicDocumento}['cedula'] == False",
+               "children": [
+                {
+                 "father": "setVar",
+                 "var": "locDicIdentidad",
+                 "command": "dict({locDicIdentidad}, etapa='sin_nombre', via='procuraduria', motivo='respuesta sin nombre para documento no cédula')",
+                 "description": "Etapa: sin nombre (continúa)"
+                }
+               ],
+               "else": []
+              }
+             ]
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Captcha no resuelto tras los intentos permitidos: excepción de sistema y gestión manual",
+             "command": "{locDicIdentidad}['etapa'] == 'procuraduria'",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='excepcion_sistema', via='procuraduria', codigo='CAPTCHA_MAX_REINTENTOS', motivo='captcha no resuelto tras los intentos permitidos')",
+               "description": "Etapa: excepción de sistema (CAPTCHA_MAX_REINTENTOS)"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "group",
+           "description": "HU008 - Comparar nombres (umbral 0.80, sin depender del orden)",
+           "children": [
+            {
+             "father": "evaluateIf",
+             "description": "Compara el nombre de Zeus con el del portal (normalizado, sin depender del orden)",
+             "command": "{locDicIdentidad}['etapa'] == 'comparar'",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Calcula el puntaje y lo compara con UMBRAL_COINCIDENCIA_NOMBRES",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicVeredicto', pasos.comparar_nombres(GetVar('locStrNombre'), pasos.objeto(GetVar('locDicIdentidad'))['nombre_portal']))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El puntaje alcanza el umbral: la identidad queda validada",
+             "command": "{locDicIdentidad}['etapa'] == 'comparar' and {locDicVeredicto}['coincide'] == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='validada', puntaje={locDicVeredicto}['puntaje'])",
+               "description": "Etapa: identidad validada"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El puntaje no alcanza el umbral o el nombre es incompleto: excepción de negocio 3",
+             "command": "{locDicIdentidad}['etapa'] == 'comparar' and {locDicVeredicto}['coincide'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='excepcion_negocio_3', puntaje={locDicVeredicto}['puntaje'], motivo={locDicVeredicto}['motivo'])",
+               "description": "Etapa: excepción de negocio 3"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Escribe el comentario de la excepción de negocio 3 en Gestión → Detalle",
+             "command": "{locDicIdentidad}['etapa'] == 'excepcion_negocio_3'",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Comentario de la excepción de negocio 3 (revisión de Cartera)",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicComentarioIdentidad', pasos.comentar_excepcion_3(GetVar('locDicCaso'), pasos.objeto(GetVar('locDicIdentidad'))['via'], GetVar('locDicVeredicto')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El comentario no se pudo registrar: excepción de sistema",
+             "command": "{locDicIdentidad}['etapa'] == 'excepcion_negocio_3' and {locDicComentarioIdentidad}['ok'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "locDicIdentidad",
+               "command": "dict({locDicIdentidad}, etapa='excepcion_sistema', codigo='COMENTARIO_NO_REGISTRADO', motivo={locDicComentarioIdentidad}['mensaje'])",
+               "description": "Etapa: excepción de sistema (comentario no registrado)"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "group",
+           "description": "HU006HU007HU008 - Registrar el resultado de identidad",
+           "children": [
+            {
+             "father": "evaluateIf",
+             "description": "Deja el resultado de identidad en el reporte y los logs",
+             "command": "'{locStrIdRadicado}' in {glbArrSiguenIdentidad} and not {locDicIdentidad}['etapa'] == 'inicio'",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra el resultado de identidad (sin nombres ni identificaciones)",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.registrar_identidad(GetVar('locStrIdRadicado'), GetVar('locDicCaso'), GetVar('locDicIdentidad')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Resultado «validada»",
+             "command": "{locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrValidadas",
+               "command": "{glbArrValidadas} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en identidad validada"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Resultado «excepcion_negocio_3»",
+             "command": "{locDicIdentidad}['etapa'] == 'excepcion_negocio_3' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesNegocioTres",
+               "command": "{glbArrExcepcionesNegocioTres} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de negocio 3"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Resultado «revision_humana»",
+             "command": "{locDicIdentidad}['etapa'] == 'revision_humana' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrRevisionHumana",
+               "command": "{glbArrRevisionHumana} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en revisión humana"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Resultado «sin_nombre»",
+             "command": "{locDicIdentidad}['etapa'] == 'sin_nombre' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrSinNombre",
+               "command": "{glbArrSinNombre} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en respuesta sin nombre"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Resultado «gestion_manual»",
+             "command": "{locDicIdentidad}['etapa'] == 'gestion_manual' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrGestionManual",
+               "command": "{glbArrGestionManual} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en gestión manual"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Resultado «excepcion_sistema»: el caso va a gestión manual",
+             "command": "{locDicIdentidad}['etapa'] == 'excepcion_sistema' and '{locStrIdRadicado}' in {glbArrSiguenIdentidad}",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistemaIdentidad",
+               "command": "{glbArrExcepcionesSistemaIdentidad} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema de identidad"
+              },
+              {
+               "father": "setVar",
+               "var": "glbArrGestionManual",
+               "command": "{glbArrGestionManual} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en gestión manual"
+              },
+              {
+               "father": "setVar",
+               "var": "glbDicCodigos",
+               "command": "dict({glbDicCodigos}, **{'{locStrIdRadicado}': {locDicIdentidad}['codigo']})",
+               "description": "Guarda el código de error del radicado"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
+           "father": "group",
+           "description": "HU011 - Registrar la exclusión en base centralizada (repositorio local)",
+           "children": [
+            {
+             "father": "setVar",
+             "var": "locDicExclusion",
+             "command": "{'ok': True}",
+             "description": "Resultado del registro de exclusión (vacío al empezar)"
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Identidad validada: inserta la exclusión, cruza contra las maestras y elimina el registro de la maestra",
+             "command": "{glbDicRepositorio}['habilitado'] == True and {locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrAvanzan}",
+             "children": [
+              {
+               "father": "execScriptPython",
+               "description": "Registra la exclusión (Exclusion + una fila por valor en Celulares/Correos), verifica y elimina de la maestra",
+               "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicExclusion', pasos.registrar_exclusion(GetVar('locDicCaso'), GetVar('locDicDuplicado')))"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "Exclusión registrada",
+             "command": "{glbDicRepositorio}['habilitado'] == True and {locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicExclusion}['ok'] == True",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrExclusionRegistrada",
+               "command": "{glbArrExclusionRegistrada} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en exclusiones registradas"
+              }
+             ],
+             "else": []
+            },
+            {
+             "father": "evaluateIf",
+             "description": "El repositorio falló de forma persistente: excepción de sistema del caso (el bot continúa)",
+             "command": "{glbDicRepositorio}['habilitado'] == True and {locDicIdentidad}['etapa'] == 'validada' and '{locStrIdRadicado}' in {glbArrAvanzan} and {locDicExclusion}['ok'] == False",
+             "children": [
+              {
+               "father": "setVar",
+               "var": "glbArrExcepcionesSistemaExclusion",
+               "command": "{glbArrExcepcionesSistemaExclusion} + ['{locStrIdRadicado}']",
+               "description": "Anota el radicado en excepciones de sistema de la exclusión"
+              }
+             ],
+             "else": []
+            }
+           ]
+          },
+          {
            "father": "execScriptPython",
            "description": "Deja constancia del fin del radicado en el log de auditoría",
-           "command": "from habeasdata import pasos\nSetVar('locDicEvento', pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado')))"
+           "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin del radicado ' + GetVar('locStrIdRadicado')))"
           }
          ]
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
+       "description": "El repositorio está habilitado y la selección terminó bien: deja constancia del fin de la búsqueda y del registro",
+       "command": "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del fin de la búsqueda de duplicados (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin de la búsqueda de duplicados EP-003', 'EP-003'))"
+        },
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del inicio del registro de exclusión (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Inicio del registro de exclusión EP-003', 'EP-003'))"
+        },
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del fin del registro de exclusión (EP-003)",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin del registro de exclusión EP-003', 'EP-003'))"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
+       "description": "Ningún caso pudo consultar el repositorio: punto de control crítico, se detiene la ejecución",
+       "command": "{glbDicRepositorio}['habilitado'] == True and {glbDicEstado}['estado'] == 'ok' and len({glbArrAvanzan}) > 0 and len({glbArrRepositorioCaido}) == len({glbArrAvanzan})",
+       "children": [
+        {
+         "father": "setVar",
+         "var": "glbDicEstado",
+         "command": "dict({glbDicEstado}, estado='detenido', motivo_detencion='repositorio inaccesible para todos los casos')",
+         "description": "Estado de la ejecución: detenido, repositorio inaccesible para todos los casos"
+        }
+       ],
+       "else": []
+      },
+      {
+       "father": "evaluateIf",
+       "description": "La identidad está habilitada y la selección terminó bien: deja constancia de su fin",
+       "command": "{glbDicPortales}['habilitada'] == True and {glbDicEstado}['estado'] == 'ok'",
+       "children": [
+        {
+         "father": "execScriptPython",
+         "description": "Deja constancia del fin de la validación de identidad en el log de auditoría",
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('locDicEvento', pasos.evento('Fin de la validación de identidad EP-002', 'EP-002'))"
         }
        ],
        "else": []
@@ -619,7 +2465,7 @@
         {
          "father": "execScriptPython",
          "description": "Registra la detención en el log de errores y prepara el aviso «Detenido»",
-         "command": "from habeasdata import pasos\nSetVar('glbDicDetencion', pasos.registrar_detencion(pasos.objeto(GetVar('glbDicEstado'))['motivo_detencion']))"
+         "command": "from habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\nSetVar('glbDicDetencion', pasos.registrar_detencion(pasos.objeto(GetVar('glbDicEstado'))['motivo_detencion']))"
         },
         {
          "father": "setVar",
@@ -633,7 +2479,7 @@
       {
        "father": "execScriptPython",
        "description": "Cierra la ejecución y deja el resumen sin PII (en modo real los datos personales se enmascaran)",
-       "command": "import json\nfrom habeasdata import pasos\no = pasos.objeto\ndetencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}\nresumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],\n           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),\n           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),\n           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),\n           'motivo_sin_casos': o(GetVar('glbDicEstado'))['motivo_sin_casos'], 'notificacion': detencion.get('notificacion')}\nSetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"
+       "command": "import json\nfrom habeasdata import pasos\npasos.asegurar(GetVar('glbStrRutaRaiz'))\no = pasos.objeto\ndetencion = o(GetVar('glbDicDetencion')) if pasos.objeto(GetVar('glbDicEstado'))['estado'] == 'detenido' else {}\nresumen = {'estado': o(GetVar('glbDicEstado'))['estado'], 'modo': o(GetVar('glbDicInicio'))['modo'],\n           'avanzan': o(GetVar('glbArrAvanzan')), 'excepciones_negocio_1': o(GetVar('glbArrExcepcionesNegocioUno')),\n           'excepciones_sistema': o(GetVar('glbArrExcepcionesSistema')),\n           'descartados_identificacion_ausente': o(GetVar('glbArrIdsDescartados')),\n           'motivo_sin_casos': o(GetVar('glbDicEstado'))['motivo_sin_casos'], 'notificacion': detencion.get('notificacion')}\nSetVar('glbStrResumen', json.dumps(pasos.cerrar(resumen)['resumen'], ensure_ascii=False, default=str))"
       },
       {
        "father": "setVar",

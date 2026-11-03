@@ -8,11 +8,15 @@ ofrece, como un módulo de Rocketbot, lo que no debe ir en variables ni en el lo
 Todas devuelven un diccionario `{"ok": bool, "mensaje": str, ...}`; el robot decide con `evaluateIf`.
 """
 import ast
+import functools
+import inspect
+import time
 
-from . import ep001
+from . import ep001, ep003
 from .config import cargar
 from .redaccion import resumen_seguro
 from .registro import Registro
+from .repositorio import ErrorRepositorio
 from .zeus import ClienteZeus, EscrituraComentario, ErrorZeus
 
 MODULO = ep001.MODULO
@@ -24,9 +28,43 @@ class _Sesion:
         self.registro = Registro(cfg)
         self.cliente = ClienteZeus(cfg, self.registro)
         self.escritura = EscrituraComentario(self.cliente)
+        self.repo = None
+        self.stub = ep003.cargar_stub()
 
 
-_sesion = None
+class _SesionPerezosa:
+    """Sesión del robot con entrada explícita: la raíz. `asegurar(raiz)` la reconstruye si no existe (prueba por bloque en
+    Studio, D-21): ningún paso depende de que otro haya corrido antes en el mismo proceso."""
+
+    def __init__(self):
+        self._real = None
+        self.raiz = None
+
+    def abrir(self, raiz):
+        _soltar_repositorio()  # una sesión nueva nunca hereda (ni deja abierto) el archivo de la anterior
+        self._real, self.raiz = _Sesion(cargar(raiz)), str(raiz)
+        return self._real
+
+    def asegurar(self, raiz):
+        if self._real is None or self.raiz != str(raiz):
+            self.abrir(raiz)
+
+    def __getattr__(self, nombre):
+        real = self.__dict__.get("_real")
+        if real is None:
+            raise RuntimeError("sesión no abierta: el bloque debe llamar a pasos.asegurar(raíz) con glbStrRutaRaiz")
+        return getattr(real, nombre)
+
+
+_sesion = _SesionPerezosa()
+
+
+def asegurar(raiz):
+    """Entrada explícita de cada bloque: abre la sesión desde la raíz si no está abierta (idempotente)."""
+    _sesion.asegurar(raiz)
+    return _ok()
+
+dormir = time.sleep  # espera del reintento de la bandeja; los tests y el banco la sustituyen
 
 
 def objeto(valor):
@@ -37,6 +75,24 @@ def objeto(valor):
         except (ValueError, SyntaxError):
             return valor
     return valor
+
+
+def _soltar_repositorio():
+    """Cierra el archivo del repositorio y olvida la conexión: tras el fin de la corrida el .sqlite no queda bloqueado."""
+    repo = _sesion.__dict__.pop("repo", None)
+    real = _sesion.__dict__.get("_real")
+    if real is not None:
+        repo, real.repo = repo or real.repo, None
+    if repo is not None:
+        repo.cerrar()
+
+
+_pasos = {"n": 0, "profundidad": 0}  # llamadas del robot a este módulo en la corrida (una llamada de nivel superior = un paso)
+
+
+def _hab():
+    """¿El repositorio local (EP-003) está habilitado? Si no, los pasos de EP-001/EP-002 no escriben transacciones."""
+    return bool(_sesion.cfg.proceso.get("Repositorio", {}).get("Habilitado"))
 
 
 def _ok(**datos):
@@ -50,8 +106,8 @@ def _fallo(mensaje, **datos):
 # ---------- inicialización y cierre ----------
 def iniciar(raiz):
     """Carga los tres JSON, crea la estructura de carpetas y los dos logs del día, y abre la sesión."""
-    global _sesion
-    _sesion = _Sesion(cargar(raiz))
+    _sesion.abrir(raiz)
+    _pasos["n"] = 0
     _sesion.registro.asegurar_archivos()
     _sesion.registro.auditoria("Inicio de ejecución EP-001", MODULO)
     return _ok(modo=_sesion.cliente.modo, lote=_sesion.cfg.proceso["SeleccionRadicados"])
@@ -64,15 +120,21 @@ def parametros():
                cadencia=cfg.proceso["CADENCIA_REINTENTO_BANDEJA_VACIA"])
 
 
-def evento(texto):
-    _sesion.registro.auditoria(texto, MODULO)
+def evento(texto, modulo=None):
+    _sesion.registro.auditoria(texto, modulo or MODULO)
     return _ok()
 
 
 def cerrar(resumen):
     """Fin de ejecución: deja el resumen sin PII en modo real."""
     resumen = objeto(resumen)
-    _sesion.registro.auditoria("Fin de ejecución EP-001" + (" (detenida)" if resumen.get("estado") == "detenido" else ""), MODULO)
+    try:
+        if _hab():  # ningún caso queda abierto y la corrida deja su fila en LogEjecucion
+            ep003.cerrar_corrida(_repo(), _sesion.stub, f"estado {resumen.get('estado')}", _sesion.registro, _pasos["n"] + 1)
+        _sesion.registro.auditoria("Fin de ejecución EP-001" + (" (detenida)" if resumen.get("estado") == "detenido" else ""), MODULO)
+        _sesion.registro.cerrar_corrida(resumen.get("estado"))
+    finally:
+        _soltar_repositorio()  # pase lo que pase, el archivo queda libre al terminar
     return _ok(resumen=resumen_seguro(dict(resumen, casos={}), _sesion.cfg))
 
 
@@ -106,8 +168,22 @@ def consultar_seleccion(consulta):
 
 
 def registrar_descartados(ids):
-    ep001.registrar_descartados(_sesion.registro, [str(i) for i in objeto(ids)])
+    ep001.registrar_descartados(_sesion.registro, [str(i) for i in objeto(ids)], _repo() if _hab() else None)
     return _ok()
+
+
+def reintentar_bandeja():
+    """HU-002: agenda el reintento de la bandeja sin casos (espera + reconsulta, según CADENCIA_REINTENTO_BANDEJA_VACIA).
+    Es solo la espera y la reconsulta con los mismos pasos de la selección; la decisión de reintentar la toma el robot."""
+    try:
+        lista, hechos = ep001.reintentar_bandeja(_sesion.cliente, _sesion.cfg, _sesion.registro, lambda s: dormir(s),
+                                                 _repo() if _hab() else None)
+    except ep001.DetenerEjecucion as error:
+        return _fallo(error)
+    if lista is None:
+        return _ok(cambia=False, reintentos=0)
+    return _ok(cambia=True, reintentos=hechos, ids=lista["ids"], descartados=lista["descartados"],
+               motivo=lista["motivo_sin_casos"], reintento=lista["reintento"])
 
 
 def registrar_sin_casos(motivo, total):
@@ -124,10 +200,15 @@ def registrar_detencion(motivo):
 # ---------- HU-003 ----------
 def leer_radicado(id_radicado):
     """GET del radicado por IDRADICADO (consulta individual)."""
+    if _hab():
+        ep003.seleccionado(_repo(), str(id_radicado))
     try:
-        return _ok(crudo=ep001.leer_crudo(_sesion.cliente, id_radicado, _sesion.cfg))
+        crudo = ep001.leer_crudo(_sesion.cliente, id_radicado, _sesion.cfg)
     except ep001.ExcepcionSistemaCaso as error:
         return _fallo(error)
+    if _hab():
+        ep003.leido(_repo(), str(id_radicado))
+    return _ok(crudo=crudo)
 
 
 def preparar_campos(lectura):
@@ -152,17 +233,218 @@ def comentar_excepcion_1(caso, motivos):
 
 def registrar_avance(caso):
     caso = objeto(caso)
-    _sesion.registro.reporte(caso["radicado_hijo"], caso["radicado_padre"], "avanza a validación de deuda", None, None)
+    _sesion.registro.reporte(caso["radicado_hijo"], caso["radicado_padre"], ep001.MENSAJE_AVANCE, None, None)
+    if _hab():
+        ep003.campos_completos(_repo(), caso)
     return _ok()
 
 
 def registrar_excepcion_negocio_1(caso, motivos):
     caso, motivos = objeto(caso), objeto(motivos)
     _sesion.registro.reporte(caso["radicado_hijo"], caso["radicado_padre"], "excepción de negocio 1", "1", ", ".join(motivos))
+    if _hab():
+        ep003.datos_incompletos(_repo(), caso, motivos, _sesion.stub)
     return _ok()
 
 
 def registrar_excepcion_sistema(id_radicado, mensaje):
     _sesion.registro.error(mensaje, MODULO)
     _sesion.registro.reporte(id_radicado, None, "excepción de sistema", None, mensaje)
+    if _hab():
+        ep003.excepcion_sistema_caso(_repo(), str(id_radicado), str(mensaje), _sesion.stub)
     return _ok()
+
+
+# ---------- EP-002: identidad (HU-006, HU-007, HU-026a, HU-008) ----------
+# La navegación por los portales vive en bloques de Chrome de Studio; aquí solo van la configuración, la lectura del TEXTO
+# de la página (lógica pura), el servicio de captchas, la comparación de nombres y los registros.
+def portales():
+    """Modo, URLs y reintentos de los portales (todo sale de la configuración). En modo real exige autorización y ventana."""
+    from .portales import ClientePortales, ErrorBloqueoPortal
+    cfg = _sesion.cfg
+    identidad = cfg.proceso.get("Identidad", {"Habilitada": True})
+    if not identidad["Habilitada"]:
+        return _ok(habilitada=False, modo="fixture", url_policia="", url_procuraduria="", max_captcha=0, umbral=0)
+    try:
+        cliente = ClientePortales(cfg)
+    except ErrorBloqueoPortal as error:
+        return _fallo(error, detenido=True, habilitada=True)
+    a = cliente.ajustes
+    return _ok(habilitada=True, modo=cliente.modo, url_policia=a["UrlPolicia"], url_procuraduria=a["UrlProcuraduria"],
+               max_captcha=int(cfg.maestro["CAPTCHA_MAX_REINTENTOS"]), umbral=cfg.maestro["UMBRAL_COINCIDENCIA_NOMBRES"])
+
+
+def esperar_reintento_portal(intento):
+    """Espera el backoff parametrizado (`Portales.BackoffSegundos`) antes del siguiente intento de abrir un portal."""
+    espera = _sesion.cfg.proceso["Portales"]["BackoffSegundos"]
+    dormir(espera[min(int(intento) - 1, len(espera) - 1)])
+    return _ok()
+
+
+def clasificar_documento(caso):
+    """Lógica pura: ¿cédula?, ¿NIT de exactamente 10 dígitos? y código del desplegable de la Procuraduría."""
+    from . import ep002
+    from .portales import TIPOS_PROCURADURIA
+    caso = objeto(caso)
+    numero = str(caso.get("numero_identificacion") or "")
+    tipo = ep002.tipo_normalizado(caso)
+    return _ok(cedula=tipo == "CEDULA DE CIUDADANIA", nit=tipo == "NIT", nit_valido=ep002.nit_valido(numero),
+               codigo_tipo=TIPOS_PROCURADURIA.get(tipo), numero=numero, nombre=str(caso.get("nombre") or ""))
+
+
+def leer_pagina_policia(texto):
+    """Lógica pura sobre el texto visible de la página de la Policía."""
+    import re
+    texto = str(texto or "")
+    minus = texto.lower()
+    nombre = re.search(r"Apellidos y Nombres:\s*(.+)", texto)
+    return _ok(cuota="supera la cuota gratuita" in minus, reto="seleccione todas las im" in minus,
+               sin_resultado="no se encontraron registros" in minus, nombre=nombre.group(1).strip() if nombre else None)
+
+
+def leer_pagina_procuraduria(texto):
+    """Lógica pura sobre el texto visible de la página de la Procuraduría (bloque «Datos del ciudadano»)."""
+    import re
+    texto = str(texto or "")
+    minus = texto.lower()
+    # el formulario del portal fiel también tiene una etiqueta «Nombre:»: solo cuenta lo que sigue al encabezado del bloque
+    bloque = texto[minus.rindex("datos del ciudadano"):] if "datos del ciudadano" in minus else ""
+    nombre = re.search(r"Nombre:[ \t]*(\S.*)", bloque)
+    estado = re.search(r"Estado:[ \t]*(\S.*)", bloque) if nombre else None
+    return _ok(nombre=nombre.group(1).strip() if nombre else None, estado=estado.group(1).strip() if estado else None,
+               incorrecta="respuesta a la pregunta es incorrecta" in minus,
+               sin_nombre="no se encontr" in minus and "informaci" in minus)
+
+
+def resolver_captcha(pregunta, documento, nombre):
+    """HU-026a: la pregunta va al servicio de captchas; el bot no calcula la respuesta. Códigos de error del servicio."""
+    from .captcha import ErrorCaptcha, ServicioCaptchas
+    cfg = _sesion.cfg
+    servicio = ServicioCaptchas(_ajustes_portales(cfg)["UrlCaptchas"], cfg.maestro["NUMERO_REINTENTOS_SISTEMA"],
+                                cfg.proceso["Portales"]["BackoffSegundos"], cfg.proceso["Portales"]["TimeoutSegundos"])
+    try:
+        return _ok(respuesta=servicio.resolver(str(pregunta), str(documento), str(nombre)), codigo=None)
+    except ErrorCaptcha as error:
+        return _fallo(error, respuesta=None, codigo=error.codigo)
+
+
+def _ajustes_portales(cfg):
+    """Ajustes de URL del modo vigente, sin las comprobaciones de autorización (esas las hace `portales()`)."""
+    ajustes = cfg.proceso["Portales"]
+    return ajustes["Real" if ajustes["Modo"] == "real" else "Fixture"]
+
+
+def comparar_nombres(nombre_zeus, nombre_portal):
+    """HU-008 (lógica pura): puntaje de coincidencia contra el umbral parametrizado."""
+    from . import nombres
+    return _ok(**nombres.comparar(str(nombre_zeus), str(nombre_portal), _sesion.cfg.maestro["UMBRAL_COINCIDENCIA_NOMBRES"]))
+
+
+def comentar_excepcion_3(caso, via, veredicto):
+    from . import ep002
+    from .zeus import ErrorZeus
+    caso = objeto(caso)
+    try:
+        _sesion.escritura.comentar(caso["radicado_hijo"], ep002.comentario_excepcion_3(objeto(veredicto), via))
+    except ErrorZeus as error:
+        return _fallo(error)
+    return _ok()
+
+
+def registrar_identidad(id_radicado, caso, identidad):
+    """Deja el resultado de identidad en el reporte y los logs (sin nombres ni identificaciones)."""
+    from . import ep002
+    caso, i = objeto(caso), objeto(identidad)
+    ep002.registrar(_sesion.registro, id_radicado, caso["radicado_padre"], i["etapa"], i["via"], i["puntaje"], i["motivo"], i["codigo"])
+    if _hab():
+        ep003.transaccion_identidad(_repo(), str(id_radicado), i["etapa"], i["via"], i["puntaje"], i["motivo"], i["codigo"], _sesion.stub)
+    return _ok()
+
+
+# ---------- EP-003: repositorio local (HU-010 duplicados, HU-011 exclusión) ----------
+def _repo():
+    """Repositorio de la corrida: se abre al primer uso (la sesión de un bloque probado solo también funciona, D-21)."""
+    if _sesion.repo is None:
+        _sesion._real.repo = ep003.abrir_repositorio(_sesion.cfg)
+    return _sesion.repo
+
+
+def repositorio():
+    """¿EP-003 está habilitado en esta corrida? (`Repositorio.Habilitado` de ConfiguracionProceso). Abre el repositorio si lo está."""
+    ajustes = _sesion.cfg.proceso.get("Repositorio", {"Habilitado": False})
+    if not ajustes.get("Habilitado"):
+        return _ok(habilitado=False)
+    try:
+        _repo()
+    except (OSError, ErrorRepositorio) as error:
+        return _fallo(error, habilitado=True)
+    return _ok(habilitado=True)
+
+
+def buscar_duplicados(caso):
+    """HU-010: cada valor se consulta por separado; `duplicados` son solo los valores que ya estaban excluidos."""
+    caso = objeto(caso)
+    ep003.duplicados_inicio(_sesion.registro, caso["radicado_hijo"])
+    try:
+        resultado = ep003.buscar_duplicados(caso, _repo())
+    except ErrorRepositorio as error:
+        return _fallo(error, duplicados=[], continua=False)
+    return _ok(**resultado)
+
+
+def comentar_duplicado(caso, duplicado):
+    caso, duplicado = objeto(caso), objeto(duplicado)
+    try:
+        _sesion.escritura.comentar(caso["radicado_hijo"], ep003.comentario_excepcion_4(duplicado))
+    except ErrorZeus as error:
+        return _fallo(error)
+    return _ok()
+
+
+def registrar_duplicado_excepcion_4(caso, duplicado):
+    caso = objeto(caso)
+    ep003.duplicados_excepcion_4(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], objeto(duplicado), _sesion.stub)
+    return _ok()
+
+
+def registrar_duplicado_sin_excepcion(caso):
+    caso = objeto(caso)
+    ep003.duplicados_sin_excepcion(_sesion.registro, _repo(), caso["radicado_hijo"])
+    return _ok()
+
+
+def registrar_duplicado_sistema(caso, mensaje, origen):
+    """origen = repositorio (no respondió) | comentario (Zeus rechazó la nota de duplicado)."""
+    caso = objeto(caso)
+    paso = ep003.duplicados_sistema if origen == "repositorio" else ep003.duplicados_comentario_fallido
+    paso(_sesion.registro, _repo(), caso["radicado_hijo"], caso["radicado_padre"], str(mensaje), _sesion.stub)
+    return _ok()
+
+
+def registrar_exclusion(caso, duplicado):
+    """HU-011: inserta, cruza y elimina de la maestra solo los valores que siguieron adelante (`restantes`)."""
+    caso, duplicado = objeto(caso), objeto(duplicado)
+    fecha = _sesion.registro.reloj().strftime("%d/%m/%Y")
+    resultado = ep003.exclusion_del_caso(_sesion.registro, _repo(), caso, (duplicado or {}).get("restantes", []), _sesion.stub, fecha)
+    if resultado["error"]:
+        return _fallo(resultado["error"], operacion=resultado["operacion"])
+    return _ok(insertados=len(resultado["insertados"]), eliminados=len(resultado["eliminados"]))
+
+
+def _contar(funcion):
+    """Cuenta como UN paso cada llamada de nivel superior del robot (las llamadas internas entre pasos no suman)."""
+    @functools.wraps(funcion)
+    def envuelta(*args, **kwargs):
+        _pasos["profundidad"] += 1
+        try:
+            return funcion(*args, **kwargs)
+        finally:
+            _pasos["profundidad"] -= 1
+            if _pasos["profundidad"] == 0:
+                _pasos["n"] += 1
+    return envuelta
+
+
+for _nombre, _funcion in list(globals().items()):
+    if inspect.isfunction(_funcion) and _funcion.__module__ == __name__ and not _nombre.startswith("_"):
+        globals()[_nombre] = _contar(_funcion)

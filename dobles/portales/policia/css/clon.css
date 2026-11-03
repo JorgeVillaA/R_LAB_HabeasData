@@ -1,0 +1,140 @@
+/* Ajustes del clon de WebJudicial: la casilla reCAPTCHA v2 «No soy un robot»
+ * dibujada en local (el original es un iframe de Google que no se puede traer sin red).
+ * El resto del aspecto viene de las hojas reales del portal (bootstrap, style, theme,
+ * components, plugins, responsive).
+ */
+
+.g-recaptcha-clon {
+    display: inline-block;
+}
+
+.rc-anchor {
+    width: 304px;
+    height: 78px;
+    position: relative;
+    background: #f9f9f9;
+    border: 1px solid #d3d3d3;
+    border-radius: 3px;
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, .08);
+    box-sizing: border-box;
+    font-family: Roboto, helvetica, arial, sans-serif;
+    color: #000;
+}
+
+.rc-anchor-content {
+    display: inline-block;
+    vertical-align: middle;
+    height: 76px;
+    line-height: 76px;
+    width: 212px;
+}
+
+.rc-inline-block {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.rc-anchor-checkbox-wrap {
+    width: 48px;
+    text-align: center;
+}
+
+.recaptcha-checkbox {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    background: #fff;
+    border: 2px solid #c1c1c1;
+    border-radius: 2px;
+    box-sizing: border-box;
+    position: relative;
+    cursor: pointer;
+    vertical-align: middle;
+    outline: none;
+}
+
+.recaptcha-checkbox:hover {
+    border-color: #b2b2b2;
+}
+
+.recaptcha-checkbox[aria-checked="true"] {
+    border-color: #c1c1c1;
+}
+
+.recaptcha-checkbox[aria-checked="true"]::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 1px;
+    width: 8px;
+    height: 16px;
+    border: solid #009e0f;
+    border-width: 0 4px 4px 0;
+    transform: rotate(45deg);
+    box-sizing: border-box;
+}
+
+.recaptcha-checkbox-loading::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    border: 3px solid #4285f4;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: rc-giro .7s linear infinite;
+}
+
+@keyframes rc-giro {
+    to { transform: rotate(360deg); }
+}
+
+.rc-anchor-checkbox-label {
+    width: 160px;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.rc-sep {
+    padding: 0 2px;
+}
+
+.rc-anchor-logo {
+    position: absolute;
+    right: 8px;
+    top: 10px;
+    width: 58px;
+    text-align: center;
+    line-height: normal;
+}
+
+.rc-anchor-logo img {
+    display: block;
+    margin: 0 auto;
+}
+
+.rc-anchor-logo-text {
+    font-size: 10px;
+    color: #555;
+    line-height: 12px;
+}
+
+.rc-anchor-logo-sub {
+    font-size: 8px;
+    color: #555;
+    line-height: 10px;
+}
+
+/* El bloque de resultado aparece en la misma página, como el panel del portal. */
+#resultadoAntecedentes .ui-panel-titlebar {
+    padding: 8px 10px;
+    font-weight: bold;
+}
+
+#resultadoAntecedentes p {
+    font-size: 14px;
+}

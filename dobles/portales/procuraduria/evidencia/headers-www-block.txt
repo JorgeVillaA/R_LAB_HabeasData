@@ -1,0 +1,22 @@
+HTTP/1.1 200 OK
+Cache-Control: private, max-age=0
+Content-Type: text/html; charset=utf-8
+Expires: Thu, 15 Oct 2026 16:08:50 GMT
+Last-Modified: Fri, 30 Oct 2026 16:08:50 GMT
+Server: Microsoft-IIS/10.0
+X-SharePointHealthScore: 0
+X-AspNet-Version: 4.0.30319
+SPRequestGuid: f0fb49a2-cb81-008c-c6c8-dddf19b6fe58
+request-id: f0fb49a2-cb81-008c-c6c8-dddf19b6fe58
+X-FRAME-OPTIONS: SAMEORIGIN
+Content-Security-Policy: frame-ancestors 'self' teams.microsoft.com *.teams.microsoft.com *.skype.com *.teams.microsoft.us local.teams.office.com *.powerapps.com *.yammer.com *.officeapps.live.com *.office.com *.stream.azure-test.net *.microsoftstream.com *.dynamics.com *.microsoft.com onedrive.live.com *.onedrive.live.com;
+SPRequestDuration: 59
+SPIisLatency: 0
+X-Powered-By: ASP.NET
+MicrosoftSharePointTeamServices: 16.0.0.10417
+X-Content-Type-Options: nosniff
+X-MS-InvokeApp: 1; RequireReadOnly
+Date: Fri, 30 Oct 2026 16:08:49 GMT
+Content-Length: 73829
+Set-Cookie: cookiesession1=678A3E351A52D41C6811BCC9886FDC70;Expires=Sat, 30 Oct 2027 16:08:50 GMT;Path=/;HttpOnly
+

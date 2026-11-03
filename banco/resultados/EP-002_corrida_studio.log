@@ -1,0 +1,21 @@
+IGUAL  EP002-01-happy-todos capturados=0 
+IGUAL  EP002-02-policia-sin-resultado-deriva-a-procuraduria capturados=0 
+IGUAL  EP002-03-policia-cuota-agotada-revision-humana capturados=0 
+IGUAL  EP002-04-policia-reto-de-imagenes-revision-humana capturados=0 
+IGUAL  EP002-05-policia-caida-persistente-deriva-a-procuraduria capturados=9 
+IGUAL  EP002-06-procuraduria-caida capturados=2 
+IGUAL  EP002-07-procuraduria-waf-bloquea capturados=1 
+IGUAL  EP002-08-procuraduria-webcert-incidentes capturados=1 
+IGUAL  EP002-09-captcha-rechazado-por-el-portal capturados=0 
+IGUAL  EP002-10-servicio-de-captchas-no-disponible capturados=0 
+IGUAL  EP002-11-familia-no-soportada-capital capturados=0 
+IGUAL  EP002-12-rotacion-de-familias capturados=0 
+IGUAL  EP002-13-nombre-no-coincide-excepcion-3 capturados=0 
+IGUAL  EP002-14-nombre-incompleto-excepcion-3 capturados=0 
+IGUAL  EP002-15-comentario-3-rechazado capturados=0 
+IGUAL  EP002-16-nit-con-9-digitos-no-consulta capturados=0 
+IGUAL  EP002-17-no-cedula-sin-nombre-continua capturados=0 
+IGUAL  EP002-18-tipo-de-documento-sin-consulta capturados=0 
+IGUAL  EP002-20-cedula-sin-resultado-en-ninguna-fuente capturados=0 
+IGUAL  EP002-19-ciudadano-con-antecedentes-igual-valida capturados=0 
+robot de Studio en Chrome equivalente al orquestador en los escenarios corridos: True

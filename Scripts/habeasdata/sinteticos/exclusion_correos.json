@@ -1,0 +1,16 @@
+[
+  {
+    "ID CLIENTE": "CLI-0900",
+    "ID CODEUDOR": "COD-0900",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000007",
+    "NOMBRE": "SOFIA ELENA RAMOS TORO",
+    "CORREO": "sofia.b@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": "01/09/2026",
+    "GESTOR": "GESTOR-PREVIO",
+    "SUCURSAL": "SUC-PREVIA"
+  }
+]

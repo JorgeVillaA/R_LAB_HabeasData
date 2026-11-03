@@ -1,0 +1,110 @@
+[
+  {
+    "ID CLIENTE": "CLI-0001",
+    "ID CODEUDOR": "COD-0001",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000001",
+    "NOMBRE": "MARIA FERNANDA LOPEZ RUIZ",
+    "CORREO": "maria.lopez@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0003",
+    "ID CODEUDOR": "COD-0003",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000003",
+    "NOMBRE": "ANA LUCIA MORA PEREZ",
+    "CORREO": "ana.mora@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0005",
+    "ID CODEUDOR": "COD-0005",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000007",
+    "NOMBRE": "SOFIA ELENA RAMOS TORO",
+    "CORREO": "sofia.a@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0006",
+    "ID CODEUDOR": "COD-0006",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000007",
+    "NOMBRE": "SOFIA ELENA RAMOS TORO",
+    "CORREO": "sofia.b@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0009",
+    "ID CODEUDOR": "COD-0009",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000008",
+    "NOMBRE": "DIEGO ALEJANDRO PINTO LEAL",
+    "CORREO": "diego.pinto@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0010",
+    "ID CODEUDOR": "COD-0010",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000010",
+    "NOMBRE": "VALERIA ISABEL CRUZ ORTIZ",
+    "CORREO": "valeria.cruz@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0011",
+    "ID CODEUDOR": "COD-0011",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000012",
+    "NOMBRE": "RAUL EDUARDO PAEZ BRAVO",
+    "CORREO": "raul.paez@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0013",
+    "ID CODEUDOR": "COD-0013",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "9000000013",
+    "NOMBRE": "INVERSIONES LAB DEMO S A S",
+    "CORREO": "contacto@lab-demo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  },
+  {
+    "ID CLIENTE": "CLI-0014",
+    "ID CODEUDOR": "COD-0014",
+    "TIPO USUARIO": "TITULAR",
+    "IDENTIFICACION": "1000000014",
+    "NOMBRE": "TORRES GALINDO NATALIA",
+    "CORREO": "natalia.torres@ejemplo.invalid",
+    "FUENTE": "FUENTE-SINTETICA-A",
+    "FECHA CONSULTA": "10/08/2026",
+    "Zeus": "",
+    "FECHA EXCLUSION": ""
+  }
+]

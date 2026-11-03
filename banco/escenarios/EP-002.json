@@ -1,0 +1,825 @@
+[
+  {
+    "id": "EP002-01-happy-todos",
+    "ramas": [
+      "HU-006 nombre extraído",
+      "HU-007 NIT por Procuraduría",
+      "HU-008 coincide (incluye orden distinto)",
+      "HU-026a familias"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ]
+    },
+    "portales": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ],
+      "vias": {
+        "900001": "policia",
+        "900013": "procuraduria"
+      },
+      "casilla_nunca_marcada": false
+    }
+  },
+  {
+    "id": "EP002-02-policia-sin-resultado-deriva-a-procuraduria",
+    "ramas": [
+      "HU-006 sin resultado → HU-007"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ]
+    },
+    "portales": {
+      "vaciar_policia": true
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ],
+      "vias": {
+        "900001": "procuraduria"
+      }
+    }
+  },
+  {
+    "id": "EP002-03-policia-cuota-agotada-revision-humana",
+    "ramas": [
+      "HU-006 cuota agotada: fallback humano"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ]
+    },
+    "portales": {
+      "policia_modo": "cuota"
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "revision_humana": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900014",
+        "900016"
+      ],
+      "validadas": [
+        "900013"
+      ],
+      "casilla_nunca_marcada": true
+    }
+  },
+  {
+    "id": "EP002-04-policia-reto-de-imagenes-revision-humana",
+    "ramas": [
+      "HU-006 reCAPTCHA escala a reto: persona"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ]
+    },
+    "portales": {
+      "policia_modo": "reto"
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "revision_humana": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900014",
+        "900016"
+      ],
+      "validadas": [
+        "900013"
+      ]
+    }
+  },
+  {
+    "id": "EP002-05-policia-caida-persistente-deriva-a-procuraduria",
+    "ramas": [
+      "HU-006 portal caído → HU-007"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ]
+    },
+    "portales": {
+      "policia_modo": "caido"
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001",
+        "900003",
+        "900004",
+        "900005",
+        "900006",
+        "900007",
+        "900008",
+        "900013",
+        "900014",
+        "900016"
+      ],
+      "vias": {
+        "900001": "procuraduria"
+      }
+    }
+  },
+  {
+    "id": "EP002-06-procuraduria-caida",
+    "ramas": [
+      "HU-007 portal caído: excepción de sistema y gestión manual"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900013"
+      ]
+    },
+    "portales": {
+      "procuraduria_modo": "caido",
+      "vaciar_policia": true
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900001",
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [
+        "900001",
+        "900013"
+      ],
+      "codigos": {
+        "900001": "PORTAL_NO_DISPONIBLE",
+        "900013": "PORTAL_NO_DISPONIBLE"
+      }
+    }
+  },
+  {
+    "id": "EP002-07-procuraduria-waf-bloquea",
+    "ramas": [
+      "Realidad: WAF bloquea la página principal"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900013"
+      ]
+    },
+    "portales": {
+      "procuraduria_modo": "waf"
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001"
+      ],
+      "gestion_manual": [
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [
+        "900013"
+      ],
+      "codigos": {
+        "900013": "PORTAL_NO_DISPONIBLE"
+      }
+    }
+  },
+  {
+    "id": "EP002-08-procuraduria-webcert-incidentes",
+    "ramas": [
+      "Realidad: webcert devuelve el formulario de atención de incidentes"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900013"
+      ]
+    },
+    "portales": {
+      "procuraduria_modo": "incidentes"
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001"
+      ],
+      "gestion_manual": [
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [
+        "900013"
+      ],
+      "codigos": {
+        "900013": "PORTAL_NO_DISPONIBLE"
+      }
+    }
+  },
+  {
+    "id": "EP002-09-captcha-rechazado-por-el-portal",
+    "ramas": [
+      "HU-026a reintentos agotados: CAPTCHA_MAX_REINTENTOS"
+    ],
+    "doble": {
+      "radicados": [
+        "900013"
+      ]
+    },
+    "portales": {
+      "captcha_rechaza": true
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [
+        "900013"
+      ],
+      "codigos": {
+        "900013": "CAPTCHA_MAX_REINTENTOS"
+      }
+    }
+  },
+  {
+    "id": "EP002-10-servicio-de-captchas-no-disponible",
+    "ramas": [
+      "HU-026a servicio caído: CAPTCHA_SERVICIO_NO_DISPONIBLE"
+    ],
+    "doble": {
+      "radicados": [
+        "900013"
+      ]
+    },
+    "portales": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [
+        "900013"
+      ],
+      "codigos": {
+        "900013": "CAPTCHA_SERVICIO_NO_DISPONIBLE"
+      }
+    },
+    "servicio": "no_disponible"
+  },
+  {
+    "id": "EP002-11-familia-no-soportada-capital",
+    "ramas": [
+      "HU-026a familia no soportada → captcha no resuelto"
+    ],
+    "doble": {
+      "radicados": [
+        "900013"
+      ]
+    },
+    "portales": {
+      "familias": [
+        "capital"
+      ]
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [
+        "900013"
+      ],
+      "codigos": {
+        "900013": "CAPTCHA_MAX_REINTENTOS"
+      }
+    }
+  },
+  {
+    "id": "EP002-12-rotacion-de-familias",
+    "ramas": [
+      "HU-026a aritmética, documento y nombre rotan; capital se refresca"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003",
+        "900004",
+        "900005"
+      ]
+    },
+    "portales": {
+      "vaciar_policia": true
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001",
+        "900003",
+        "900004",
+        "900005"
+      ]
+    }
+  },
+  {
+    "id": "EP002-13-nombre-no-coincide-excepcion-3",
+    "ramas": [
+      "HU-008 excepción de negocio 3 con comentario"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {
+      "padron_policia": {
+        "1000000001": "RAMIREZ DIAZ CARLOS"
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "excepciones_negocio_3": [
+        "900001"
+      ],
+      "comentarios": [
+        "900001"
+      ],
+      "comentario_contiene": [
+        "Excepción de negocio 3",
+        "Fuente: policia",
+        "Puntaje:",
+        "Motivo:"
+      ]
+    }
+  },
+  {
+    "id": "EP002-14-nombre-incompleto-excepcion-3",
+    "ramas": [
+      "HU-008 sin primer apellido"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {
+      "padron_policia": {
+        "1000000001": "MARIA"
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "excepciones_negocio_3": [
+        "900001"
+      ],
+      "comentarios": [
+        "900001"
+      ],
+      "comentario_contiene": [
+        "Excepción de negocio 3",
+        "Fuente: policia",
+        "Puntaje:",
+        "Motivo:"
+      ]
+    }
+  },
+  {
+    "id": "EP002-15-comentario-3-rechazado",
+    "ramas": [
+      "HU-008 comentario no registrado: excepción de sistema"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ],
+      "falla_comentario": 400
+    },
+    "portales": {
+      "padron_policia": {
+        "1000000001": "RAMIREZ DIAZ CARLOS"
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "excepciones_sistema_identidad": [
+        "900001"
+      ],
+      "gestion_manual": [
+        "900001"
+      ],
+      "codigos": {
+        "900001": "COMENTARIO_NO_REGISTRADO"
+      },
+      "comentarios": []
+    }
+  },
+  {
+    "id": "EP002-16-nit-con-9-digitos-no-consulta",
+    "ramas": [
+      "HU-007 NIT ≠ 10 dígitos → gestión manual sin consultar"
+    ],
+    "doble": {
+      "radicados": [
+        "900013"
+      ],
+      "campos": {
+        "900013": {
+          "NOIDENTIFICACIONDELCLIENTE": "900000013"
+        }
+      }
+    },
+    "portales": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900013"
+      ],
+      "excepciones_sistema_identidad": [],
+      "consultas_maximas": {
+        "procuraduria": 0,
+        "policia": 0
+      }
+    }
+  },
+  {
+    "id": "EP002-17-no-cedula-sin-nombre-continua",
+    "ramas": [
+      "HU-007 respuesta sin nombre, no cédula: registra y continúa"
+    ],
+    "doble": {
+      "radicados": [
+        "900013",
+        "900001"
+      ]
+    },
+    "portales": {
+      "sin_nombre": [
+        [
+          "2",
+          "9000000013"
+        ]
+      ]
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "sin_nombre": [
+        "900013"
+      ],
+      "validadas": [
+        "900001"
+      ]
+    }
+  },
+  {
+    "id": "EP002-18-tipo-de-documento-sin-consulta",
+    "ramas": [
+      "Realidad: PEP no tiene consulta en la Procuraduría"
+    ],
+    "doble": {
+      "radicados": [
+        "900013"
+      ],
+      "campos": {
+        "900013": {
+          "TIPODEIDENTIFICACION": "PEP"
+        }
+      }
+    },
+    "portales": {},
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900013"
+      ],
+      "consultas_maximas": {
+        "procuraduria": 0
+      }
+    }
+  },
+  {
+    "id": "EP002-20-cedula-sin-resultado-en-ninguna-fuente",
+    "ramas": [
+      "HU-007 cédula sin resultado en Policía ni Procuraduría → gestión manual"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {
+      "vaciar_policia": true,
+      "sin_nombre": [
+        [
+          "1",
+          "1000000001"
+        ]
+      ]
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "gestion_manual": [
+        "900001"
+      ],
+      "excepciones_sistema_identidad": []
+    }
+  },
+  {
+    "id": "EP002-19-ciudadano-con-antecedentes-igual-valida",
+    "ramas": [
+      "HU-007 con antecedentes: el estado no altera la identidad"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {
+      "vaciar_policia": true,
+      "con_antecedentes": [
+        [
+          "1",
+          "1000000001"
+        ]
+      ]
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001"
+      ]
+    }
+  },
+  {
+    "id": "EP002-21-modo-real-no-evade-el-recaptcha",
+    "ramas": [
+      "HU-006 modo real: el reCAPTCHA lo resuelve una persona; la casilla NUNCA se marca; la Procuraduría sigue su curso"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900013"
+      ]
+    },
+    "portales": {},
+    "modo_real": true,
+    "solo_interprete": true,
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "revision_humana": [
+        "900001"
+      ],
+      "validadas": [
+        "900013"
+      ],
+      "casilla_nunca_marcada": true,
+      "consultas_exactas": {
+        "policia": 0
+      }
+    }
+  },
+  {
+    "id": "EP002-22-portal-con-falla-transitoria-reintenta",
+    "ramas": [
+      "HU-006/HU-007 una caída de una sola vez se reintenta (NUMERO_REINTENTOS_SISTEMA) y el caso se resuelve"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900013"
+      ]
+    },
+    "portales": {
+      "fallas_get": {
+        "policia": 1,
+        "procuraduria": 1
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001",
+        "900013"
+      ],
+      "vias": {
+        "900001": "policia",
+        "900013": "procuraduria"
+      },
+      "excepciones_sistema_identidad": [],
+      "casilla_nunca_marcada": false
+    }
+  },
+  {
+    "id": "EP002-23-umbral-de-nombres-configurable",
+    "ramas": [
+      "HU-008 el umbral sale del maestro: con 0.70 un puntaje de 0.75 valida (con 0.80 sería excepción 3)"
+    ],
+    "doble": {
+      "radicados": [
+        "900001"
+      ]
+    },
+    "portales": {
+      "padron_policia": {
+        "1000000001": "LOPEZ RUIZ MARIA CAMILA"
+      }
+    },
+    "maestro": {
+      "UMBRAL_COINCIDENCIA_NOMBRES": 0.7
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001"
+      ],
+      "excepciones_negocio_3": [],
+      "comentarios": [],
+      "casilla_nunca_marcada": false
+    }
+  },
+  {
+    "id": "EP002-24-pasaporte-y-cedula-de-extranjeria",
+    "ramas": [
+      "HU-007 tipos de documento con consulta directa en la Procuraduría (pasaporte y cédula de extranjería)"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900003"
+      ],
+      "campos": {
+        "900001": {
+          "TIPODEIDENTIFICACION": "PASAPORTE"
+        },
+        "900003": {
+          "TIPODEIDENTIFICACION": "CEDULA DE EXTRANJERIA"
+        }
+      }
+    },
+    "portales": {
+      "padron_procuraduria": [
+        [
+          "3",
+          "1000000001",
+          "MARIA FERNANDA LOPEZ RUIZ"
+        ],
+        [
+          "5",
+          "1000000003",
+          "ANA LUCIA MORA PEREZ"
+        ]
+      ]
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001",
+        "900003"
+      ],
+      "vias": {
+        "900001": "procuraduria",
+        "900003": "procuraduria"
+      },
+      "consultas_exactas": {
+        "policia": 0
+      },
+      "casilla_nunca_marcada": false
+    }
+  },
+  {
+    "id": "EP002-25-portal-con-dos-fallas-transitorias-resuelve-en-el-tercer-intento",
+    "ramas": [
+      "HU-006/HU-007 dos caídas seguidas: el tercer intento (el último) abre el portal y el caso se resuelve"
+    ],
+    "doble": {
+      "radicados": [
+        "900001",
+        "900013"
+      ]
+    },
+    "portales": {
+      "fallas_get": {
+        "policia": 2,
+        "procuraduria": 2
+      }
+    },
+    "espera": {
+      "identidad": true,
+      "estado": "ok",
+      "validadas": [
+        "900001",
+        "900013"
+      ],
+      "vias": {
+        "900001": "policia",
+        "900013": "procuraduria"
+      },
+      "excepciones_sistema_identidad": [],
+      "casilla_nunca_marcada": false
+    }
+  }
+]

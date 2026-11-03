@@ -11,7 +11,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "35dbcda2847154ba891f57c5965bced470acd1f347b19f5446f985cbf7e016c2"
+    "huella": "16f693fc1ca9f20efb9a8ba8e73de38c7a94c347af9887f9848a9d12ba650ec3"
   },
   {
     "id": "EP001-02-bandeja-vacia",
@@ -21,7 +21,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "260fc48959ac8b09c02afddc88cd59f5974a57775e8bf67437f33304c8c81b8b"
+    "huella": "ab7340acd557085003ca95d965a8d5002508ff9d03b897560b8773e7607748db"
   },
   {
     "id": "EP001-03-tipologia-ausente",
@@ -31,7 +31,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "02e2f7c1c93496ba088ce2a56063d23317232bd3a027d8f1037bc2d322a3b5a7"
+    "huella": "f8b8d643886d4a32428cc157b5e744b8816c9ac8ece38616b34ba7b83623eb19"
   },
   {
     "id": "EP001-04-filtro-no-reconocido",
@@ -41,7 +41,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "c711663b7bb5fe6e8a7302af78bb6239f9d9751b553cd60a3a8ca5f48f11e7c5"
+    "huella": "aa06635e8ae05926c9fc243c3885cd0cc49f09efa848076cdf8b04d5e80bfc66"
   },
   {
     "id": "EP001-05-token-vencido-persistente",
@@ -51,7 +51,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "eb585a47335268bc782dccadcdde14648982335976357d9af0afa740aa0af163"
+    "huella": "9f3b6466be143bdd31f42de8b68cc09b4f9da332e6973ef0fc1b7a68332d9cf6"
   },
   {
     "id": "EP001-06-sin-roles-403",
@@ -61,7 +61,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "6ad87322f9c52272a77f0a8f9a4d6335f47035aa0494cf74ff9763185fc884a7"
+    "huella": "127781ffe75df3cd20af964ac637955e65d4270c683c7b0931e275ee5bae857a"
   },
   {
     "id": "EP001-07-api-no-disponible",
@@ -71,7 +71,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "5c975f17273ef23df7f3525cd62e3b67290137c8d7b495921c765684b1ed3537"
+    "huella": "b0674b3952ec45110a10937c566ef205de5b5ded3262276662c21a9eb64e4bea"
   },
   {
     "id": "EP001-08-radicado-no-legible-400",
@@ -81,7 +81,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "b55e3c6114099b205befd37d563c544b69fc4ddc9efc530ffff7a186b03bd66a"
+    "huella": "5ff67c7064c1913e3cee195a089db3929ae9f66806ea091206423e967b525f89"
   },
   {
     "id": "EP001-09-radicado-no-encontrado-404",
@@ -91,7 +91,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "c115553881678f4e478465f9f228e9112a6450eb8cf9fca90defc97b51d19f5f"
+    "huella": "7ce193952d926bbcf1d52d5cec2e068e36ad826c197b273caa40e1ce9f3c65f9"
   },
   {
     "id": "EP001-10-comentario-rechazado-400",
@@ -101,7 +101,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "317ccf8eca60b00c0c5085db99a94cfcd0988e32c4578c42ff04dc8fb1f4c9d4"
+    "huella": "9587ac4ed5481f79549db72f0bde8786a5e118d73a273bb406d21f9576435dc3"
   },
   {
     "id": "EP001-11-comentario-sin-autorizacion-401",
@@ -111,7 +111,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "44d0f278d9f10b084dfcf99e4593d3606c0909c447e6c8d4d70e6f813e5db285"
+    "huella": "11c5756fe87f05dd7bd03900416e2aff92a3765c0d9e98b8b60100511f4870df"
   },
   {
     "id": "EP001-12-solo-casos-completos",
@@ -121,7 +121,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "189ea90e85d423dcf0358664e3b1930b6623a03a0c3b7d6f4272027dd41425d3"
+    "huella": "3678458aaff64543d277870efed15ccd94b70e226918f8c7ab72a5d69cd053a9"
   },
   {
     "id": "EP001-13-todos-incompletos",
@@ -131,7 +131,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "b608fdd0c0e22ff517978cf19f2fec35ee2511885fc9f49e8b00ad2144d6c533"
+    "huella": "1194c59847b093d0788773f0aebe8de7327965bc54b7c3d483865f29b388be56"
   },
   {
     "id": "EP001-14-sin-descartar-identificacion-ausente",
@@ -142,7 +142,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "02b2476920429ab1b9f7fe0905d7605ef770ae754a75192b6000761583f9eecf"
+    "huella": "1e0ddc1e57689a4685e8090b75c6986f7da108eb9d6e9d75bc0bd09d3d550299"
   },
   {
     "id": "EP001-15-lote-con-first-y-orderby",
@@ -152,7 +152,7 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "a29fee1ea66589f997e0ce7b69708bae3a2814ef1d4fca4db2115a1c83f33939"
+    "huella": "8233032fcf5bb94cd2d133567a0d84a5825932c861d3fd54166f5e91c42550f7"
   },
   {
     "id": "EP001-16-solo-descartados",
@@ -162,6 +162,26 @@
     ],
     "paso": true,
     "fallos": [],
-    "huella": "11478d6aa42319ac23e0eae42f23f656bb4a43ee2461f98534ada3628c88d9aa"
+    "huella": "8477fda28192de1a1a00533e3b3da8d4d39390acd81ac1e407c8edbbbefeebec"
+  },
+  {
+    "id": "EP001-17-casos-aparecen-en-el-reintento",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 bandeja vacía, el reintento agendado encuentra casos y el bot los procesa (AC-04, AC-05)"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "c0adc5dda288886f4a39f156ce070c7706a9a4f483af90a540cc854b2f2373cf"
+  },
+  {
+    "id": "EP001-18-falla-durante-el-reintento",
+    "modo": "fixture",
+    "ramas": [
+      "HU-002 bandeja vacía, la API deja de responder durante el reintento: se detiene y alerta"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "708eb81ec642a9d4aebd5bedb5db6631d57563632d391adc35852fbb84d6ab45"
   }
 ]

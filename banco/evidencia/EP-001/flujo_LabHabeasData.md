@@ -1,6 +1,6 @@
 # Flujo del robot LabHabeasData (EP-001: HU-002, HU-003, HU-004)
 
-Comandos por tipo: evaluateIf=19, execScriptPython=21, for=1, group=5, log_message=1, setVar=35, trycatch=2. Total: 84.
+Comandos por tipo: click_web=9, evaluateIf=57, execScriptPython=33, for=2, group=10, log_message=1, openUrl=2, openbrowser=1, sendkey_web=4, setVar=82, textObject=4, trycatch=5, waitforobject=6. Total: 216.
 
 - **Control de errores**: Control de ejecución
   - **Grupo**: HU002HU003HU004 - Inicializar el Asistente
@@ -12,6 +12,19 @@ Comandos por tipo: evaluateIf=19, execScriptPython=21, for=1, group=5, log_messa
     - **Asignar**: Radicados en excepción de sistema (HU-003, HU-004)
     - **Paso (componente)**: Carga los tres JSON de configuración, crea la estructura de carpetas y los dos logs del día
     - **Paso (componente)**: Lee los parámetros de negocio de la configuración (tipología, campo, literal de ausencia, lote, orden)
+    - **Asignar**: Radicados con identidad validada (HU-008)
+    - **Asignar**: Radicados en excepción de negocio 3 (HU-008)
+    - **Asignar**: Radicados en revisión humana (HU-006)
+    - **Asignar**: Radicados con respuesta sin nombre (HU-007)
+    - **Asignar**: Radicados derivados a gestión manual (HU-006, HU-007, HU-026a)
+    - **Asignar**: Radicados en excepción de sistema de identidad
+    - **Asignar**: Códigos de error de identidad por radicado
+    - **Asignar**: Chrome aún no está abierto
+    - **Paso (componente)**: Lee el modo, las URL de los portales y los reintentos del captcha; en modo real exige autorización y ventana operativa
+    - **Si**: Los portales no se pueden usar (falta autorización o ventana operativa)
+      - **Asignar**: Marca la ejecución como detenida y guarda el motivo del paso que falló
+    - **Asignar**: URL del portal de la Policía
+    - **Asignar**: URL del portal de la Procuraduría
   - **Control de errores**: Proceso principal
     - **Grupo**: HU002 - Filtrar radicados de Exclusión de Datos
       - **Paso (componente)**: Solicita el token OAuth (client_credentials, vigencia 300 s); el secreto sale del Administrador de credenciales
@@ -49,6 +62,8 @@ Comandos por tipo: evaluateIf=19, execScriptPython=21, for=1, group=5, log_messa
           - **Asignar**: Marca la ejecución como detenida y guarda el motivo del paso que falló
         *(en caso contrario)*
         - **Asignar**: Marca la ejecución como detenida y guarda el motivo del paso que falló
+    - **Si**: La identidad está habilitada y la selección terminó bien: deja constancia de su inicio
+      - **Paso (componente)**: Deja constancia del inicio de la validación de identidad en el log de auditoría
     - **Si**: Hay radicados que procesar
       - **Para cada**: Iteración por radicado de exclusión
         - **Paso (componente)**: Deja constancia del inicio del radicado en el log de auditoría
@@ -81,7 +96,127 @@ Comandos por tipo: evaluateIf=19, execScriptPython=21, for=1, group=5, log_messa
               *(en caso contrario)*
               - **Paso (componente)**: Registra la excepción de sistema (no se pudo escribir el comentario)
               - **Asignar**: Anota el radicado en excepciones de sistema
+        - **Grupo**: HU006 - Consultar la Policía Nacional (Chrome)
+          - **Asignar**: Estado de la identidad del radicado (empieza en «inicio»)
+          - **Si**: El radicado avanzó (HU-004) y la identidad está habilitada: prepara los datos del caso
+            - **Paso (componente)**: Deja constancia del inicio de la identidad del radicado en el log de auditoría
+            - **Paso (componente)**: Clasifica el documento: cédula, NIT de 10 dígitos y código del tipo en la Procuraduría
+            - **Asignar**: Número de documento a consultar
+            - **Asignar**: Nombre del caso en Zeus (la pregunta del captcha puede requerirlo)
+            - **Asignar**: Código del tipo de documento en el desplegable de la Procuraduría
+          - **Si**: Avanzó a identidad y el documento es cédula de ciudadanía: empieza por la Policía
+            - **Asignar**: Etapa: consulta en la Policía
+          - **Si**: Avanzó a identidad y el documento no es cédula: va directo a la Procuraduría
+            - **Asignar**: Etapa: consulta en la Procuraduría
+          - **Si**: Hay que usar un portal y Chrome aún no está abierto
+            - **openbrowser**: Abre Chrome (el robot corre en Chrome)
+            - **Asignar**: Chrome quedó abierto
+          - **Control de errores**: Policía: abre el portal y acepta los términos
+            - **Si**: Consulta en la Policía
+              - **openUrl**: Abre el portal de la Policía
+              - **waitforobject**: Espera la página de términos
+              - **click_web**: Marca «Acepto» los términos de uso
+              - **click_web**: Pulsa «Continuar»
+              - **waitforobject**: Espera el formulario de consulta
+              - **textObject**: Lee el texto de la página (aviso de cuota, si lo hay)
+              - **Paso (componente)**: Lee el texto de la página de la Policía
+            *(en caso contrario)*
+            - **Asignar**: Policía caída o con estructura inesperada: se consulta la Procuraduría
+          - **Si**: Cuota agotada del reCAPTCHA de la Policía: el bot no lo evade, queda en revisión humana
+            - **Asignar**: Etapa: revisión humana (cuota agotada)
+          - **Si**: Modo real: el reCAPTCHA v2 lo resuelve una persona; el bot se detiene
+            - **Asignar**: Etapa: revisión humana (reCAPTCHA)
+          - **Si**: Modo fixture: el clon entrega el captcha ya resuelto (el lab no ejercita la resolución)
+            - **click_web**: Marca la casilla del clon «No soy un robot»
+          - **Control de errores**: Policía: consulta la cédula
+            - **Si**: Consulta en la Policía
+              - **sendkey_web**: Escribe el número de cédula
+              - **click_web**: Pulsa «Consultar»
+              - **waitforobject**: Espera la respuesta de la Policía
+              - **textObject**: Lee el texto del resultado
+              - **Paso (componente)**: Lee el texto del resultado de la Policía
+            *(en caso contrario)*
+            - **Asignar**: Policía caída durante la consulta: se consulta la Procuraduría
+          - **Si**: El reCAPTCHA escaló a un reto de imágenes: lo resuelve una persona
+            - **Asignar**: Etapa: revisión humana (reto de imágenes)
+          - **Si**: La Policía devolvió el nombre oficial (apellidos y luego nombres)
+            - **Asignar**: Etapa: comparar nombres (HU-008)
+          - **Si**: La Policía no devolvió resultado: se consulta la Procuraduría
+            - **Asignar**: Etapa: consulta en la Procuraduría
+        - **Grupo**: HU007 - Consultar la Procuraduría (Chrome)
+          - **Asignar**: Página de la Procuraduría (aún sin leer)
+          - **Si**: NIT con cantidad de dígitos distinta de 10: gestión manual, no se consulta
+            - **Asignar**: Etapa: gestión manual (NIT inválido)
+          - **Si**: Tipo de documento sin consulta en la Procuraduría: gestión manual
+            - **Asignar**: Etapa: gestión manual (tipo sin consulta)
+          - **Control de errores**: Procuraduría: abre el portal y acepta los términos
+            - **Si**: Consulta en la Procuraduría
+              - **openUrl**: Abre el portal de la Procuraduría
+              - **waitforobject**: Espera la página de términos
+              - **click_web**: Marca «Acepto» los términos
+              - **click_web**: Pulsa «Continuar»
+              - **waitforobject**: Espera la pregunta del captcha
+            *(en caso contrario)*
+            - **Asignar**: Procuraduría caída, bloqueada o con estructura inesperada: excepción de sistema
+        - **Grupo**: HU026a - Resolver el captcha de pregunta (servicio de captchas)
+          - **Asignar**: Intentos permitidos (CAPTCHA_MAX_REINTENTOS)
+          - **Para cada**: Intento de resolver el captcha
+            - **Si**: Lee la pregunta y la envía al servicio de captchas (el bot no calcula la respuesta)
+              - **textObject**: Lee la pregunta del captcha
+              - **Paso (componente)**: Envía pregunta, documento y nombre al servicio de captchas
+              - **Asignar**: Respuesta que retornó el servicio
+            - **Si**: El servicio respondió: diligencia el formulario y consulta
+              - **sendkey_web**: Escribe el nombre
+              - **click_web**: Elige el tipo de documento en el desplegable
+              - **sendkey_web**: Escribe el número de documento
+              - **sendkey_web**: Escribe la respuesta del captcha
+              - **click_web**: Pulsa «Consultar»
+              - **waitforobject**: Espera la respuesta de la Procuraduría
+              - **textObject**: Lee el texto del resultado
+              - **Paso (componente)**: Lee el bloque «Datos del ciudadano»
+            - **Si**: El servicio no puede resolver esta pregunta: pide otra con el botón de refresco (cuenta como intento)
+              - **click_web**: Pulsa el botón de refresco de la pregunta
+            - **Si**: Servicio de captchas no disponible tras los reintentos: excepción de sistema
+              - **Asignar**: Etapa: excepción de sistema (servicio de captchas)
+            - **Si**: La Procuraduría devolvió el nombre (bloque «Datos del ciudadano»)
+              - **Asignar**: Etapa: comparar nombres (HU-008)
+            - **Si**: Respuesta sin nombre y el documento es cédula: ni Policía ni Procuraduría dieron resultado, gestión manual
+              - **Asignar**: Etapa: gestión manual (sin resultado)
+            - **Si**: Respuesta sin nombre para un documento no cédula: se registra y continúa
+              - **Asignar**: Etapa: sin nombre (continúa)
+          - **Si**: Captcha no resuelto tras los intentos permitidos: excepción de sistema y gestión manual
+            - **Asignar**: Etapa: excepción de sistema (CAPTCHA_MAX_REINTENTOS)
+        - **Grupo**: HU008 - Comparar nombres (umbral 0.80, sin depender del orden)
+          - **Si**: Compara el nombre de Zeus con el del portal (normalizado, sin depender del orden)
+            - **Paso (componente)**: Calcula el puntaje y lo compara con UMBRAL_COINCIDENCIA_NOMBRES
+          - **Si**: El puntaje alcanza el umbral: la identidad queda validada
+            - **Asignar**: Etapa: identidad validada
+          - **Si**: El puntaje no alcanza el umbral o el nombre es incompleto: excepción de negocio 3
+            - **Asignar**: Etapa: excepción de negocio 3
+          - **Si**: Escribe el comentario de la excepción de negocio 3 en Gestión → Detalle
+            - **Paso (componente)**: Comentario de la excepción de negocio 3 (revisión de Cartera)
+          - **Si**: El comentario no se pudo registrar: excepción de sistema
+            - **Asignar**: Etapa: excepción de sistema (comentario no registrado)
+        - **Grupo**: HU006HU007HU008 - Registrar el resultado de identidad
+          - **Si**: Deja el resultado de identidad en el reporte y los logs
+            - **Paso (componente)**: Registra el resultado de identidad (sin nombres ni identificaciones)
+          - **Si**: Resultado «validada»
+            - **Asignar**: Anota el radicado en identidad validada
+          - **Si**: Resultado «excepcion_negocio_3»
+            - **Asignar**: Anota el radicado en excepciones de negocio 3
+          - **Si**: Resultado «revision_humana»
+            - **Asignar**: Anota el radicado en revisión humana
+          - **Si**: Resultado «sin_nombre»
+            - **Asignar**: Anota el radicado en respuesta sin nombre
+          - **Si**: Resultado «gestion_manual»
+            - **Asignar**: Anota el radicado en gestión manual
+          - **Si**: Resultado «excepcion_sistema»: el caso va a gestión manual
+            - **Asignar**: Anota el radicado en excepciones de sistema de identidad
+            - **Asignar**: Anota el radicado en gestión manual
+            - **Asignar**: Guarda el código de error del radicado
         - **Paso (componente)**: Deja constancia del fin del radicado en el log de auditoría
+    - **Si**: La identidad está habilitada y la selección terminó bien: deja constancia de su fin
+      - **Paso (componente)**: Deja constancia del fin de la validación de identidad en el log de auditoría
     *(en caso contrario)*
     - **Asignar**: Marca fallo de sistema en el proceso principal
     - **Asignar**: Estado de la ejecución: detenido por excepción de sistema

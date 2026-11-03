@@ -25,7 +25,7 @@ for carpeta in (REPO, REPO / "Scripts", REPO / "dobles" / "zeus_api", REPO / "ba
     if str(carpeta) not in sys.path:
         sys.path.insert(0, str(carpeta))
 
-from correr_matriz import mezclar, radicados_de  # noqa: E402
+from correr_matriz import cambios_del_doble, mezclar, radicados_de  # noqa: E402
 from habeasdata import ep001  # noqa: E402
 from habeasdata.config import cargar  # noqa: E402
 from dobles.zeus_api.servidor import DobleZeus  # noqa: E402
@@ -76,6 +76,7 @@ def preparar_raiz(puerto, cambios_proceso):
         datos["ZeusApi"]["Fixture"][clave] = datos["ZeusApi"]["Fixture"][clave].replace("8765", str(puerto))
     datos["ZeusApi"]["BackoffSegundos"] = [0]
     datos["Identidad"] = {"Habilitada": False}  # la equivalencia de EP-001 no consulta portales; EP-002 tiene la suya
+    datos.setdefault("Repositorio", {})["Habilitado"] = False  # ni repositorio: EP-003 tiene su equivalencia
     # Credenciales del doble explícitas en la configuración temporal: el robot de Studio las lee
     # de aquí y no depende de que su proceso tenga las variables de entorno.
     datos["ZeusApi"]["Fixture"]["ClientId"] = os.environ["ZEUS_DOBLE_CLIENT_ID"]
@@ -164,6 +165,9 @@ def filas_csv(raiz, patron, columna_fecha):
         for linea in ruta.read_text(encoding="utf-8").splitlines()[1:]:
             columnas = linea.split(";")
             del columnas[columna_fecha]
+            columnas = [re.sub(r"^\[C\d+\] ", "", c) for c in columnas]  # el identificador de corrida cambia entre orquestador y robot
+            if "INFORMEGESTION" in patron:
+                columnas = columnas[:5]
             filas.append(";".join(columnas))
     return sorted(filas)
 
@@ -188,7 +192,7 @@ def escenario(esc, ejecutor=None):
     puerto = doble.puerto
     raiz = preparar_raiz(puerto, esc.get("proceso", {}))
     try:
-        doble.estado.configurar({k: v for k, v in spec.items() if k in ESCRIBIR})
+        doble.estado.configurar(cambios_del_doble(spec))
         if spec.get("apagado"):
             doble.detener()
         py = ep001.procesar(cargar(raiz))

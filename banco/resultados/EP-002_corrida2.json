@@ -1,0 +1,255 @@
+[
+  {
+    "id": "EP002-01-happy-todos",
+    "modo": "fixture",
+    "ramas": [
+      "HU-006 nombre extraído",
+      "HU-007 NIT por Procuraduría",
+      "HU-008 coincide (incluye orden distinto)",
+      "HU-026a familias"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "f4fdbe87522402e2af310c5632efa0d64f61a07cf0fc2609e2c6dbd87a51449a"
+  },
+  {
+    "id": "EP002-02-policia-sin-resultado-deriva-a-procuraduria",
+    "modo": "fixture",
+    "ramas": [
+      "HU-006 sin resultado → HU-007"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "3a399940ff3eea0bf903abb1b6e93ce128cbd47febe8a05e84267b47348ab356"
+  },
+  {
+    "id": "EP002-03-policia-cuota-agotada-revision-humana",
+    "modo": "fixture",
+    "ramas": [
+      "HU-006 cuota agotada: fallback humano"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "0780e32a4e2ebd586ca347f0037db594b1114475c28d61919174d07908471393"
+  },
+  {
+    "id": "EP002-04-policia-reto-de-imagenes-revision-humana",
+    "modo": "fixture",
+    "ramas": [
+      "HU-006 reCAPTCHA escala a reto: persona"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "beb231127fe5b0cf2392626e3eb881f0f5667417bdc8e855b6508e81b2787306"
+  },
+  {
+    "id": "EP002-05-policia-caida-persistente-deriva-a-procuraduria",
+    "modo": "fixture",
+    "ramas": [
+      "HU-006 portal caído → HU-007"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "473224c7e8ac39f57e20a8591d7a60e28685f242a2f70f34a4fd4e21731bc98b"
+  },
+  {
+    "id": "EP002-06-procuraduria-caida",
+    "modo": "fixture",
+    "ramas": [
+      "HU-007 portal caído: excepción de sistema y gestión manual"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "875397e0b4d9fc23208c1bfaad34daf7e0eb2431b1ecef697ea801a096216fa3"
+  },
+  {
+    "id": "EP002-07-procuraduria-waf-bloquea",
+    "modo": "fixture",
+    "ramas": [
+      "Realidad: WAF bloquea la página principal"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "d636a08c1c40567aab27fce9ed361ad9a183f7633da0451afc7724967b595e9d"
+  },
+  {
+    "id": "EP002-08-procuraduria-webcert-incidentes",
+    "modo": "fixture",
+    "ramas": [
+      "Realidad: webcert devuelve el formulario de atención de incidentes"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "d493dc42121b747b10135177d69ae451d4f1eac621e3c787dd57d0af5d2c6ae1"
+  },
+  {
+    "id": "EP002-09-captcha-rechazado-por-el-portal",
+    "modo": "fixture",
+    "ramas": [
+      "HU-026a reintentos agotados: CAPTCHA_MAX_REINTENTOS"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "83304fa50fceb92a32c2d24a470bb4af6f36ec6b69b67e0aa1ba1fa6bdfa571b"
+  },
+  {
+    "id": "EP002-10-servicio-de-captchas-no-disponible",
+    "modo": "fixture",
+    "ramas": [
+      "HU-026a servicio caído: CAPTCHA_SERVICIO_NO_DISPONIBLE"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "15ccd2d63c988f3f789b8328d101e6b9750774f828742c682fccdd2603495361"
+  },
+  {
+    "id": "EP002-11-familia-no-soportada-capital",
+    "modo": "fixture",
+    "ramas": [
+      "HU-026a familia no soportada → captcha no resuelto"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "7299f945eaedaf90e8e42db6d4a07f60f879495a4bb2d4b6671da57548e9b643"
+  },
+  {
+    "id": "EP002-12-rotacion-de-familias",
+    "modo": "fixture",
+    "ramas": [
+      "HU-026a aritmética, documento y nombre rotan; capital se refresca"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "281542166a5d002b1f256e29cd889366f44161499c6fb5c5aeb45d2653fd5e29"
+  },
+  {
+    "id": "EP002-13-nombre-no-coincide-excepcion-3",
+    "modo": "fixture",
+    "ramas": [
+      "HU-008 excepción de negocio 3 con comentario"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "3b6ceaaaba11fdf8265beeb08d789540c7f123a1708e35695419c68b3aaa5690"
+  },
+  {
+    "id": "EP002-14-nombre-incompleto-excepcion-3",
+    "modo": "fixture",
+    "ramas": [
+      "HU-008 sin primer apellido"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "64b5cfa4515faa9b19268fecff52515620165e26d030544d31019176af7c5071"
+  },
+  {
+    "id": "EP002-15-comentario-3-rechazado",
+    "modo": "fixture",
+    "ramas": [
+      "HU-008 comentario no registrado: excepción de sistema"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "e28722b0eb945ecd15c1a77f4e11741ace680ed4caa9486aac23b0d9f90a44ed"
+  },
+  {
+    "id": "EP002-16-nit-con-9-digitos-no-consulta",
+    "modo": "fixture",
+    "ramas": [
+      "HU-007 NIT ≠ 10 dígitos → gestión manual sin consultar"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "e95e4ae842d949495d8dd20394e68ac6e7f5c9b978a67b442473dd74e2495a7a"
+  },
+  {
+    "id": "EP002-17-no-cedula-sin-nombre-continua",
+    "modo": "fixture",
+    "ramas": [
+      "HU-007 respuesta sin nombre, no cédula: registra y continúa"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "0f1a81ba01c4226d630dc4fbee44baa993ed42e6cc413ede952c84204695d47c"
+  },
+  {
+    "id": "EP002-18-tipo-de-documento-sin-consulta",
+    "modo": "fixture",
+    "ramas": [
+      "Realidad: PEP no tiene consulta en la Procuraduría"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "1174ec184d84e87ec4866a33b88e88c5b116663288bbea29fec7afc93b59fc46"
+  },
+  {
+    "id": "EP002-20-cedula-sin-resultado-en-ninguna-fuente",
+    "modo": "fixture",
+    "ramas": [
+      "HU-007 cédula sin resultado en Policía ni Procuraduría → gestión manual"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "e73165db62fb79ce5d36eb6bf9592585902659462c6899e04aa6814abce7ed3d"
+  },
+  {
+    "id": "EP002-19-ciudadano-con-antecedentes-igual-valida",
+    "modo": "fixture",
+    "ramas": [
+      "HU-007 con antecedentes: el estado no altera la identidad"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "e1164830fddd86600b1c96cfac6bd00e097d91e10c31c9c9f986127be4eb66e8"
+  },
+  {
+    "id": "EP002-21-modo-real-no-evade-el-recaptcha",
+    "modo": "real",
+    "ramas": [
+      "HU-006 modo real: el reCAPTCHA lo resuelve una persona; la casilla NUNCA se marca; la Procuraduría sigue su curso"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "19f78c6172ff57ebe56b4aa8db7f2720c7e6e1f753b3193d563e9bac0bf4ae25"
+  },
+  {
+    "id": "EP002-22-portal-con-falla-transitoria-reintenta",
+    "modo": "fixture",
+    "ramas": [
+      "HU-006/HU-007 una caída de una sola vez se reintenta (NUMERO_REINTENTOS_SISTEMA) y el caso se resuelve"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "9bce6c5d4f5233111b23d9f9fd732ff18635811c07bffdf201da9837cf3f381b"
+  },
+  {
+    "id": "EP002-23-umbral-de-nombres-configurable",
+    "modo": "fixture",
+    "ramas": [
+      "HU-008 el umbral sale del maestro: con 0.70 un puntaje de 0.75 valida (con 0.80 sería excepción 3)"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "f42573b4eafb0347cd7f4a952d84d9b57da9a6a81026ca00159bd37690c4483a"
+  },
+  {
+    "id": "EP002-24-pasaporte-y-cedula-de-extranjeria",
+    "modo": "fixture",
+    "ramas": [
+      "HU-007 tipos de documento con consulta directa en la Procuraduría (pasaporte y cédula de extranjería)"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "71ece2c81a9f6dac7a4b94c97c2f9ddcc88f0ef51b1f5640f6d92fb4000abd6b"
+  },
+  {
+    "id": "EP002-25-portal-con-dos-fallas-transitorias-resuelve-en-el-tercer-intento",
+    "modo": "fixture",
+    "ramas": [
+      "HU-006/HU-007 dos caídas seguidas: el tercer intento (el último) abre el portal y el caso se resuelve"
+    ],
+    "paso": true,
+    "fallos": [],
+    "huella": "9bce6c5d4f5233111b23d9f9fd732ff18635811c07bffdf201da9837cf3f381b"
+  }
+]

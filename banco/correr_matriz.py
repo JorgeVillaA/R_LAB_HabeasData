@@ -43,6 +43,19 @@ def radicados_de(especificacion):
     return [r for r in RADICADOS if str(r["IDRADICADO"]) in set(especificacion)]
 
 
+def cambios_del_doble(especificacion):
+    """Lo que el escenario le pide al doble: fallas inyectadas y, opcionalmente, un cambio que ocurre tras N consultas
+    (`cambio_tras_consultas`: casos que llegan o una API que deja de responder mientras el bot espera el reintento)."""
+    cambios = {k: v for k, v in especificacion.items() if k in ("token_ttl", "denegar", "fallas_radicado", "falla_comentario")}
+    programado = especificacion.get("cambio_tras_consultas")
+    if programado:
+        cambio = dict(programado["cambios"])
+        if "radicados" in cambio:
+            cambio["radicados"] = radicados_de(cambio["radicados"])
+        cambios["cambio_tras_consultas"] = {"tras": programado["tras"], "cambios": cambio}
+    return cambios
+
+
 def mezclar(destino, cambios):
     for clave, valor in cambios.items():
         if isinstance(valor, dict) and isinstance(destino.get(clave), dict):
@@ -69,13 +82,13 @@ def correr_escenario(escenario):
     doble = DobleZeus(CREDENCIALES, radicados_de(especificacion["radicados"])).iniciar()
     raiz = preparar_raiz(doble.puerto, escenario.get("proceso", {}))
     try:
-        doble.estado.configurar({k: v for k, v in especificacion.items() if k in ("token_ttl", "denegar", "fallas_radicado", "falla_comentario")})
+        doble.estado.configurar(cambios_del_doble(especificacion))
         if especificacion.get("apagado"):
             doble.detener()
         cfg = cargar(raiz)
         registro = Registro(cfg, RELOJ)
         cliente = ClienteZeus(cfg, registro, ENTORNO, dormir=lambda segundos: None)
-        resumen = ep001.procesar(cfg, cliente, registro)
+        resumen = ep001.procesar(cfg, cliente, registro, dormir=lambda segundos: None)
         comentarios = sorted(c["IDRADICADO"] for c in doble.estado.comentarios)
         archivos = sorted(p.relative_to(raiz).as_posix() for p in raiz.rglob("*.csv"))
         lineas_auditoria = registro.ruta_auditoria().read_text(encoding="utf-8").count("\n")
@@ -99,6 +112,8 @@ def verificar(escenario, resumen, comentarios, archivos):
             igual(clave, sorted(resumen[clave]), sorted(espera[clave]))
     if "motivo_sin_casos" in espera:
         igual("motivo_sin_casos", resumen["motivo_sin_casos"], espera["motivo_sin_casos"])
+    if "reintentos" in espera:
+        igual("reintentos", resumen["reintentos"], espera["reintentos"])
     if "comentarios" in espera:
         igual("comentarios", comentarios, sorted(espera["comentarios"]))
     if "descartados" in espera:
@@ -124,8 +139,14 @@ def verificar(escenario, resumen, comentarios, archivos):
 def una_corrida(escenarios):
     resultados = []
     for escenario in escenarios:
-        resumen, comentarios, archivos, lineas, modo = correr_escenario(escenario)
-        fallos = verificar(escenario, resumen, comentarios, archivos)
+        if "portales" in escenario or "identidad" in escenario["espera"]:  # EP-002: identidad con clones de portales
+            import banco_ep002
+            resumen, comentarios, consultas, archivos, texto_logs, lineas, modo = banco_ep002.correr_escenario(escenario)
+            fallos = banco_ep002.verificar(escenario, resumen, comentarios, consultas, archivos, texto_logs)
+            comentarios = {"comentarios": comentarios, "consultas": consultas}
+        else:
+            resumen, comentarios, archivos, lineas, modo = correr_escenario(escenario)
+            fallos = verificar(escenario, resumen, comentarios, archivos)
         normalizado = json.dumps({"modo": modo, "resumen": resumen, "comentarios": comentarios, "archivos": archivos,
                                   "lineas_auditoria": lineas}, sort_keys=True, ensure_ascii=False, default=str)
         resultados.append({"id": escenario["id"], "modo": modo, "ramas": escenario["ramas"], "paso": not fallos, "fallos": fallos,

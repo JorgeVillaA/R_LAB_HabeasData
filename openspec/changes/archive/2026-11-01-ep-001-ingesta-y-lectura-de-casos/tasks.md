@@ -19,3 +19,4 @@
 - [x] 4.2 Banco determinista: 16 escenarios, dos corridas idénticas
 - [x] 4.3 Equivalencia del robot de Studio con el orquestador (16 de 16)
 - [x] 4.4 Mutación sobre las reglas de negocio y el contrato
+- [x] 4.5 Reintento agendado de la bandeja vacía (AC-04 y AC-05 de HU-002): espera y reconsulta según la cadencia parametrizada

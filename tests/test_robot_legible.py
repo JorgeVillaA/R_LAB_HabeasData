@@ -38,6 +38,13 @@ class TestEstructuraLegible(unittest.TestCase):
             "HU002 - Filtrar radicados de Exclusión de Datos",
             "HU003 - Leer datos paramétricos",
             "HU004 - Validar campos obligatorios",
+            "HU010 - Buscar duplicados de exclusión (repositorio local)",
+            "HU006 - Consultar la Policía Nacional (Chrome)",
+            "HU007 - Consultar la Procuraduría (Chrome)",
+            "HU026a - Resolver el captcha de pregunta (servicio de captchas)",
+            "HU008 - Comparar nombres (umbral 0.80, sin depender del orden)",
+            "HU006HU007HU008 - Registrar el resultado de identidad",
+            "HU011 - Registrar la exclusión en base centralizada (repositorio local)",
             "HU002HU003HU004 - Cierre y registro de ejecución",
         ]
         self.assertEqual(GRUPOS, esperados)
@@ -63,7 +70,7 @@ class TestEstructuraLegible(unittest.TestCase):
     def test_el_flujo_tiene_decisiones_y_bucle_visibles(self):
         padres = [c["father"] for c in TODOS]
         self.assertGreaterEqual(padres.count("evaluateIf"), 15)
-        self.assertEqual(padres.count("for"), 1)
+        self.assertEqual(padres.count("for"), 2)  # por radicado + intentos del captcha (HU-026a)
 
     def test_el_python_no_es_contenedor_del_flujo(self):
         for bloque in PYTHON:
@@ -101,9 +108,28 @@ class TestEstructuraLegible(unittest.TestCase):
                        "locStrFiltroBase", "locStrFiltroSeleccion", "locStrSelect", "locIntLote", "locStrOrden"):
             self.assertNotIn(suelto, nombres)
 
-    def test_tope_de_bloques_tras_consolidar(self):  # antes: 95 comandos, 47 setVar
-        self.assertLessEqual(len(TODOS), 84)
-        self.assertLessEqual([c["father"] for c in TODOS].count("setVar"), 36)
+    def test_tope_de_bloques_de_ep001_tras_consolidar(self):  # antes: 95 comandos, 47 setVar (EP-002 se mide aparte)
+        ep002 = [c for c in ROBOT["commands"][0]["children"][1]["children"]
+                 if c["father"] == "evaluateIf" or c["father"] == "group"]
+        propios = [c for c, _ in recorrer(ROBOT["commands"])]
+        grupos_ep002 = [g for g in TODOS if g["father"] == "group" and g["description"].split(" - ")[0] in
+                        ("HU006", "HU007", "HU026a", "HU008", "HU006HU007HU008", "HU010", "HU011")]
+        dentro = {id(x) for g in grupos_ep002 for x, _ in recorrer([g])}
+        init_ep002 = 17  # listas, códigos, Chrome, portales y URLs de la inicialización + inicio y fin de la identidad
+        init_ep003 = 17  # listas del repositorio, su apertura, las constancias de inicio/fin y la detención crítica
+        ep001 = [c for c in propios if id(c) not in dentro]
+        self.assertLessEqual(len(ep001), 84 + 9 + init_ep002 + init_ep003)
+        self.assertLessEqual([c["father"] for c in ep001].count("setVar"), 36 + 3 + 11 + 8)
+
+    def test_los_intentos_de_apertura_de_cada_portal_coinciden_con_NUMERO_REINTENTOS_SISTEMA(self):
+        """HU-006/HU-007: el robot reintenta abrir cada portal tantas veces como dice el maestro (bloques visibles por intento)."""
+        import json as _json
+        maestro = _json.loads((REPO / "Configuracion" / "Maestro_Configuracion.json").read_text(encoding="utf-8"))
+        n = maestro["NUMERO_REINTENTOS_SISTEMA"]
+        for portal in ("Policía", "Procuraduría"):
+            intentos = [c for c in TODOS if c["father"] == "trycatch" and c["description"].startswith(f"{portal}: abre el portal")]
+            self.assertEqual(len(intentos), n, portal)
+            self.assertTrue(all(f"de {n})" in c["description"] for c in intentos), portal)
 
     def test_los_motivos_de_incompletitud_coinciden_con_las_reglas_de_python(self):
         en_robot = []

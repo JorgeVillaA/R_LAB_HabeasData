@@ -275,3 +275,17 @@ Directriz de Villa para la construcción, que se suma a las reglas del lab:
 - **PII real.** En modo real, logs, reporte y resumen del robot enmascaran nombre, identificación, correos y teléfonos; toda evidencia con radicados reales debe redactarse.
 - **Navegador.** Toda navegación web del robot corre en Chrome: `openbrowser` con `extra:{default:"chrome"}` y `openUrl` aparte; la ejecución se verifica con `run_in_studio` y captura del MCP. Cualquier ejecución en otro navegador o sin ventana es defecto.
 - **Robot legible a cliente (corrección de Villa).** El flujo de Studio es visible: `trycatch` «Control de ejecución» → grupos por historia (`HU002`, `HU003`, `HU004`, más inicialización y cierre `HU002HU003HU004`) → bloques por paso con descripción. El Python queda para E/S con secretos, parseo/clasificación puros y escritura de logs, invocado desde bloques visibles; nunca contiene el flujo. El comando nativo `request` no se usa porque escribe cabeceras y cuerpo (secreto y Bearer) en el log de Studio. La equivalencia con el orquestador Python se comprueba escenario por escenario (`banco/equivalencia_robot.py`).
+
+## 14. Práctica experimental: test por bloque en Studio (D-21, 2026-10-30)
+
+**Qué es.** Todo bloque del robot puede ejecutarse solo con el botón de test de Studio (corre ese comando aislado con las variables actuales) y `playNode` permite arrancar desde cualquier bloque. Sirve para mantenimiento y soporte: diagnosticar y reparar un bloque sin correr el robot entero, y ver la **salud** de cada bloque.
+
+**Cómo se cumple en el robot.**
+- Cada bloque declara su entrada y su salida (variables que lee y escribe); el mapa está en `docs/SALUD-POR-BLOQUE.md`.
+- No hay estado oculto: los bloques `Paso (componente)` reciben la raíz (`glbStrRutaRaiz`) y llaman a `pasos.asegurar(raíz)`, que reconstruye la sesión solo; ningún paso depende de que otro haya corrido antes en el proceso.
+- La lógica pura sigue en `Scripts/habeasdata` con pruebas que no abren Studio.
+- El mapa se **genera y se mide** (`python banco/salud_por_bloque.py`): cada escenario del banco corre el robot en el intérprete y anota los bloques que ejecutó. Un bloque sin escenario se reporta como hueco de cobertura.
+
+**Cómo se mide el experimento.** Se compara el tiempo de diagnóstico y reparación de un fallo de bloque con esta práctica frente a depurar corriendo el robot completo, en los incidentes de soporte del lab. Se registra: tiempo hasta localizar el bloque, tiempo hasta la reparación verificada y bloques sin cobertura que causaron el incidente. Con esos datos Villa decide si la práctica se mantiene. Hasta entonces es **experimental**.
+
+**Límite declarado.** Un test por bloque ejecuta el comando aislado: no sustituye al banco, que valida el flujo completo.

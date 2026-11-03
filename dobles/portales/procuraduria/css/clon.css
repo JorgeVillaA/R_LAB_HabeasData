@@ -1,0 +1,59 @@
+/* Ajustes mínimos del clon de la Procuraduría.
+ * Todo el resto del aspecto viene de las hojas reales del portal
+ * (Media/Style/Certificado.css y jquery.realperson.css, aquí en css/).
+ */
+
+#continuarBtn[disabled] {
+    color: #9a9a9a;
+    border-color: #b9b9b9;
+    cursor: default;
+}
+
+#continuarBtn[disabled]:hover {
+    color: #9a9a9a;
+    background: #ffffff;
+    border: 2px solid #b9b9b9;
+    height: 25px;
+}
+
+/* La imagen de refresco va alineada con la pregunta, como en el portal. */
+#tdPregunta {
+    text-align: right;
+}
+
+#lblPregunta {
+    font-weight: bold;
+    color: #30608F;
+}
+
+#ImageButton1 {
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+#divResultado {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#divDatosCiudadano {
+    border-color: #CCCCCC;
+    border-style: solid;
+    border-width: 1px;
+    padding: 15px;
+    margin: 10px auto 20px auto;
+    width: 90%;
+}
+
+#divDatosCiudadano h2 {
+    margin-top: 0;
+}
+
+#lblMensaje {
+    font-weight: bold;
+    min-height: 18px;
+}
+
+.divBanner {
+    margin-bottom: 10px;
+}
